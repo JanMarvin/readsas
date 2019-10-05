@@ -72,8 +72,8 @@ Rcpp::List readsas(const char * filePath, const bool debug)
     mn8 = readbin(mn8, sas, 0);
 
     if (debug)
-    Rprintf("Magicnumber: %d, %d, %d, %d, %d, %d, %d, %d  \n",
-            mn1, mn2, mn3, mn4, mn5, mn6, mn7, mn8);
+      Rprintf("Magicnumber: %d, %d, %d, %d, %d, %d, %d, %d  \n",
+              mn1, mn2, mn3, mn4, mn5, mn6, mn7, mn8);
 
     if (mn1 != 0)
       Rcpp::stop("mn1 != 0");
@@ -219,7 +219,7 @@ Rcpp::List readsas(const char * filePath, const bool debug)
 
     int32_t headersize = 0;
     headersize = readbin(headersize, sas, 0);
-    if (debug) Rprintf("headersize: %d \n", headersize);
+    Rprintf("headersize: %d \n", headersize);
 
     int32_t pagesize = 0;
     pagesize = readbin(pagesize, sas, 0);
@@ -337,8 +337,7 @@ Rcpp::List readsas(const char * filePath, const bool debug)
 
     if (debug) Rprintf("unk16: %d \n", unk16);
 
-    auto SL = 24;
-    if(ALIGN_2_VALUE != 4) SL = 12;
+    auto SL = 24; if(ALIGN_2_VALUE != 4) SL = 12;
 
     std::vector<PO_Tab> potabs(SUBHEADER_COUNT);
 
@@ -385,304 +384,264 @@ Rcpp::List readsas(const char * filePath, const bool debug)
     // debug
     auto sh_end_pos = sas.tellg();
     Rprintf("sh_end_pos: %d\n", sh_end_pos);
-
-
-
-
     data_pos.push_back( sh_end_pos );
-
 
     int8_t alignval = 8;
     if (ALIGN_2_VALUE != 4) alignval = 4;
 
-    // for (int i = 0; i < SUBHEADER_COUNT; ++i) {
-    auto pos = pagestart + potabs[0].SH_OFF;
-    sas.seekg(pos, sas.beg);
-    if (debug) Rprintf("%d \n", pos);
-
-
-    int64_t sas_offset = alignval;
-    if (ALIGN_1_VALUE == 4) {
-      sas_offset = readbin(sas_offset, sas, 0);
-    } else {
-      sas_offset = readbin((int32_t)sas_offset, sas, 0);
-    }
-
-
     int64_t rowlength = 0, rowcount = 0;
     int64_t colf_p1 = 0, colf_p2 = 0;
-
-    // Rcout << std::hex << sas_offset << std::endl;
-
-    std::string sas_hex = int32_to_hex(sas_offset);
-
-    if (sas_hex.compare("f7f7f7f7") == 0 ||
-        sas_hex.compare("fffffffff7f7f7f7") == 0){ // F7F7F7F7
-
-      if (ALIGN_2_VALUE == 4) {
-        unk64 = readbin(unk64, sas, 0);
-        if (debug) Rcout << unk64 << std::endl;
-        unk64 = readbin(unk64, sas, 0);
-        if (debug) Rcout << unk64 << std::endl;
-        unk64 = readbin(unk64, sas, 0);
-        if (debug) Rcout << unk64 << std::endl;
-        unk64 = readbin(unk64, sas, 0);
-        if (debug) Rcout << unk64 << std::endl;
-      } else {
-        unk32 = readbin(unk32, sas, 0);
-        if (debug) Rcout << unk32 << std::endl;
-        unk32 = readbin(unk32, sas, 0);
-        if (debug) Rcout << unk32 << std::endl;
-        unk32 = readbin(unk32, sas, 0);
-        if (debug) Rcout << unk32 << std::endl;
-        unk32 = readbin(unk32, sas, 0);
-        if (debug) Rcout << unk32 << std::endl;
-      }
-
-
-      if (ALIGN_2_VALUE == 4) {
-        rowlength = readbin(rowlength, sas, 0);
-        Rcout << rowlength << std::endl;
-        rowcount = readbin(rowcount, sas, 0);
-        if (debug) Rcout << rowcount << std::endl;
-        unk64 = readbin(unk64, sas, 0);
-        if (debug) Rcout << unk64 << std::endl;
-        unk64 = readbin(unk64, sas, 0);
-        if (debug) Rcout << unk64 << std::endl;
-      } else {
-        rowlength = readbin((int32_t)rowlength, sas, 0);
-        Rcout << rowlength << std::endl;
-        rowcount = readbin((int32_t)rowcount, sas, 0);
-        if (debug) Rcout << rowcount << std::endl;
-        unk32 = readbin(unk32, sas, 0);
-        if (debug) Rcout << unk32 << std::endl;
-        unk32 = readbin(unk32, sas, 0);
-        if (debug) Rcout << unk32 << std::endl;
-      }
-
-
-      if (ALIGN_2_VALUE == 4) {
-        colf_p1 = readbin(colf_p1, sas, 0);
-        if (debug) Rcout << colf_p1 << std::endl;
-        colf_p2 = readbin(colf_p2, sas, 0);
-        if (debug) Rcout << colf_p2 << std::endl;
-        unk64 = readbin(unk64, sas, 0);
-        if (debug) Rcout << unk64 << std::endl;
-        unk64 = readbin(unk64, sas, 0);
-        if (debug) Rcout << unk64 << std::endl;
-      } else {
-        colf_p1 = readbin((int32_t)colf_p1, sas, 0);
-        if (debug) Rcout << colf_p1 << std::endl;
-        colf_p2 = readbin((int32_t)colf_p2, sas, 0);
-        if (debug) Rcout << colf_p2 << std::endl;
-        unk32 = readbin(unk32, sas, 0);
-        if (debug) Rcout << unk32 << std::endl;
-        unk32 = readbin(unk32, sas, 0);
-        if (debug) Rcout << unk32 << std::endl;
-      }
-
-    }
-
-    // new offset ------------------------------------------------------------//
-    pos = pagestart + potabs[1].SH_OFF;
-    sas.seekg(pos, sas.beg);
-    if (debug) Rprintf("%d \n", pos);
-
-
-    if (ALIGN_1_VALUE == 4) {
-      sas_offset = readbin(sas_offset, sas, 0);
-    } else {
-      sas_offset = readbin((int32_t)sas_offset, sas, 0);
-    }
-
-    sas_hex = int32_to_hex(sas_offset);
-    if (debug) Rcout << sas_hex << std::endl;
-
-    auto position = sas.tellg();
-    if (debug) Rprintf("position: %d\n", position);
-
-
     int64_t colnum = 0;
-
-    if (sas_hex.compare("f6f6f6f6") == 0) { // f6f6f6f6
-
-
-      if (ALIGN_2_VALUE == 4) {
-        colnum = readbin(colnum, sas, 0);
-        if (debug) Rcout << colnum << std::endl;
-        unk64 = readbin(unk64, sas, 0);
-        if (debug) Rcout << unk64 << std::endl;
-        unk64 = readbin(unk64, sas, 0);
-        if (debug) Rcout << unk64 << std::endl;
-      } else {
-        colnum = readbin((int32_t)colnum, sas, 0);
-        if (debug) Rcout << colnum << std::endl;
-        unk32 = readbin(unk32, sas, 0);
-        if (debug) Rcout << unk32 << std::endl;
-        unk32 = readbin(unk32, sas, 0);
-        if (debug) Rcout << unk32 << std::endl;
-      }
-
-    }
-
-    // new offset ------------------------------------------------------------//
-    pos = pagestart + potabs[3].SH_OFF;
-    sas.seekg(pos, sas.beg);
-    if (debug) Rprintf("%d \n", pos);
-
-    if (ALIGN_1_VALUE == 4) {
-      sas_offset = readbin(sas_offset, sas, 0);
-    } else {
-      sas_offset = readbin((int32_t)sas_offset, sas, 0);
-    }
-    sas_hex = int32_to_hex(sas_offset);
-    if (debug) Rcout << sas_hex << std::endl;
-
     std::vector<std::string> stringvec ;
 
-    if (sas_hex.compare("fffffffd") == 0) { // f6f6f6f6
+    for (auto i = 0; i < SUBHEADER_COUNT; ++i)
+    {
 
-      int16_t len = 0;
-      len = readbin(len, sas, 0);
-      if (debug) Rprintf("%d\n", len);
-
-      unk16 = readbin(unk16, sas, 0);
-      if (debug) Rcout << unk16 << std::endl;
-      unk16 = readbin(unk16, sas, 0);
-      if (debug) Rcout << unk16 << std::endl;
-      unk16 = readbin(unk16, sas, 0);
-      if (debug) Rcout << unk16 << std::endl;
-      unk16 = readbin(unk16, sas, 0);
-      if (debug) Rcout << unk16 << std::endl;
-      unk16 = readbin(unk16, sas, 0);
-      if (debug) Rcout << unk16 << std::endl;
-
-      std::string CN_IDX_STR (len, '\0');
-      CN_IDX_STR = readstring(CN_IDX_STR, sas);
-
-      // std::cout << CN_IDX_STR << std::endl;
-
-      stringvec.push_back(CN_IDX_STR);
-
-    }
+      auto pos = pagestart + potabs[i].SH_OFF;
+      sas.seekg(pos, sas.beg);
+      if (debug) Rprintf("%d \n", pos);
 
 
-    // new offset ------------------------------------------------------------//
-    pos = pagestart + potabs[4].SH_OFF;
-    sas.seekg(pos, sas.beg);
-    if (debug) Rprintf("%d \n", pos);
-
-    if (ALIGN_1_VALUE == 4) {
-      sas_offset = readbin(sas_offset, sas, 0);
-    } else {
-      sas_offset = readbin((int32_t)sas_offset, sas, 0);
-    }
-    sas_hex = int32_to_hex(sas_offset);
-    if (debug) Rcout << sas_hex << std::endl;
-
-
-    if (sas_hex.compare("ffffffff") == 0) { // f6f6f6f6
-
-      int16_t lenremain = 0;
-      lenremain = readbin(lenremain, sas, 0);
-      if (debug) Rprintf("lenremain %d \n", lenremain);
-
-      unk16 = readbin(unk16, sas, 0);
-      if (debug) Rcout << unk16 << std::endl;
-      unk16 = readbin(unk16, sas, 0);
-      if (debug) Rcout << unk16 << std::endl;
-      unk16 = readbin(unk16, sas, 0);
-      if (debug) Rcout << unk16 << std::endl;
-
-      auto cmax = (lenremain + alignval)/8;
-
-      std::vector<CN_Poi> cnpois(cmax);
-
-      for (auto i = 0; i < cmax; ++i) {
-        auto idx    = readbin(cnpois[i].CN_IDX, sas, 0);
-        auto off    = readbin(cnpois[i].CN_OFF, sas, 0);
-        auto len    = readbin(cnpois[i].CN_LEN, sas, 0);
-        auto zeros  = readbin(cnpois[i].zeros,  sas, 0);
-
-
-        if (!(len <= 0)) {
-          off -= 12; // reduce off
-
-          if (debug)
-          Rprintf("CN_IDX %d; CN_OFF %d; CN_LEN %d; zeros %d \n",
-                  idx, off,
-                  len, zeros);
-
-          std::string varname = stringvec[idx].substr(off, len);
-
-          if (debug) Rcout << varname << std::endl;
-
-          varnames.push_back(varname);
-        }
-
+      int64_t sas_offset = alignval;
+      if (ALIGN_1_VALUE == 4) {
+        sas_offset = readbin(sas_offset, sas, 0);
+      } else {
+        sas_offset = readbin((int32_t)sas_offset, sas, 0);
       }
 
-    }
+      // Rcout << std::hex << sas_offset << std::endl;
 
+      std::string sas_hex = int32_to_hex(sas_offset);
 
-    // new offset ------------------------------------------------------------//
-    pos = pagestart + potabs[5].SH_OFF;
-    sas.seekg(pos, sas.beg);
-    if (debug) Rprintf("%d \n", pos);
+      // new offset ----------------------------------------------------------//
 
-    if (ALIGN_1_VALUE == 4) {
-      sas_offset = readbin(sas_offset, sas, 0);
-    } else {
-      sas_offset = readbin((int32_t)sas_offset, sas, 0);
-    }
-    sas_hex = int32_to_hex(sas_offset);
-    if (debug) Rcout << sas_hex << std::endl;
+      if (sas_hex.compare("f7f7f7f7") == 0 ||
+          sas_hex.compare("fffffffff7f7f7f7") == 0) { // F7F7F7F7
 
-    if (sas_hex.compare("fffffffc") == 0) { // f6f6f6f6
-
-      int16_t lenremain = 0;
-      lenremain = readbin(lenremain, sas, 0);
-      if (debug) Rprintf("lenremain %d \n", lenremain);
-
-      unk16 = readbin(unk16, sas, 0);
-      // Rcout << unk16 << std::endl;
-      unk16 = readbin(unk16, sas, 0);
-      // Rcout << unk16 << std::endl;
-      unk16 = readbin(unk16, sas, 0);
-      // Rcout << unk16 << std::endl;
-
-      auto cmax = (lenremain + alignval) / (alignval+8);
-      if (debug) Rcout << cmax << std::endl;
-
-      std::vector<CN_Att> cnpois(cmax);
-
-      for (auto i = 0; i < cmax; ++i) {
-
-        if (ALIGN_1_VALUE == 4) {
-          cnpois[i].CN_OFF     = readbin(cnpois[i].CN_OFF, sas, 0);
+        if (ALIGN_2_VALUE == 4) {
+          unk64 = readbin(unk64, sas, 0);
+          if (debug) Rcout << unk64 << std::endl;
+          unk64 = readbin(unk64, sas, 0);
+          if (debug) Rcout << unk64 << std::endl;
+          unk64 = readbin(unk64, sas, 0);
+          if (debug) Rcout << unk64 << std::endl;
+          unk64 = readbin(unk64, sas, 0);
+          if (debug) Rcout << unk64 << std::endl;
         } else {
-          cnpois[i].CN_OFF     = readbin((int32_t)cnpois[i].CN_OFF, sas, 0);
+          unk32 = readbin(unk32, sas, 0);
+          if (debug) Rcout << unk32 << std::endl;
+          unk32 = readbin(unk32, sas, 0);
+          if (debug) Rcout << unk32 << std::endl;
+          unk32 = readbin(unk32, sas, 0);
+          if (debug) Rcout << unk32 << std::endl;
+          unk32 = readbin(unk32, sas, 0);
+          if (debug) Rcout << unk32 << std::endl;
         }
-        cnpois[i].CN_WID     = readbin(cnpois[i].CN_WID, sas, 0);
-        cnpois[i].NM_FLAG    = readbin(cnpois[i].NM_FLAG, sas, 0);
-        cnpois[i].CN_TYP     = readbin(cnpois[i].CN_TYP, sas, 0);
-        cnpois[i].UNK8       = readbin(cnpois[i].UNK8, sas, 0);
 
-        auto wid = cnpois[i].CN_WID;
-        auto typ = cnpois[i].CN_TYP;
 
-        // Rprintf("WID: %d\n", wid  );
-        // Rprintf("typ: %d\n", typ );
-
-        if (typ > 0) {
-          colwidth.push_back( wid );
-          vartyps.push_back( typ );
+        if (ALIGN_2_VALUE == 4) {
+          rowlength = readbin(rowlength, sas, 0);
+          Rcout << rowlength << std::endl;
+          rowcount = readbin(rowcount, sas, 0);
+          if (debug) Rcout << rowcount << std::endl;
+          unk64 = readbin(unk64, sas, 0);
+          if (debug) Rcout << unk64 << std::endl;
+          unk64 = readbin(unk64, sas, 0);
+          if (debug) Rcout << unk64 << std::endl;
+        } else {
+          rowlength = readbin((int32_t)rowlength, sas, 0);
+          Rcout << rowlength << std::endl;
+          rowcount = readbin((int32_t)rowcount, sas, 0);
+          if (debug) Rcout << rowcount << std::endl;
+          unk32 = readbin(unk32, sas, 0);
+          if (debug) Rcout << unk32 << std::endl;
+          unk32 = readbin(unk32, sas, 0);
+          if (debug) Rcout << unk32 << std::endl;
         }
+
+
+        if (ALIGN_2_VALUE == 4) {
+          colf_p1 = readbin(colf_p1, sas, 0);
+          if (debug) Rcout << colf_p1 << std::endl;
+          colf_p2 = readbin(colf_p2, sas, 0);
+          if (debug) Rcout << colf_p2 << std::endl;
+          unk64 = readbin(unk64, sas, 0);
+          if (debug) Rcout << unk64 << std::endl;
+          unk64 = readbin(unk64, sas, 0);
+          if (debug) Rcout << unk64 << std::endl;
+        } else {
+          colf_p1 = readbin((int32_t)colf_p1, sas, 0);
+          if (debug) Rcout << colf_p1 << std::endl;
+          colf_p2 = readbin((int32_t)colf_p2, sas, 0);
+          if (debug) Rcout << colf_p2 << std::endl;
+          unk32 = readbin(unk32, sas, 0);
+          if (debug) Rcout << unk32 << std::endl;
+          unk32 = readbin(unk32, sas, 0);
+          if (debug) Rcout << unk32 << std::endl;
+        }
+
+      } else
+
+      // new offset ----------------------------------------------------------//
+
+
+      if (sas_hex.compare("f6f6f6f6") == 0) { // f6f6f6f6
+
+
+        if (ALIGN_2_VALUE == 4) {
+          colnum = readbin(colnum, sas, 0);
+          if (debug) Rcout << colnum << std::endl;
+          unk64 = readbin(unk64, sas, 0);
+          if (debug) Rcout << unk64 << std::endl;
+          unk64 = readbin(unk64, sas, 0);
+          if (debug) Rcout << unk64 << std::endl;
+        } else {
+          colnum = readbin((int32_t)colnum, sas, 0);
+          if (debug) Rcout << colnum << std::endl;
+          unk32 = readbin(unk32, sas, 0);
+          if (debug) Rcout << unk32 << std::endl;
+          unk32 = readbin(unk32, sas, 0);
+          if (debug) Rcout << unk32 << std::endl;
+        }
+
+      } else
+
+      // new offset ----------------------------------------------------------//
+
+      if (sas_hex.compare("fffffffd") == 0) { // f6f6f6f6
+
+        int16_t len = 0;
+        len = readbin(len, sas, 0);
+        if (debug) Rprintf("%d\n", len);
+
+        unk16 = readbin(unk16, sas, 0);
+        if (debug) Rcout << unk16 << std::endl;
+        unk16 = readbin(unk16, sas, 0);
+        if (debug) Rcout << unk16 << std::endl;
+        unk16 = readbin(unk16, sas, 0);
+        if (debug) Rcout << unk16 << std::endl;
+        unk16 = readbin(unk16, sas, 0);
+        if (debug) Rcout << unk16 << std::endl;
+        unk16 = readbin(unk16, sas, 0);
+        if (debug) Rcout << unk16 << std::endl;
+
+        std::string CN_IDX_STR (len, '\0');
+        CN_IDX_STR = readstring(CN_IDX_STR, sas);
+
+        // std::cout << CN_IDX_STR << std::endl;
+
+        stringvec.push_back(CN_IDX_STR);
+
+      } else
+
+
+      // new offset ----------------------------------------------------------//
+
+
+      if (sas_hex.compare("ffffffff") == 0) { // f6f6f6f6
+
+        int16_t lenremain = 0;
+        lenremain = readbin(lenremain, sas, 0);
+        if (debug) Rprintf("lenremain %d \n", lenremain);
+
+        unk16 = readbin(unk16, sas, 0);
+        if (debug) Rcout << unk16 << std::endl;
+        unk16 = readbin(unk16, sas, 0);
+        if (debug) Rcout << unk16 << std::endl;
+        unk16 = readbin(unk16, sas, 0);
+        if (debug) Rcout << unk16 << std::endl;
+
+        auto cmax = (lenremain + alignval)/8;
+
+        std::vector<CN_Poi> cnpois(cmax);
+
+        for (auto i = 0; i < cmax; ++i) {
+          auto idx    = readbin(cnpois[i].CN_IDX, sas, 0);
+          auto off    = readbin(cnpois[i].CN_OFF, sas, 0);
+          auto len    = readbin(cnpois[i].CN_LEN, sas, 0);
+          auto zeros  = readbin(cnpois[i].zeros,  sas, 0);
+
+
+          if (!(len <= 0)) {
+            off -= 12; // reduce off
+
+            if (debug)
+              Rprintf("CN_IDX %d; CN_OFF %d; CN_LEN %d; zeros %d \n",
+                      idx, off,
+                      len, zeros);
+
+            std::string varname = stringvec[idx].substr(off, len);
+
+            if (debug) Rcout << varname << std::endl;
+
+            varnames.push_back(varname);
+          }
+
+        }
+
+      } else
+
+
+      // new offset ----------------------------------------------------------//
+
+      if (sas_hex.compare("fffffffc") == 0) { // f6f6f6f6
+
+        int16_t lenremain = 0;
+        lenremain = readbin(lenremain, sas, 0);
+        if (debug) Rprintf("lenremain %d \n", lenremain);
+
+        unk16 = readbin(unk16, sas, 0);
+        // Rcout << unk16 << std::endl;
+        unk16 = readbin(unk16, sas, 0);
+        // Rcout << unk16 << std::endl;
+        unk16 = readbin(unk16, sas, 0);
+        // Rcout << unk16 << std::endl;
+
+        auto cmax = (lenremain + alignval) / (alignval+8);
+        if (debug) Rcout << cmax << std::endl;
+
+        std::vector<CN_Att> cnpois(cmax);
+
+        for (auto i = 0; i < cmax; ++i) {
+
+          if (ALIGN_1_VALUE == 4) {
+            cnpois[i].CN_OFF     = readbin(cnpois[i].CN_OFF, sas, 0);
+          } else {
+            cnpois[i].CN_OFF     = readbin((int32_t)cnpois[i].CN_OFF, sas, 0);
+          }
+          cnpois[i].CN_WID     = readbin(cnpois[i].CN_WID, sas, 0);
+          cnpois[i].NM_FLAG    = readbin(cnpois[i].NM_FLAG, sas, 0);
+          cnpois[i].CN_TYP     = readbin(cnpois[i].CN_TYP, sas, 0);
+          cnpois[i].UNK8       = readbin(cnpois[i].UNK8, sas, 0);
+
+          auto wid = cnpois[i].CN_WID;
+          auto typ = cnpois[i].CN_TYP;
+
+          // Rprintf("WID: %d\n", wid  );
+          // Rprintf("typ: %d\n", typ );
+
+          if (typ > 0) {
+            colwidth.push_back( wid );
+            vartyps.push_back( typ );
+          }
+
+        }
+      }
+
+      else
+      {
+        sas_hex = int32_to_hex(sas_offset);
+        Rcout << sas_hex << std::endl;
+
+        std::string unkstr (potabs[i].SH_LEN, '\0');
+
+        unkstr = readstring(unkstr, sas);
 
       }
+
     }
 
-    // -------------------------------------------------------------------------- //
+    // ---------------------------------------------------------------------- //
 
     if (pagecount > 1) {
 
