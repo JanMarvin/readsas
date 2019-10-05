@@ -1,12 +1,18 @@
 Package: readsas
 Type: Package
-Title: What the Package Does in One 'Title Case' Line
-Version: 1.0
+Title: Importing SAS Files
+Version: 0.1
 Date: 2019-08-30
-Author: Your Name
-Maintainer: Your Name <your@email.com>
-Description: One paragraph description of what the package does as one or more full sentences.
-License: GPL (>= 2)
+Authors@R: c(
+    person("Jan Marvin", "Garbuszus",
+    email = "jan.garbuszus@ruhr-uni-bochum.de", role = c("aut", "cre"))
+    )
+Maintainer: Jan Marvin Garbuszus <jan.garbuszus@ruhr-uni-bochum.de>
+Description: Package to read the SAS file format.
+License: GPL (>= 2) | file LICENSE
+LazyData: TRUE
 Imports: Rcpp (>= 1.0.2)
 LinkingTo: Rcpp, BH
+SystemRequirements: C++11, OpenSSL >= 1.0.1
+ByteCompile: yes
 RoxygenNote: 6.1.1
