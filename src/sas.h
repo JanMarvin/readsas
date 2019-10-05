@@ -73,6 +73,16 @@ struct CN_Att {
   int8_t  UNK8    = 0;
 };
 
+
+struct SCV {
+  int64_t SIG = 0;
+  int64_t FIRST = 0;
+  int16_t F_POS = 0; // why is this pos not int64_?
+  int64_t LAST = 0;
+  int16_t L_POS = 0;
+};
+
+
 inline std::string int32_to_hex (int32_t val) {
   std::stringstream stream;
   stream << std::hex << val;
