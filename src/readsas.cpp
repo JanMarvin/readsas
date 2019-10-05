@@ -886,6 +886,20 @@ Rcpp::List readsas(const char * filePath, const bool debug)
         // Rcout << off << std::endl;
         // Rcout << readpos << std::endl;
 
+        if (wid < 8 & typ == 1) {
+
+          double val_d = 0.0;
+
+          sas.seekg(readpos, sas.beg);
+
+          val_d = readbinlen(val_d, sas, 0, wid);
+
+          // Rcout << val_d << std::endl;
+
+          REAL(VECTOR_ELT(df,j))[i] = val_d;
+
+        }
+
         if (wid == 8 & typ == 1) {
 
           double val_d = 0.0;

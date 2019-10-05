@@ -21,6 +21,30 @@ T readbin( T t , std::istream& sas, bool swapit)
     return(swap_endian(t));
 }
 
+double readbinlen(double d, std::istream& sas, bool swapit, int len)
+{
+
+  unsigned char buffer[sizeof d] = {0};
+
+  for (int i = 0; i < len; ++i) {
+
+    unsigned char tmp;
+    if(!sas.read ((char*)&tmp, sizeof(tmp)))
+      Rcpp::stop("readbin: a binary read error occurred");
+
+    int pos = 8 - (len-i);
+    buffer[pos] = tmp;
+
+  }
+
+  memcpy(&d , buffer, sizeof(d));
+
+  if (swapit==0)
+    return(d);
+  else
+    return(swap_endian(d));
+}
+
 
 template <typename T>
 inline std::string readstring(std::string &mystring, T& sas)
