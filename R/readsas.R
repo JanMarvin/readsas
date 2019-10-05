@@ -2,7 +2,11 @@
 #'
 #'@author Jan Marvin Garbuszus \email{jan.garbuszus@@ruhr-uni-bochum.de}
 #'
+#'@param file file to read
+#'@param debug print debug information
+#'
 #'@useDynLib readsas, .registration=TRUE
+#'@importFrom utils download.file
 #'
 #'@export
 read.sas <- function(file, debug = FALSE) {

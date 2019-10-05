@@ -4,7 +4,12 @@
 \alias{read.sas}
 \title{read.sas}
 \usage{
-read.sas(file, debug = TRUE)
+read.sas(file, debug = FALSE)
+}
+\arguments{
+\item{file}{file to read}
+
+\item{debug}{print debug information}
 }
 \description{
 read.sas

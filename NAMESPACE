@@ -3,4 +3,5 @@
 export(read.sas)
 export(readsas)
 import(Rcpp)
+importFrom(utils,download.file)
 useDynLib(readsas, .registration=TRUE)
