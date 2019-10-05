@@ -54,6 +54,7 @@ Rcpp::List readsas(const char * filePath, const bool debug)
 
     Rcpp::IntegerVector vartyps;
     Rcpp::IntegerVector colwidth;
+    Rcpp::IntegerVector coloffset;
     Rcpp::IntegerVector data_pos;
     Rcpp::CharacterVector varnames; // (colnum)
 
@@ -241,7 +242,7 @@ Rcpp::List readsas(const char * filePath, const bool debug)
 
     std::string sasrel (8, '\0');
     readstring(sasrel, sas);
-    if (debug) Rcout << "SAS release: " << sasrel << std::endl;
+    Rcout << "SAS release: " << sasrel << std::endl;
 
     std::string sasserv (16, '\0');
     readstring(sasserv, sas);
@@ -286,6 +287,8 @@ Rcpp::List readsas(const char * filePath, const bool debug)
 
     // rest is filled with zeros. read it anyway.
     int32_t num_zeros = headersize - sas.tellg();
+
+    Rcout << num_zeros << std::endl;
 
     for (int i = 0; i < num_zeros; ++i) {
       int8_t zero = 0;
@@ -411,6 +414,16 @@ Rcpp::List readsas(const char * filePath, const bool debug)
       //     data_pos.push_back( sh_end_pos );
       //
       //   }
+
+
+      // Guess?
+
+      // if (SUBHEADER_COUNT < 12) {
+      //   // for (int8_t i = 0; i < (12 - SUBHEADER_COUNT); ++i  )
+      if (sas.tellg() % 8 != 0) {
+          readbin(unk32, sas, 0); // padding?
+          // readbin(unk64, sas, 0);
+      }
 
       // debug
       auto sh_end_pos = sas.tellg();
@@ -783,9 +796,11 @@ Rcpp::List readsas(const char * filePath, const bool debug)
             auto typ = cnpois[i].CN_TYP;
 
             // Rprintf("WID: %d\n", wid  );
-            // Rprintf("typ: %d\n", typ );
+            Rprintf("offset: %d\n", cnpois[i].CN_OFF );
+            Rprintf("flag: %d\n", cnpois[i].NM_FLAG );
 
             if (typ > 0) {
+              coloffset.push_back( cnpois[i].CN_OFF );
               colwidth.push_back( wid );
               vartyps.push_back( typ );
             }
@@ -842,24 +857,40 @@ Rcpp::List readsas(const char * filePath, const bool debug)
     auto page = 0;
     sas.seekg(data_pos[0], sas.beg);
 
-    std::string row(rowlength, '\0');
+    auto ii = 0;
     for (auto i = 0; i < rowcount; ++i) {
 
-      if ((pagecount > 0) & (totalrowsvec[page] == i)) {
+      if (totalrowsvec[page] == i) {
         ++page;
-        sas.seekg(data_pos[page], sas.beg);
-        // Rcout << page << std::endl;
+        ii = 0;
       }
 
+      // Rcout << ii << std::endl;
+      // Rprintf("ii: %d\n", ii);
+
+      sas.seekg((data_pos[page] + rowlength * ii), sas.beg);
+      // Rcout << "page: " << page << std::endl;
+      int64_t tempoffs = sas.tellg();
+      // Rcout << tempoffs << std::endl;
+
       auto pos = 0;
+
       for (auto j = 0; j < colnum; ++j) {
 
         auto wid = colwidth[j];
         auto typ = vartyps[j];
 
+        int64_t off = coloffset[j];
+        int64_t readpos = tempoffs + off;
+        // Rcout << wid << std::endl;
+        // Rcout << off << std::endl;
+        // Rcout << readpos << std::endl;
+
         if (wid == 8 & typ == 1) {
 
           double val_d = 0.0;
+
+          sas.seekg(readpos, sas.beg);
 
           val_d = readbin(val_d, sas, 0);
 
@@ -872,6 +903,8 @@ Rcpp::List readsas(const char * filePath, const bool debug)
         if (wid > 0 & typ == 2) {
 
           std::string val_s(wid, '\0');
+
+          sas.seekg(readpos, sas.beg);
 
           val_s = readstring(val_s, sas);
 
@@ -893,6 +926,7 @@ Rcpp::List readsas(const char * filePath, const bool debug)
         // pos += wid;
       }
 
+      ++ii;
     }
 
 
