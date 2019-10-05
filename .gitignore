@@ -1,0 +1,9 @@
+inst
+.Rproj.user
+.Rhistory
+.RData
+.Rbuildignore
+src/*.o
+src/*.so
+src/*.dll
+
