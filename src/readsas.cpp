@@ -855,20 +855,20 @@ Rcpp::List readsas(const char * filePath, const bool debug)
         // std::cout << stringvec[pg] << std::endl;
 
         std::string format = "";
-        int64_t fidx = fmt[var].IDX, foff = fmt[var].OFF, flen = fmt[var].LEN;
-        // Rprintf("fidx %d; foff %d; flen %d \n", fidx, foff, flen);
+        int64_t fidx = 0, foff = fmt[var].OFF, flen = fmt[var].LEN;
+        Rprintf("fidx %d; foff %d; flen %d \n", fidx, foff, flen);
         if ((foff > 0) & (flen > 0)) {
           format = stringvec[fidx].substr((foff-14), flen);
         }
 
         std:: string label = "";
-        int64_t lidx = lbl[var].IDX, loff = lbl[var].OFF, llen = lbl[var].LEN;
-        // Rprintf("lidx %d; loff %d; llen %d \n", lidx, loff, llen);
+        int64_t lidx = 0, loff = lbl[var].OFF, llen = lbl[var].LEN;
+        Rprintf("lidx %d; loff %d; llen %d \n", lidx, loff, llen);
         if ((loff > 0) & (llen > 0)) {
           label = stringvec[lidx].substr((loff-14), llen);
         }
 
-        // Rcout << format << " : " << label << std::endl;
+        Rcout << format << " : " << label << std::endl;
 
         formats.push_back( format );
         labels.push_back( label );
