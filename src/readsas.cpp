@@ -27,10 +27,6 @@
 using namespace Rcpp;
 
 
-// RLE_COMPRESSION = b'SASYZCRL'
-// RDC_COMPRESSION = b'SASYZCR2'
-
-
 //' Reads SAS data files
 //'
 //' @param filePath The full systempath to the sas7bdat file you want to import.
@@ -45,6 +41,7 @@ Rcpp::List readsas(const char * filePath, const bool debug)
 
 
     auto k = 0;
+    int compr = 0;
 
     int8_t  unk8  = 0;
     int16_t unk16 = 0;
@@ -112,7 +109,11 @@ Rcpp::List readsas(const char * filePath, const bool debug)
     // o37 1 = little
     int8_t ENDIANNESS = 0;
     ENDIANNESS = readbin(ENDIANNESS, sas, 0);
-    if (debug) Rprintf("ENDIANNESS: %d \n", ENDIANNESS);
+    Rprintf("ENDIANNESS: %d \n", ENDIANNESS);
+
+    if (ENDIANNESS != 1)
+      stop("Big Endian found");
+
 
     readbin(unk8, sas, 0);
 
@@ -417,12 +418,8 @@ Rcpp::List readsas(const char * filePath, const bool debug)
 
 
       // Guess?
-
-      // if (SUBHEADER_COUNT < 12) {
-      //   // for (int8_t i = 0; i < (12 - SUBHEADER_COUNT); ++i  )
-      if (sas.tellg() % 8 != 0) {
-          readbin(unk32, sas, 0); // padding?
-          // readbin(unk64, sas, 0);
+      while (sas.tellg() % 8 != 0) {
+        readbin(unk32, sas, 0); // padding?
       }
 
       // debug
@@ -444,8 +441,6 @@ Rcpp::List readsas(const char * filePath, const bool debug)
         } else {
           sas_offset = readbin((int32_t)sas_offset, sas, 0);
         }
-
-        // Rcout << std::hex << sas_offset << std::endl;
 
         std::string sas_hex = int32_to_hex(sas_offset);
 
@@ -476,8 +471,6 @@ Rcpp::List readsas(const char * filePath, const bool debug)
           // new offset ----------------------------------------------------- //
         case 1:
         {
-          // if (sas_hex.compare("f7f7f7f7") == 0 ||
-          //     sas_hex.compare("fffffffff7f7f7f7") == 0) { // F7F7F7F7
 
           if (ALIGN_2_VALUE == 4) {
           unk64 = readbin(unk64, sas, 0);
@@ -547,7 +540,7 @@ Rcpp::List readsas(const char * filePath, const bool debug)
 
           // new offset ----------------------------------------------------- //
         case 2:
-        { // f6f6f6f6
+        {
 
           int64_t off = 0;
 
@@ -625,31 +618,45 @@ Rcpp::List readsas(const char * filePath, const bool debug)
 
           // new offset ----------------------------------------------------- //
         case 3:
-        { // f6f6f6f6
+        {
 
-          int64_t sig = 0;
+          Rcout << "SAS pos: " << sas.tellg() << " ############# " << std::endl;
 
-          if (ALIGN_2_VALUE == 4) {
-            sig = readbin(sig, sas, 0);
-          } else {
-            sig = readbin((int32_t)sig, sas, 0);
-          }
+          int64_t unk64 = 0;
 
           int8_t unklen = 38; if (ALIGN_2_VALUE != 4) unklen = 30;
           std::string unkstr(unklen, '\0');
           unkstr = readstring(unkstr, sas);
+          // Rcout << unkstr << std::endl;
 
-          int16_t colfsig = 0, colfoff = 0, colflen = 0,
-            collidx = 0, colllen = 0;
+          int16_t
+            colfidx = 0, colfoff = 0, colflen = 0,
+            collidx = 0, colloff = 0, colllen = 0,
+            coluidx = 0, coluoff = 0, colulen = 0;
 
-          colfsig = readbin(colfsig, sas, 0);
+          colfidx = readbin(colfidx, sas, 0);
           colfoff = readbin(colfoff, sas, 0);
           colflen = readbin(colflen, sas, 0);
+
           collidx = readbin(collidx, sas, 0);
+          colloff = readbin(colloff, sas, 0);
           colllen = readbin(colllen, sas, 0);
-          unk16 = readbin(unk16, sas, 0);
-          unk16 = readbin(unk16, sas, 0);
-          unk16 = readbin(unk16, sas, 0);
+
+          coluidx = readbin(coluidx, sas, 0);
+          coluoff = readbin(coluoff, sas, 0);
+          colulen = readbin(colulen, sas, 0);
+
+          /* idx does not uniquely define a variable */
+
+
+          // Rprintf("Fidx %d; Foff %d; Flen %d \n",
+          //         colfidx, colfoff, colflen);
+          //
+          // Rprintf("Lidx %d; Loff %d; Llen %d \n",
+          //         collidx, colloff, colllen);
+          //
+          // Rprintf("uidx %d; uoff %d; ulen %d \n",
+          //         coluidx, coluoff, colulen);
 
 
           break;
@@ -658,55 +665,66 @@ Rcpp::List readsas(const char * filePath, const bool debug)
 
           // new offset ----------------------------------------------------- //
         case 4:
-        { // f6f6f6f6
+        { /* Column Size */
 
+          int64_t unk1 = 0;
 
           if (ALIGN_2_VALUE == 4) {
-          colnum = readbin(colnum, sas, 0);
-          if (debug) Rcout << colnum << std::endl;
-          unk64 = readbin(unk64, sas, 0);
-          if (debug) Rcout << unk64 << std::endl;
-          unk64 = readbin(unk64, sas, 0);
-          if (debug) Rcout << unk64 << std::endl;
-        } else {
-          colnum = readbin((int32_t)colnum, sas, 0);
-          if (debug) Rcout << colnum << std::endl;
-          unk32 = readbin(unk32, sas, 0);
-          if (debug) Rcout << unk32 << std::endl;
-          unk32 = readbin(unk32, sas, 0);
-          if (debug) Rcout << unk32 << std::endl;
-        }
+            colnum = readbin(colnum, sas, 0);
+            unk1 = readbin(unk1, sas, 0);
+          } else {
+            colnum = readbin((int32_t)colnum, sas, 0);
+            unk1 = readbin((int32_t)unk1, sas, 0);
+          }
 
+          if (debug)
+            Rprintf("colnum %d; unk1 %d\n",
+                    colnum, unk1);
 
-        break;
+          break;
         }
 
           // new offset ----------------------------------------------------- //
 
         case 5:
-        { // f6f6f6f6
+        { /* Column Text */
 
           int16_t len = 0;
+          int8_t /*tmp = 20; if (ALIGN_2_VALUE != 4)*/ tmp = 16;
+
           len = readbin(len, sas, 0);
-          if (debug) Rprintf("%d\n", len);
+          unk16 = readbin(unk16, sas, 0); // 1
+          Rcout << unk16 << std::endl;
+          unk16 = readbin(unk16, sas, 0); // 2
+          Rcout << unk16 << std::endl;
+          unk16 = readbin(unk16, sas, 0); // 3
+          Rcout << unk16 << std::endl;
+          unk16 = readbin(unk16, sas, 0); // 4
+          Rcout << unk16 << std::endl;
+          unk16 = readbin(unk16, sas, 0); // 5
+          Rcout << unk16 << std::endl;
+          unk16 = readbin(unk16, sas, 0); // 6
+          Rcout << unk16 << std::endl;
 
-          unk16 = readbin(unk16, sas, 0);
-          if (debug) Rcout << unk16 << std::endl;
-          unk16 = readbin(unk16, sas, 0);
-          if (debug) Rcout << unk16 << std::endl;
-          unk16 = readbin(unk16, sas, 0);
-          if (debug) Rcout << unk16 << std::endl;
-          unk16 = readbin(unk16, sas, 0);
-          if (debug) Rcout << unk16 << std::endl;
-          unk16 = readbin(unk16, sas, 0);
-          if (debug) Rcout << unk16 << std::endl;
-
-          std::string CN_IDX_STR (len, '\0');
+          std::string CN_IDX_STR ((len - tmp), '\0');
           CN_IDX_STR = readstring(CN_IDX_STR, sas);
 
-          // std::cout << CN_IDX_STR << std::endl;
+          Rprintf("len %d; textlen: %d\n", potabs[sc].SH_LEN, len);
+          std::cout << CN_IDX_STR << std::endl;
 
           stringvec.push_back(CN_IDX_STR);
+
+          std::string compression = CN_IDX_STR.substr(0, 8);
+          Rcout << compression << std::endl;
+
+          // if (compression.compare("        ") == 0)
+          //   compr = 0;
+
+          if (compression.compare("SASYZCRL") == 0)
+            compr = 1;
+
+          if (compression.compare("SASYZCR2") == 0)
+            compr = 2;
 
 
           break;
@@ -715,21 +733,22 @@ Rcpp::List readsas(const char * filePath, const bool debug)
 
           // new offset ----------------------------------------------------- //
         case 6:
-        { // f6f6f6f6
+        { /* Column Name */
 
           int16_t lenremain = 0;
           lenremain = readbin(lenremain, sas, 0);
           if (debug) Rprintf("lenremain %d \n", lenremain);
 
           unk16 = readbin(unk16, sas, 0);
-          if (debug) Rcout << unk16 << std::endl;
+          // Rcout << unk16 << std::endl;
           unk16 = readbin(unk16, sas, 0);
-          if (debug) Rcout << unk16 << std::endl;
+          // Rcout << unk16 << std::endl;
           unk16 = readbin(unk16, sas, 0);
-          if (debug) Rcout << unk16 << std::endl;
+          // Rcout << unk16 << std::endl;
 
           auto cmax = (lenremain + alignval)/8;
 
+          /* Column Name Pointers */
           std::vector<CN_Poi> cnpois(cmax);
 
           for (auto i = 0; i < cmax; ++i) {
@@ -740,12 +759,11 @@ Rcpp::List readsas(const char * filePath, const bool debug)
 
 
             if (!(len <= 0)) {
-              off -= 12; // reduce off
+              off -= 14; // reduce off
 
               if (debug)
                 Rprintf("CN_IDX %d; CN_OFF %d; CN_LEN %d; zeros %d \n",
-                        idx, off,
-                        len, zeros);
+                        idx, off, len, zeros);
 
               std::string varname = stringvec[idx].substr(off, len);
 
@@ -762,12 +780,13 @@ Rcpp::List readsas(const char * filePath, const bool debug)
 
           // new offset ----------------------------------------------------- //
         case 7:
-        { // f6f6f6f6
+        { /* Column Attributes */
 
           int16_t lenremain = 0;
           lenremain = readbin(lenremain, sas, 0);
           if (debug) Rprintf("lenremain %d \n", lenremain);
 
+          // zeros as padding?
           unk16 = readbin(unk16, sas, 0);
           // Rcout << unk16 << std::endl;
           unk16 = readbin(unk16, sas, 0);
@@ -778,31 +797,31 @@ Rcpp::List readsas(const char * filePath, const bool debug)
           auto cmax = (lenremain + alignval) / (alignval+8);
           if (debug) Rcout << cmax << std::endl;
 
-          std::vector<CN_Att> cnpois(cmax);
+          /* Column Attributes Pointers */
+          std::vector<CN_Att> capois(cmax);
 
           for (auto i = 0; i < cmax; ++i) {
 
             if (ALIGN_1_VALUE == 4) {
-              cnpois[i].CN_OFF     = readbin(cnpois[i].CN_OFF, sas, 0);
+              capois[i].CN_OFF     = readbin(capois[i].CN_OFF, sas, 0);
             } else {
-              cnpois[i].CN_OFF     = readbin((int32_t)cnpois[i].CN_OFF, sas, 0);
+              capois[i].CN_OFF     = readbin((int32_t)capois[i].CN_OFF, sas, 0);
             }
-            cnpois[i].CN_WID     = readbin(cnpois[i].CN_WID, sas, 0);
-            cnpois[i].NM_FLAG    = readbin(cnpois[i].NM_FLAG, sas, 0);
-            cnpois[i].CN_TYP     = readbin(cnpois[i].CN_TYP, sas, 0);
-            cnpois[i].UNK8       = readbin(cnpois[i].UNK8, sas, 0);
+            capois[i].CN_WID     = readbin(capois[i].CN_WID, sas, 0);
+            capois[i].NM_FLAG    = readbin(capois[i].NM_FLAG, sas, 0);
+            capois[i].CN_TYP     = readbin(capois[i].CN_TYP, sas, 0);
+            capois[i].UNK8       = readbin(capois[i].UNK8, sas, 0);
 
-            auto wid = cnpois[i].CN_WID;
-            auto typ = cnpois[i].CN_TYP;
 
-            // Rprintf("WID: %d\n", wid  );
-            Rprintf("offset: %d\n", cnpois[i].CN_OFF );
-            Rprintf("flag: %d\n", cnpois[i].NM_FLAG );
+            if (debug)
+              Rprintf("OFF %d; WID: %d; FLAG %d; TYP %d; UNK8 %d\n",
+                      capois[i].CN_OFF, capois[i].CN_WID, capois[i].NM_FLAG,
+                      capois[i].CN_TYP, capois[i].UNK8 );
 
-            if (typ > 0) {
-              coloffset.push_back( cnpois[i].CN_OFF );
-              colwidth.push_back( wid );
-              vartyps.push_back( typ );
+            if (capois[i].CN_TYP > 0) {
+              coloffset.push_back( capois[i].CN_OFF );
+              colwidth.push_back( capois[i].CN_WID );
+              vartyps.push_back( capois[i].CN_TYP );
             }
 
           }
@@ -896,7 +915,10 @@ Rcpp::List readsas(const char * filePath, const bool debug)
 
           // Rcout << val_d << std::endl;
 
-          REAL(VECTOR_ELT(df,j))[i] = val_d;
+          if (std::isnan(val_d))
+            REAL(VECTOR_ELT(df,j))[i] = NA_REAL;
+          else
+            REAL(VECTOR_ELT(df,j))[i] = val_d;
 
         }
 
@@ -910,7 +932,10 @@ Rcpp::List readsas(const char * filePath, const bool debug)
 
           // Rcout << val_d << std::endl;
 
-          REAL(VECTOR_ELT(df,j))[i] = val_d;
+          if (std::isnan(val_d))
+            REAL(VECTOR_ELT(df,j))[i] = NA_REAL;
+          else
+            REAL(VECTOR_ELT(df,j))[i] = val_d;
 
         }
 
