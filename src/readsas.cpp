@@ -42,18 +42,26 @@ Rcpp::List readsas(const char * filePath, const bool debug)
 
     auto k = 0;
     int compr = 0;
+    auto ctr = 0;
 
+    bool hasattributes = 0;
     int8_t  unk8  = 0;
     int16_t unk16 = 0;
     int32_t unk32 = 0;
     int64_t unk64 = 0;
     double unkdub = 0;
 
+    std::vector<idxofflen> fmt;
+    std::vector<idxofflen> lbl;
+    std::vector<idxofflen> unk;
+
     Rcpp::IntegerVector vartyps;
     Rcpp::IntegerVector colwidth;
     Rcpp::IntegerVector coloffset;
     Rcpp::IntegerVector data_pos;
     Rcpp::CharacterVector varnames; // (colnum)
+    Rcpp::CharacterVector formats;
+    Rcpp::CharacterVector labels;
 
     // read 2* 4*4 = 32
     // 0 - 31: Magic Number
@@ -546,24 +554,24 @@ Rcpp::List readsas(const char * filePath, const bool debug)
 
           if (ALIGN_2_VALUE == 4) {
             off = readbin(off, sas, 0);
-            Rcout << off << std::endl;
+            // Rcout << off << std::endl;
             unk64 = readbin(unk64, sas, 0);
-            Rcout << unk64 << std::endl;
+            // Rcout << unk64 << std::endl;
           } else {
             off = readbin((int32_t)off, sas, 0);
-            Rcout << off << std::endl;
+            // Rcout << off << std::endl;
             unk32 = readbin(unk32, sas, 0);
-            Rcout << unk32 << std::endl;
+            // Rcout << unk32 << std::endl;
           }
 
           int16_t num_nonzero = 0;
           num_nonzero = readbin(num_nonzero, sas, 0);
-          Rcout << num_nonzero << std::endl;
+          // Rcout << num_nonzero << std::endl;
 
           int8_t unklen = 94; if (ALIGN_2_VALUE != 4) unklen = 50;
           std::string unkstr(unklen, '\0');
           unkstr = readstring(unkstr, sas);
-          Rcout << unkstr << std::endl;
+          // Rcout << unkstr << std::endl;
 
           std::vector<SCV> scv(12);
 
@@ -606,6 +614,7 @@ Rcpp::List readsas(const char * filePath, const bool debug)
               // Rcout << unk16 << std::endl;
             }
 
+            if (debug)
             Rprintf("SIG %d; FIRST %d; F_POS %d; LAST %d; L_POS %d\n",
                     scv[i].SIG, scv[i].FIRST, scv[i].F_POS,
                     scv[i].LAST, scv[i].L_POS);
@@ -620,7 +629,7 @@ Rcpp::List readsas(const char * filePath, const bool debug)
         case 3:
         {
 
-          Rcout << "SAS pos: " << sas.tellg() << " ############# " << std::endl;
+          hasattributes = 1;
 
           int64_t unk64 = 0;
 
@@ -629,35 +638,27 @@ Rcpp::List readsas(const char * filePath, const bool debug)
           unkstr = readstring(unkstr, sas);
           // Rcout << unkstr << std::endl;
 
-          int16_t
-            colfidx = 0, colfoff = 0, colflen = 0,
-            collidx = 0, colloff = 0, colllen = 0,
-            coluidx = 0, coluoff = 0, colulen = 0;
+          idxofflen fmts;
+          idxofflen lbls;
+          idxofflen unks;
 
-          colfidx = readbin(colfidx, sas, 0);
-          colfoff = readbin(colfoff, sas, 0);
-          colflen = readbin(colflen, sas, 0);
+          fmts.IDX = readbin(fmts.IDX, sas, 0);
+          fmts.OFF = readbin(fmts.OFF, sas, 0);
+          fmts.LEN = readbin(fmts.LEN, sas, 0);
 
-          collidx = readbin(collidx, sas, 0);
-          colloff = readbin(colloff, sas, 0);
-          colllen = readbin(colllen, sas, 0);
+          fmt.push_back(fmts);
 
-          coluidx = readbin(coluidx, sas, 0);
-          coluoff = readbin(coluoff, sas, 0);
-          colulen = readbin(colulen, sas, 0);
+          lbls.IDX = readbin(lbls.IDX, sas, 0);
+          lbls.OFF = readbin(lbls.OFF, sas, 0);
+          lbls.LEN = readbin(lbls.LEN, sas, 0);
 
-          /* idx does not uniquely define a variable */
+          lbl.push_back(lbls);
 
+          unks.IDX = readbin(unks.IDX, sas, 0);
+          unks.OFF = readbin(unks.OFF, sas, 0);
+          unks.LEN = readbin(unks.LEN, sas, 0);
 
-          // Rprintf("Fidx %d; Foff %d; Flen %d \n",
-          //         colfidx, colfoff, colflen);
-          //
-          // Rprintf("Lidx %d; Loff %d; Llen %d \n",
-          //         collidx, colloff, colllen);
-          //
-          // Rprintf("uidx %d; uoff %d; ulen %d \n",
-          //         coluidx, coluoff, colulen);
-
+          unk.push_back(unks);
 
           break;
         }
@@ -694,23 +695,24 @@ Rcpp::List readsas(const char * filePath, const bool debug)
 
           len = readbin(len, sas, 0);
           unk16 = readbin(unk16, sas, 0); // 1
-          Rcout << unk16 << std::endl;
+          // Rcout << unk16 << std::endl;
           unk16 = readbin(unk16, sas, 0); // 2
-          Rcout << unk16 << std::endl;
+          // Rcout << unk16 << std::endl;
           unk16 = readbin(unk16, sas, 0); // 3
-          Rcout << unk16 << std::endl;
+          // Rcout << unk16 << std::endl;
           unk16 = readbin(unk16, sas, 0); // 4
-          Rcout << unk16 << std::endl;
+          // Rcout << unk16 << std::endl;
           unk16 = readbin(unk16, sas, 0); // 5
-          Rcout << unk16 << std::endl;
+          // Rcout << unk16 << std::endl;
           unk16 = readbin(unk16, sas, 0); // 6
-          Rcout << unk16 << std::endl;
+          // Rcout << unk16 << std::endl;
 
           std::string CN_IDX_STR ((len - tmp), '\0');
           CN_IDX_STR = readstring(CN_IDX_STR, sas);
 
+          if (debug)
           Rprintf("len %d; textlen: %d\n", potabs[sc].SH_LEN, len);
-          std::cout << CN_IDX_STR << std::endl;
+          // std::cout << CN_IDX_STR << std::endl;
 
           stringvec.push_back(CN_IDX_STR);
 
@@ -762,14 +764,13 @@ Rcpp::List readsas(const char * filePath, const bool debug)
               off -= 14; // reduce off
 
               if (debug)
-                Rprintf("CN_IDX %d; CN_OFF %d; CN_LEN %d; zeros %d \n",
-                        idx, off, len, zeros);
+              Rprintf("CN_IDX %d; CN_OFF %d; CN_LEN %d; zeros %d \n",
+                      idx, off, len, zeros);
 
               std::string varname = stringvec[idx].substr(off, len);
-
               if (debug) Rcout << varname << std::endl;
-
               varnames.push_back(varname);
+
             }
 
           }
@@ -844,8 +845,40 @@ Rcpp::List readsas(const char * filePath, const bool debug)
 
         }
       }
+    }
+
+    if (hasattributes) {
+
+      // read format and labels
+      for (auto var = 0; var < colnum; ++var) {
+
+        // std::cout << stringvec[pg] << std::endl;
+
+        std::string format = "";
+        int64_t fidx = fmt[var].IDX, foff = fmt[var].OFF, flen = fmt[var].LEN;
+        Rprintf("fidx %d; foff %d; flen %d \n", fidx, foff, flen);
+        // if ((foff > 0) & (flen > 0)) {
+        //   format = stringvec[fidx].substr((foff-14), flen);
+        // }
+
+        std:: string label = "";
+        int64_t lidx = lbl[var].IDX, loff = lbl[var].OFF, llen = lbl[var].LEN;
+        Rprintf("lidx %d; loff %d; llen %d \n", lidx, loff, llen);
+        // if ((loff > 0) & (llen > 0)) {
+        //   label = stringvec[lidx].substr((loff-14), llen);
+        // }
+
+        Rcout << format << " : " << label << std::endl;
+
+        formats.push_back( format );
+        labels.push_back( label );
+      }
 
     }
+
+    if (compr != 0)
+      stop("File contains unhandled compression");
+
 
     // ---------------------------------------------------------------------- //
 
@@ -978,9 +1011,11 @@ Rcpp::List readsas(const char * filePath, const bool debug)
     df.attr("names") = varnames;
     df.attr("class") = "data.frame";
 
-
     // close file
     sas.close();
+
+    df.attr("labels") = labels;
+    df.attr("formats") = formats;
 
     return(df);
 

@@ -106,6 +106,12 @@ struct SCV {
   int16_t L_POS = 0;
 };
 
+struct idxofflen {
+  int16_t IDX = 0;
+  int16_t OFF = 0;
+  int16_t LEN = 0;
+};
+
 
 inline std::string int32_to_hex (int32_t val) {
   std::stringstream stream;

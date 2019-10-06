@@ -4,12 +4,13 @@
 #'
 #'@param file file to read
 #'@param debug print debug information
+#'@param convert.dates default is TRUE
 #'
 #'@useDynLib readsas, .registration=TRUE
 #'@importFrom utils download.file
 #'
 #'@export
-read.sas <- function(file, debug = FALSE) {
+read.sas <- function(file, debug = FALSE, convert.dates = TRUE) {
 
   # Check if path is a url
   if (length(grep("^(http|ftp|https)://", file))) {
@@ -28,7 +29,21 @@ read.sas <- function(file, debug = FALSE) {
 
   data <- readsas(filepath, debug)
 
+  formats <- attr(data, "formats")
+
+  if (convert.dates) {
+
+    vars <- which(formats == "MMDDYY")
+    # z <- 1472562988
+
+    # no leapseconds applied (is it required?)
+    for (var in vars) {
+      data[[var]] <- as.Date(
+        as.POSIXct( data[[var]] * 24 * 60 * 60, origin = "1960-01-01")
+        )
+    }
+
+  }
 
   return(data)
-
 }

@@ -4,12 +4,14 @@
 \alias{read.sas}
 \title{read.sas}
 \usage{
-read.sas(file, debug = FALSE)
+read.sas(file, debug = FALSE, convert.dates = TRUE)
 }
 \arguments{
 \item{file}{file to read}
 
 \item{debug}{print debug information}
+
+\item{convert.dates}{default is TRUE}
 }
 \description{
 read.sas
