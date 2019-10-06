@@ -33,7 +33,7 @@ read.sas <- function(file, debug = FALSE, convert.dates = TRUE) {
 
   if (convert.dates) {
 
-    vars <- which(formats == "MMDDYY")
+    vars <- which(formats == "MMDDYY" | formats == "DATE")
     # z <- 1472562988
 
     # no leapseconds applied (is it required?)
