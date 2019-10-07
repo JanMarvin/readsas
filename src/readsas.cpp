@@ -51,6 +51,8 @@ Rcpp::List readsas(const char * filePath, const bool debug)
     int64_t unk64 = 0;
     double unkdub = 0;
 
+    int16_t swlen = 0, proclen = 0;
+
     std::vector<idxofflen> fmt;
     std::vector<idxofflen> lbl;
     std::vector<idxofflen> unk;
@@ -478,71 +480,269 @@ Rcpp::List readsas(const char * filePath, const bool debug)
 
           // new offset ----------------------------------------------------- //
         case 1:
-        {
+        { /* Row Size */
+
+          int16_t pgwpossh = 0, pgwpossh2 = 0, numzeros = 37,
+            sh_num = 0, cn_maxlen = 0, l_maxlen = 0,
+            rowsonpg = 0;
+          int32_t pgidx = 0;
+          int64_t pgsize = 0, pgc = 0, rcmix = 0, pgwsh = 0, pgwsh2 = 0;
+
 
           if (ALIGN_2_VALUE == 4) {
-          unk64 = readbin(unk64, sas, 0);
-          if (debug) Rcout << unk64 << std::endl;
-          unk64 = readbin(unk64, sas, 0);
-          if (debug) Rcout << unk64 << std::endl;
-          unk64 = readbin(unk64, sas, 0);
-          if (debug) Rcout << unk64 << std::endl;
-          unk64 = readbin(unk64, sas, 0);
-          if (debug) Rcout << unk64 << std::endl;
-        } else {
-          unk32 = readbin(unk32, sas, 0);
-          if (debug) Rcout << unk32 << std::endl;
-          unk32 = readbin(unk32, sas, 0);
-          if (debug) Rcout << unk32 << std::endl;
-          unk32 = readbin(unk32, sas, 0);
-          if (debug) Rcout << unk32 << std::endl;
-          unk32 = readbin(unk32, sas, 0);
-          if (debug) Rcout << unk32 << std::endl;
-        }
+            unk64 = readbin(unk64, sas, 0);
+            if (debug) Rcout << unk64 << std::endl;
+            unk64 = readbin(unk64, sas, 0);
+            if (debug) Rcout << unk64 << std::endl;
+            unk64 = readbin(unk64, sas, 0);
+            if (debug) Rcout << unk64 << std::endl;
+            unk64 = readbin(unk64, sas, 0);
+            if (debug) Rcout << unk64 << std::endl;
+
+            rowlength = readbin(rowlength, sas, 0);
+            Rcout << rowlength << std::endl;
+            rowcount = readbin(rowcount, sas, 0);
+            if (debug) Rcout << rowcount << std::endl;
+            unk64 = readbin(unk64, sas, 0);
+            if (debug) Rcout << unk64 << std::endl;
+            unk64 = readbin(unk64, sas, 0);
+            if (debug) Rcout << unk64 << std::endl;
+
+            colf_p1 = readbin(colf_p1, sas, 0);
+            if (debug) Rcout << colf_p1 << std::endl;
+            colf_p2 = readbin(colf_p2, sas, 0);
+            if (debug) Rcout << colf_p2 << std::endl;
+            unk64 = readbin(unk64, sas, 0); // p3 and p4?
+            if (debug) Rcout << unk64 << std::endl;
+            unk64 = readbin(unk64, sas, 0);
+            if (debug) Rcout << unk64 << std::endl;
+            pgsize = readbin(pgsize, sas, 0);
+            unk64 = readbin(unk64, sas, 0);
+            rcmix =  readbin(rcmix, sas, 0);
+
+            unk64 = readbin(unk64, sas, 0); /* end of initial header ? */
+            unk64 = readbin(unk64, sas, 0); /*                         */
+
+            for (int z = 0; z < numzeros; ++z) {
+              unk64 = readbin(unk64, sas, 0);
+              if (unk64 != 0)
+                warning("val is %d. expected a zero", unk64);
+            }
+
+            pgidx = readbin(pgidx, sas, 0);
+
+            // padding? 68 bytes: zeros
+            for (int z = 0; z < 8; ++z) {
+              unk64 = readbin(unk64, sas, 0);
+            }
+            unk32 = readbin(unk32, sas, 0);
+
+            unk64 = readbin(unk64, sas, 0); // val 1?
+            unk16 = readbin(unk16, sas, 0); // val 2?
+
+            unk16 = readbin(unk16, sas, 0); // padding
+            unk16 = readbin(unk16, sas, 0); // padding
+            unk16 = readbin(unk16, sas, 0); // padding
+
+            pgwsh = readbin(pgwsh, sas, 0);
+            pgwpossh = readbin(pgwpossh, sas, 0);
+
+            unk16 = readbin(unk16, sas, 0); // padding
+            unk16 = readbin(unk16, sas, 0); // padding
+            unk16 = readbin(unk16, sas, 0); // padding
+
+            pgwsh2 = readbin(pgwsh2, sas, 0);
+            pgwpossh2 = readbin(pgwpossh2, sas, 0);
+
+            unk16 = readbin(unk16, sas, 0); // padding
+            unk16 = readbin(unk16, sas, 0); // padding
+            unk16 = readbin(unk16, sas, 0); // padding
+
+            pgc = readbin(pgc, sas, 0);
+
+            unk16 = readbin(unk16, sas, 0); // val ?
+            unk16 = readbin(unk16, sas, 0); // padding
+            unk16 = readbin(unk16, sas, 0); // padding
+            unk16 = readbin(unk16, sas, 0); // padding
+
+            unk64 = readbin(unk64, sas, 0); // val 1?
+
+            unk16 = readbin(unk16, sas, 0); // val 7 | 8?
+            unk16 = readbin(unk16, sas, 0); // padding
+            unk16 = readbin(unk16, sas, 0); // padding
+            unk16 = readbin(unk16, sas, 0); // padding
+
+            for (int z = 0; z < 10; ++z) {
+              unk64 = readbin(unk64, sas, 0); // 0
+            }
+
+            unk16 = readbin(unk16, sas, 0); // val 0
+            unk16 = readbin(unk16, sas, 0); // val 0|8 ?
+            unk16 = readbin(unk16, sas, 0); // val 4
+            unk16 = readbin(unk16, sas, 0); // val 0
+            unk16 = readbin(unk16, sas, 0); // val 12,32|0?
+
+            swlen = readbin(swlen, sas, 0);
+            Rcout << swlen << std::endl;
+            unk16 = readbin(unk16, sas, 0); // val 0?
+            unk16 = readbin(unk16, sas, 0); // val 20?
+            unk16 = readbin(unk16, sas, 0); //
+            unk64 = readbin(unk64, sas, 0); // 0
+
+            unk16 = readbin(unk16, sas, 0); // 12
+            unk16 = readbin(unk16, sas, 0); // 8
+            unk16 = readbin(unk16, sas, 0); // 0
+            unk16 = readbin(unk16, sas, 0); // 28
+            proclen = readbin(proclen, sas, 0);
+
+            for (int z = 0; z < 8; ++z) {
+              unk32 = readbin(unk32, sas, 0); // 0
+            }
+
+            unk16 = readbin(unk16, sas, 0); // 4
+            unk16 = readbin(unk16, sas, 0); // 1
+
+            sh_num = readbin(sh_num, sas, 0);
+            cn_maxlen = readbin(cn_maxlen, sas, 0);
+            l_maxlen = readbin(l_maxlen, sas, 0);
+
+            for (int z = 0; z < 3; ++z) {
+              unk32 = readbin(unk32, sas, 0); // 0
+            }
+
+            rowsonpg = readbin(rowsonpg, sas, 0);
+
+            for (int z = 0; z < 10; ++z) {
+              unk32 = readbin(unk32, sas, 0); // 0
+            }
+
+          } else {
+            unk32 = readbin(unk32, sas, 0);
+            if (debug) Rcout << unk32 << std::endl;
+            unk32 = readbin(unk32, sas, 0);
+            if (debug) Rcout << unk32 << std::endl;
+            unk32 = readbin(unk32, sas, 0);
+            if (debug) Rcout << unk32 << std::endl;
+            unk32 = readbin(unk32, sas, 0);
+            if (debug) Rcout << unk32 << std::endl;
+
+            rowlength = readbin((int32_t)rowlength, sas, 0);
+            Rcout << rowlength << std::endl;
+            rowcount = readbin((int32_t)rowcount, sas, 0);
+            if (debug) Rcout << rowcount << std::endl;
+            unk32 = readbin(unk32, sas, 0);
+            if (debug) Rcout << unk32 << std::endl;
+            unk32 = readbin(unk32, sas, 0);
+            if (debug) Rcout << unk32 << std::endl;
+
+            colf_p1 = readbin((int32_t)colf_p1, sas, 0);
+            if (debug) Rcout << colf_p1 << std::endl;
+            colf_p2 = readbin((int32_t)colf_p2, sas, 0);
+            if (debug) Rcout << colf_p2 << std::endl;
+            unk32 = readbin(unk32, sas, 0);
+            if (debug) Rcout << unk32 << std::endl;
+            unk32 = readbin(unk32, sas, 0);
+            if (debug) Rcout << unk32 << std::endl;
+            pgsize = readbin((int32_t)pgsize, sas, 0);
+            unk32 = readbin(unk32, sas, 0);
+            rcmix =  readbin((int32_t)rcmix, sas, 0);
+            unk32 = readbin(unk32, sas, 0);
+            unk32 = readbin(unk32, sas, 0);
+
+            for (int z = 0; z < numzeros; ++z) {
+              unk64 = readbin((int32_t)unk64, sas, 0);
+              if (unk64 != 0)
+                warning("val is %d. expected a zero", unk64);
+            }
+
+            pgidx = readbin(pgidx, sas, 0);
 
 
-        if (ALIGN_2_VALUE == 4) {
-          rowlength = readbin(rowlength, sas, 0);
-          Rcout << rowlength << std::endl;
-          rowcount = readbin(rowcount, sas, 0);
-          if (debug) Rcout << rowcount << std::endl;
-          unk64 = readbin(unk64, sas, 0);
-          if (debug) Rcout << unk64 << std::endl;
-          unk64 = readbin(unk64, sas, 0);
-          if (debug) Rcout << unk64 << std::endl;
-        } else {
-          rowlength = readbin((int32_t)rowlength, sas, 0);
-          Rcout << rowlength << std::endl;
-          rowcount = readbin((int32_t)rowcount, sas, 0);
-          if (debug) Rcout << rowcount << std::endl;
-          unk32 = readbin(unk32, sas, 0);
-          if (debug) Rcout << unk32 << std::endl;
-          unk32 = readbin(unk32, sas, 0);
-          if (debug) Rcout << unk32 << std::endl;
-        }
+            for (int z = 0; z < 8; ++z) {
+              unk64 = readbin((int32_t)unk64, sas, 0);
+            }
 
+            // padding?
+            unk32 = readbin(unk32, sas, 0);
+            unk32 = readbin(unk32, sas, 0);
 
-        if (ALIGN_2_VALUE == 4) {
-          colf_p1 = readbin(colf_p1, sas, 0);
-          if (debug) Rcout << colf_p1 << std::endl;
-          colf_p2 = readbin(colf_p2, sas, 0);
-          if (debug) Rcout << colf_p2 << std::endl;
-          unk64 = readbin(unk64, sas, 0);
-          if (debug) Rcout << unk64 << std::endl;
-          unk64 = readbin(unk64, sas, 0);
-          if (debug) Rcout << unk64 << std::endl;
-        } else {
-          colf_p1 = readbin((int32_t)colf_p1, sas, 0);
-          if (debug) Rcout << colf_p1 << std::endl;
-          colf_p2 = readbin((int32_t)colf_p2, sas, 0);
-          if (debug) Rcout << colf_p2 << std::endl;
-          unk32 = readbin(unk32, sas, 0);
-          if (debug) Rcout << unk32 << std::endl;
-          unk32 = readbin(unk32, sas, 0);
-          if (debug) Rcout << unk32 << std::endl;
-        }
+            unk32 = readbin(unk32, sas, 0); // val 1?
+            unk16 = readbin(unk16, sas, 0); // val 2?
 
-        break;
+            unk16 = readbin(unk16, sas, 0); // padding
+
+            pgwsh = readbin((int32_t)pgwsh, sas, 0);
+            pgwpossh = readbin(pgwpossh, sas, 0);
+
+            unk16 = readbin(unk16, sas, 0); // padding
+
+            pgwsh2 = readbin((int32_t)pgwsh2, sas, 0);
+            pgwpossh2 = readbin(pgwpossh2, sas, 0);
+
+            unk16 = readbin(unk16, sas, 0); // padding
+
+            pgc = readbin((int32_t)pgc, sas, 0);
+
+            unk16 = readbin(unk16, sas, 0); // val ?
+            unk16 = readbin(unk16, sas, 0); // padding
+
+            unk64 = readbin((int32_t)unk64, sas, 0); // val 1?
+
+            unk16 = readbin(unk16, sas, 0); // val 7 | 8?
+            unk16 = readbin(unk16, sas, 0); // padding
+
+            for (int z = 0; z < 10; ++z) {
+              unk64 = readbin((int32_t)unk64, sas, 0); // 0
+            }
+
+            unk16 = readbin(unk16, sas, 0); // val 0?
+            unk16 = readbin(unk16, sas, 0); // val 0|8 ?
+            unk16 = readbin(unk16, sas, 0); // val 4?
+            unk16 = readbin(unk16, sas, 0); // val 0?
+            unk16 = readbin(unk16, sas, 0); // val 12,32|0?
+
+            swlen = readbin(swlen, sas, 0);
+            unk16 = readbin(unk16, sas, 0); // val 0?
+            unk16 = readbin(unk16, sas, 0); // val 20?
+            unk16 = readbin(unk16, sas, 0); //
+            unk32 = readbin(unk32, sas, 0); // 0
+            unk32 = readbin(unk32, sas, 0); // 0
+
+            unk16 = readbin(unk16, sas, 0); // 12
+            unk16 = readbin(unk16, sas, 0); // 8
+            unk16 = readbin(unk16, sas, 0); // 0
+            unk16 = readbin(unk16, sas, 0); // 28
+
+            proclen = readbin(proclen, sas, 0);
+
+            for (int z = 0; z < 8; ++z) {
+              unk32 = readbin(unk32, sas, 0); // 0
+            }
+
+            unk16 = readbin(unk16, sas, 0); // 4
+            unk16 = readbin(unk16, sas, 0); // 1
+
+            sh_num = readbin(sh_num, sas, 0);
+            cn_maxlen = readbin(cn_maxlen, sas, 0);
+            l_maxlen = readbin(l_maxlen, sas, 0);
+
+            for (int z = 0; z < 3; ++z) {
+              unk32 = readbin(unk32, sas, 0); // 0
+            }
+
+            rowsonpg = readbin(rowsonpg, sas, 0);
+
+            for (int z = 0; z < 10; ++z) {
+              unk32 = readbin(unk32, sas, 0); // 0
+            }
+
+          }
+
+          // if (debug)
+          Rprintf("swlen = %d, proclen = %d \n",
+                  swlen, proclen);
+
+          break;
         }
 
 
@@ -659,6 +859,9 @@ Rcpp::List readsas(const char * filePath, const bool debug)
           unks.LEN = readbin(unks.LEN, sas, 0);
 
           unk.push_back(unks);
+
+          if (unks.IDX != 0 | unks.OFF != 0 | unks.LEN != 0)
+            warning("unk not 0 as expected");
 
           break;
         }
