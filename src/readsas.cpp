@@ -42,16 +42,18 @@ Rcpp::List readsas(const char * filePath, const bool debug)
 
     auto k = 0;
     int compr = 0;
-    auto ctr = 0;
+    auto ctr = 0, varoffset = 0, offset = 0;
 
-    bool hasattributes = 0;
+    bool hasattributes = 0, hasproc = 1;
     int8_t  unk8  = 0;
     int16_t unk16 = 0;
     int32_t unk32 = 0;
     int64_t unk64 = 0;
     double unkdub = 0;
 
-    int16_t swlen = 0, proclen = 0;
+    int16_t swlen = 0, proclen = 0, comprlen = 0, textoff = 0, todata = 0,
+      addtextoff = 0;
+    int16_t PAGE_TYPE = 0, BLOCK_COUNT = 0, SUBHEADER_COUNT = 0;
 
     std::vector<idxofflen> fmt;
     std::vector<idxofflen> lbl;
@@ -305,7 +307,7 @@ Rcpp::List readsas(const char * filePath, const bool debug)
       int8_t zero = 0;
       zero = readbin(zero, sas, 0);
       if (zero!=0)
-        Rcpp::stop("Error. Expected 0, is %d", zero);
+        warning("Error. Expected 0, is %d", zero);
     }
 
     // debug
@@ -329,6 +331,9 @@ Rcpp::List readsas(const char * filePath, const bool debug)
 
     // begin reading pages ---------------------------------------------------//
     for (auto pg = 0; pg < pagecount; ++pg) {
+
+      Rcout << "########### PAGE" << pg << " ###############"  << std::endl;
+
 
       if (pagecount > 0) {
         auto pagenumx = headersize + pg * pagesize;
@@ -358,7 +363,6 @@ Rcpp::List readsas(const char * filePath, const bool debug)
       }
       if (debug) Rprintf("pageseqnum: %d \n", pageseqnum);
 
-      int16_t PAGE_TYPE = 0, BLOCK_COUNT = 0, SUBHEADER_COUNT = 0;
       PAGE_TYPE = readbin(PAGE_TYPE, sas, 0);
       BLOCK_COUNT = readbin(BLOCK_COUNT, sas, 0);
       SUBHEADER_COUNT = readbin(SUBHEADER_COUNT, sas, 0);
@@ -371,6 +375,7 @@ Rcpp::List readsas(const char * filePath, const bool debug)
       // if (debug)
       Rprintf("PAGE_TYPE: %d ; BLOCK_COUNT: %d ; SUBHEADER_COUNT: %d \n",
               PAGE_TYPE, BLOCK_COUNT, SUBHEADER_COUNT);
+
 
       if (debug) Rprintf("unk16: %d \n", unk16);
 
@@ -427,10 +432,13 @@ Rcpp::List readsas(const char * filePath, const bool debug)
       //   }
 
 
+      // if ((PAGE_TYPE == 256) | (PAGE_TYPE == 512)) {
       // Guess?
       while (sas.tellg() % 8 != 0) {
         readbin(unk32, sas, 0); // padding?
       }
+      // }
+      // Rcout << sas.tellg() <<  "--------------------------" <<std::endl;
 
       // debug
       auto sh_end_pos = sas.tellg();
@@ -439,10 +447,14 @@ Rcpp::List readsas(const char * filePath, const bool debug)
 
       for (auto sc = 0; sc < SUBHEADER_COUNT; ++sc)
       {
-
-        auto pos = pagestart + potabs[sc].SH_OFF;
-        sas.seekg(pos, sas.beg);
-        if (debug) Rprintf("%d \n", pos);
+        if ((PAGE_TYPE == 256) | (PAGE_TYPE == 512)) {
+          auto pos = pagestart + potabs[sc].SH_OFF;
+          sas.seekg(pos, sas.beg);
+        } else if (PAGE_TYPE == 1024) {
+          auto pos = (headersize + pg * pagesize) + potabs[sc].SH_OFF;
+          sas.seekg(pos, sas.beg);
+        }
+        // if (debug) Rprintf("%d \n", pos);
 
 
         int64_t sas_offset = alignval;
@@ -481,6 +493,9 @@ Rcpp::List readsas(const char * filePath, const bool debug)
           // new offset ----------------------------------------------------- //
         case 1:
         { /* Row Size */
+
+
+          Rcout << "----------- case 1 ---------" << std::endl;
 
           int16_t pgwpossh = 0, pgwpossh2 = 0, numzeros = 37,
             sh_num = 0, cn_maxlen = 0, l_maxlen = 0,
@@ -567,7 +582,7 @@ Rcpp::List readsas(const char * filePath, const bool debug)
 
             unk64 = readbin(unk64, sas, 0); // val 1?
 
-            unk16 = readbin(unk16, sas, 0); // val 7 | 8?
+            addtextoff = readbin(addtextoff, sas, 0); // val 7 | 8?
             unk16 = readbin(unk16, sas, 0); // padding
             unk16 = readbin(unk16, sas, 0); // padding
             unk16 = readbin(unk16, sas, 0); // padding
@@ -576,24 +591,60 @@ Rcpp::List readsas(const char * filePath, const bool debug)
               unk64 = readbin(unk64, sas, 0); // 0
             }
 
-            unk16 = readbin(unk16, sas, 0); // val 0
+            Rcout << "###############" << std::endl;
+
+            unk16 = readbin(unk16, sas, 0); // val
+            Rcout << unk16 << std::endl;
             unk16 = readbin(unk16, sas, 0); // val 0|8 ?
+            Rcout << unk16 << std::endl;
             unk16 = readbin(unk16, sas, 0); // val 4
+            Rcout << unk16 << std::endl;
             unk16 = readbin(unk16, sas, 0); // val 0
-            unk16 = readbin(unk16, sas, 0); // val 12,32|0?
+            Rcout << unk16 << std::endl;
+            todata = readbin(unk16, sas, 0); // val 12,32|0?
+            Rcout << todata << std::endl;
+
+            if (todata == 12)
+              hasproc = false;
+
+            Rcout << "###############" << std::endl;
 
             swlen = readbin(swlen, sas, 0);
             Rcout << swlen << std::endl;
-            unk16 = readbin(unk16, sas, 0); // val 0?
-            unk16 = readbin(unk16, sas, 0); // val 20?
-            unk16 = readbin(unk16, sas, 0); //
-            unk64 = readbin(unk64, sas, 0); // 0
-
-            unk16 = readbin(unk16, sas, 0); // 12
+            unk16 = readbin(unk16, sas, 0); // val 0
+            Rcout << unk16 << std::endl;
+            unk16 = readbin(unk16, sas, 0); // val 20 | 28
+            Rcout << unk16 << std::endl;
             unk16 = readbin(unk16, sas, 0); // 8
+            Rcout << unk16 << std::endl;
+            // unk64 = readbin(unk64, sas, 0); // ?
+            // Rcout << unk64 << std::endl;
+
+            Rcout << "###############" << std::endl;
+
             unk16 = readbin(unk16, sas, 0); // 0
-            unk16 = readbin(unk16, sas, 0); // 28
+            Rcout << unk16 << std::endl;
+            unk16 = readbin(unk16, sas, 0); // 12
+            Rcout << unk16 << std::endl;
+            comprlen = readbin(unk16, sas, 0); // 8
+            Rcout << comprlen << std::endl;
+            unk16 = readbin(unk16, sas, 0); // 0
+            Rcout << unk16 << std::endl;
+
+            Rcout << "###############" << std::endl;
+
+            unk16 = readbin(unk16, sas, 0); // 12 | 20
+            Rcout << unk16 << std::endl;
+            unk16 = readbin(unk16, sas, 0); // 8
+            Rcout << unk16 << std::endl;
+            unk16 = readbin(unk16, sas, 0); // 0
+            Rcout << unk16 << std::endl;
+            textoff = readbin(textoff, sas, 0); // 28 | 36
+            Rcout << textoff << std::endl;
             proclen = readbin(proclen, sas, 0);
+            Rcout << proclen << std::endl;
+
+            Rcout << "###############" << std::endl;
 
             for (int z = 0; z < 8; ++z) {
               unk32 = readbin(unk32, sas, 0); // 0
@@ -627,8 +678,9 @@ Rcpp::List readsas(const char * filePath, const bool debug)
             if (debug) Rcout << unk32 << std::endl;
 
             rowlength = readbin((int32_t)rowlength, sas, 0);
-            Rcout << rowlength << std::endl;
+            Rcout << "rowlength "<< rowlength << std::endl;
             rowcount = readbin((int32_t)rowcount, sas, 0);
+            Rcout << "rowcount "<< rowcount << std::endl;
             if (debug) Rcout << rowcount << std::endl;
             unk32 = readbin(unk32, sas, 0);
             if (debug) Rcout << unk32 << std::endl;
@@ -636,9 +688,9 @@ Rcpp::List readsas(const char * filePath, const bool debug)
             if (debug) Rcout << unk32 << std::endl;
 
             colf_p1 = readbin((int32_t)colf_p1, sas, 0);
-            if (debug) Rcout << colf_p1 << std::endl;
+            Rcout << colf_p1 << std::endl;
             colf_p2 = readbin((int32_t)colf_p2, sas, 0);
-            if (debug) Rcout << colf_p2 << std::endl;
+            Rcout << colf_p2 << std::endl;
             unk32 = readbin(unk32, sas, 0);
             if (debug) Rcout << unk32 << std::endl;
             unk32 = readbin(unk32, sas, 0);
@@ -687,33 +739,68 @@ Rcpp::List readsas(const char * filePath, const bool debug)
             unk16 = readbin(unk16, sas, 0); // padding
 
             unk64 = readbin((int32_t)unk64, sas, 0); // val 1?
+            Rcout << unk64 << std::endl;
 
-            unk16 = readbin(unk16, sas, 0); // val 7 | 8?
+            addtextoff = readbin(addtextoff, sas, 0); // val 7 | 8?
+            Rcout << addtextoff << std::endl;
             unk16 = readbin(unk16, sas, 0); // padding
 
             for (int z = 0; z < 10; ++z) {
               unk64 = readbin((int32_t)unk64, sas, 0); // 0
             }
 
-            unk16 = readbin(unk16, sas, 0); // val 0?
+            Rcout << "###############" << std::endl;
+
+            unk16 = readbin(unk16, sas, 0); // val
+            Rcout << unk16 << std::endl;
             unk16 = readbin(unk16, sas, 0); // val 0|8 ?
-            unk16 = readbin(unk16, sas, 0); // val 4?
-            unk16 = readbin(unk16, sas, 0); // val 0?
-            unk16 = readbin(unk16, sas, 0); // val 12,32|0?
+            Rcout << unk16 << std::endl;
+            unk16 = readbin(unk16, sas, 0); // val 4
+            Rcout << unk16 << std::endl;
+            unk16 = readbin(unk16, sas, 0); // val 0
+            Rcout << unk16 << std::endl;
+            todata = readbin(todata, sas, 0); // val 12,32|0? //
+            Rcout << todata << std::endl;
+
+            if (todata == 12)
+              hasproc = false;
+
+            Rcout << "###############" << std::endl;
 
             swlen = readbin(swlen, sas, 0);
+            Rcout << "swlen " << swlen << std::endl;
             unk16 = readbin(unk16, sas, 0); // val 0?
+            Rcout << unk16 << std::endl;
             unk16 = readbin(unk16, sas, 0); // val 20?
+            Rcout << unk16 << std::endl;
             unk16 = readbin(unk16, sas, 0); //
-            unk32 = readbin(unk32, sas, 0); // 0
-            unk32 = readbin(unk32, sas, 0); // 0
+            Rcout << unk16 << std::endl;
+
+            Rcout << "###############" << std::endl;
+
+            unk16 = readbin(unk16, sas, 0); // 0
+            Rcout << unk16 << std::endl;
+            unk16 = readbin(unk16, sas, 0); // 12
+            Rcout << unk16 << std::endl;
+            comprlen = readbin(unk16, sas, 0); // 8 compression code length?
+            Rcout << comprlen << std::endl;
+            unk16 = readbin(unk16, sas, 0); // 0
+            Rcout << unk16 << std::endl;
+
+            Rcout << "###############" << std::endl;
 
             unk16 = readbin(unk16, sas, 0); // 12
+            Rcout << unk16 << std::endl;
             unk16 = readbin(unk16, sas, 0); // 8
+            Rcout << unk16 << std::endl;
             unk16 = readbin(unk16, sas, 0); // 0
-            unk16 = readbin(unk16, sas, 0); // 28
-
+            Rcout << unk16 << std::endl;
+            textoff = readbin(textoff, sas, 0); // 28
+            Rcout << textoff << std::endl;
             proclen = readbin(proclen, sas, 0);
+            Rcout << proclen << std::endl;
+
+            Rcout << "###############" << std::endl;
 
             for (int z = 0; z < 8; ++z) {
               unk32 = readbin(unk32, sas, 0); // 0
@@ -738,9 +825,22 @@ Rcpp::List readsas(const char * filePath, const bool debug)
 
           }
 
+
+          if (!hasproc)
+            proclen = 0;
+
+          // if (addtextoff == 8)
+          //   textoff = 0;
+
+          if (todata > 0) {
+            offset = todata + swlen;
+          } else {
+            offset = textoff + proclen + swlen;
+          }
+
           // if (debug)
-          Rprintf("swlen = %d, proclen = %d \n",
-                  swlen, proclen);
+          Rprintf("swlen = %d, proclen = %d, todata %d, textoff %d, offset %d \n",
+                  swlen, proclen, todata, textoff, offset);
 
           break;
         }
@@ -749,6 +849,8 @@ Rcpp::List readsas(const char * filePath, const bool debug)
           // new offset ----------------------------------------------------- //
         case 2:
         {
+
+          Rcout << "----------- case 2 ---------" << std::endl;
 
           int64_t off = 0;
 
@@ -815,9 +917,9 @@ Rcpp::List readsas(const char * filePath, const bool debug)
             }
 
             if (debug)
-            Rprintf("SIG %d; FIRST %d; F_POS %d; LAST %d; L_POS %d\n",
-                    scv[i].SIG, scv[i].FIRST, scv[i].F_POS,
-                    scv[i].LAST, scv[i].L_POS);
+              Rprintf("SIG %d; FIRST %d; F_POS %d; LAST %d; L_POS %d\n",
+                      scv[i].SIG, scv[i].FIRST, scv[i].F_POS,
+                      scv[i].LAST, scv[i].L_POS);
 
           }
 
@@ -829,11 +931,13 @@ Rcpp::List readsas(const char * filePath, const bool debug)
         case 3:
         {
 
+          Rcout << "----------- case 3 ---------" << std::endl;
+
           hasattributes = 1;
 
           int64_t unk64 = 0;
 
-          int8_t unklen = 38; if (ALIGN_2_VALUE != 4) unklen = 30;
+          int8_t unklen = 38;if (ALIGN_2_VALUE != 4) unklen = 30;
           std::string unkstr(unklen, '\0');
           unkstr = readstring(unkstr, sas);
           // Rcout << unkstr << std::endl;
@@ -861,7 +965,7 @@ Rcpp::List readsas(const char * filePath, const bool debug)
           unk.push_back(unks);
 
           if (unks.IDX != 0 | unks.OFF != 0 | unks.LEN != 0)
-            warning("unk not 0 as expected");
+            warning("unk not 0 as expected\n");
 
           break;
         }
@@ -870,6 +974,8 @@ Rcpp::List readsas(const char * filePath, const bool debug)
           // new offset ----------------------------------------------------- //
         case 4:
         { /* Column Size */
+
+          Rcout << "----------- case 4 ---------" << std::endl;
 
           int64_t unk1 = 0;
 
@@ -893,44 +999,91 @@ Rcpp::List readsas(const char * filePath, const bool debug)
         case 5:
         { /* Column Text */
 
+          Rcout << "----------- case 5 ---------" << std::endl;
+          Rcout << sas.tellg() << std::endl;
+
           int16_t len = 0;
-          int8_t /*tmp = 20; if (ALIGN_2_VALUE != 4)*/ tmp = 16;
+          int8_t tmp = 16; // always 16?
+          if (!hasproc) tmp = 0;
 
           len = readbin(len, sas, 0);
-          unk16 = readbin(unk16, sas, 0); // 1
-          // Rcout << unk16 << std::endl;
-          unk16 = readbin(unk16, sas, 0); // 2
-          // Rcout << unk16 << std::endl;
-          unk16 = readbin(unk16, sas, 0); // 3
-          // Rcout << unk16 << std::endl;
-          unk16 = readbin(unk16, sas, 0); // 4
-          // Rcout << unk16 << std::endl;
-          unk16 = readbin(unk16, sas, 0); // 5
-          // Rcout << unk16 << std::endl;
-          unk16 = readbin(unk16, sas, 0); // 6
+          Rcout << len << std::endl;
+          unk16 = readbin(unk16, sas, 0); // 0 vars on p1 ?
+          Rcout << unk16 << std::endl;
+          unk16 = readbin(unk16, sas, 0); // 0 vars on p2 ?
+          Rcout << unk16 << std::endl;
+          unk16 = readbin(unk16, sas, 0); // 0
           // Rcout << unk16 << std::endl;
 
-          std::string CN_IDX_STR ((len - tmp), '\0');
+          if (PAGE_TYPE != 1024) {
+            unk16 = readbin(unk16, sas, 0); // 0
+            // Rcout << unk16 << std::endl;
+            unk16 = readbin(unk16, sas, 0); // 0
+            // Rcout << unk16 << std::endl;
+          }
+
+          std::string compression = "";
+          std::string proc = "";
+          std::string sw = "";
+
+          Rprintf("%d %d %d %d \n", comprlen, tmp, proclen, swlen);
+          varoffset = comprlen + tmp + proclen + swlen;
+
+          if (PAGE_TYPE != 1024) {
+
+            // compression
+            if (comprlen > 0) {
+              compression.resize(comprlen, '\0');
+              compression = readstring(compression, sas);
+
+              if (compression.compare("SASYZCRL") == 0)
+                compr = 1;
+
+              if (compression.compare("SASYZCR2") == 0)
+                compr = 2;
+            }
+
+            // 16 whitespaces
+            std::string empty (tmp, '\0');
+            if (tmp > 0) {
+              empty = readstring(empty, sas);
+              if (!(empty.compare("                ") == 0))
+                warning("non empty 'empty' string found");
+            }
+
+            // proc that created the file
+            if (proclen > 0) {
+              proc.resize(proclen, '\0');
+              proc = readstring(proc, sas);
+            }
+
+            // additional software string
+            if (swlen > 0) {
+              sw.resize(swlen, '\0');
+              sw = readstring(sw, sas);
+            }
+
+
+            Rcout << compression << "\n" <<
+              empty << "\n" <<
+                proc << "\n" << sw << std::endl;
+
+          }
+
+          int32_t newlen = len - varoffset;
+
+          std::string CN_IDX_STR (newlen, '\0');
           CN_IDX_STR = readstring(CN_IDX_STR, sas);
+          Rcout << CN_IDX_STR << std::endl;
 
-          if (debug)
-          Rprintf("len %d; textlen: %d\n", potabs[sc].SH_LEN, len);
-          // std::cout << CN_IDX_STR << std::endl;
+          // if (debug)
+          Rprintf("SH_LEN %d; len %d; newlen: %d\n",
+                  potabs[sc].SH_LEN, len, newlen);
+
+
+
 
           stringvec.push_back(CN_IDX_STR);
-
-          std::string compression = CN_IDX_STR.substr(0, 8);
-          Rcout << compression << std::endl;
-
-          // if (compression.compare("        ") == 0)
-          //   compr = 0;
-
-          if (compression.compare("SASYZCRL") == 0)
-            compr = 1;
-
-          if (compression.compare("SASYZCR2") == 0)
-            compr = 2;
-
 
           break;
         }
@@ -939,6 +1092,8 @@ Rcpp::List readsas(const char * filePath, const bool debug)
           // new offset ----------------------------------------------------- //
         case 6:
         { /* Column Name */
+
+          Rcout << "------------ case 6 -------------" << std::endl;
 
           int16_t lenremain = 0;
           lenremain = readbin(lenremain, sas, 0);
@@ -953,6 +1108,8 @@ Rcpp::List readsas(const char * filePath, const bool debug)
 
           auto cmax = (lenremain + alignval)/8;
 
+          Rcout << offset << std::endl;
+
           /* Column Name Pointers */
           std::vector<CN_Poi> cnpois(cmax);
 
@@ -963,17 +1120,20 @@ Rcpp::List readsas(const char * filePath, const bool debug)
             auto zeros  = readbin(cnpois[i].zeros,  sas, 0);
 
 
-            if (!(len <= 0)) {
-              off -= 14; // reduce off
+            // if (debug)
+            Rprintf("CN_IDX %d; CN_OFF %d; CN_LEN %d; zeros %d \n",
+                    idx, off, len, zeros);
 
-              if (debug)
+            if (len > 0) {
+              off -= offset;
+              // off = 2;
+
               Rprintf("CN_IDX %d; CN_OFF %d; CN_LEN %d; zeros %d \n",
                       idx, off, len, zeros);
 
               std::string varname = stringvec[idx].substr(off, len);
-              if (debug) Rcout << varname << std::endl;
+              Rcout << varname << std::endl;
               varnames.push_back(varname);
-
             }
 
           }
@@ -985,6 +1145,8 @@ Rcpp::List readsas(const char * filePath, const bool debug)
           // new offset ----------------------------------------------------- //
         case 7:
         { /* Column Attributes */
+
+          Rcout << "------------ case 7 -------------" << std::endl;
 
           int16_t lenremain = 0;
           lenremain = readbin(lenremain, sas, 0);
@@ -1051,6 +1213,14 @@ Rcpp::List readsas(const char * filePath, const bool debug)
     }
 
     if (hasattributes) {
+      Rcout << "------------ attributes -------------" << std::endl;
+
+      auto idx = 0;
+
+      if (addtextoff == 8 & PAGE_TYPE == 1024) {
+        idx = (stringvec.size() -1);
+        offset = 8;
+      }
 
       // read format and labels
       for (auto var = 0; var < colnum; ++var) {
@@ -1060,15 +1230,17 @@ Rcpp::List readsas(const char * filePath, const bool debug)
         std::string format = "";
         int64_t fidx = 0, foff = fmt[var].OFF, flen = fmt[var].LEN;
         Rprintf("fidx %d; foff %d; flen %d \n", fidx, foff, flen);
-        if ((foff > 0) & (flen > 0)) {
-          format = stringvec[fidx].substr((foff-14), flen);
+        if (flen > 0) {
+          foff -= offset;
+          format = stringvec[idx].substr(foff, flen);
         }
 
         std:: string label = "";
         int64_t lidx = 0, loff = lbl[var].OFF, llen = lbl[var].LEN;
         Rprintf("lidx %d; loff %d; llen %d \n", lidx, loff, llen);
-        if ((loff > 0) & (llen > 0)) {
-          label = stringvec[lidx].substr((loff-14), llen);
+        if (llen > 0) {
+          loff -= offset;
+          label = stringvec[idx].substr(loff, llen);
         }
 
         Rcout << format << " : " << label << std::endl;
@@ -1078,6 +1250,9 @@ Rcpp::List readsas(const char * filePath, const bool debug)
       }
 
     }
+
+    if (PAGE_TYPE == 0)
+      stop("unhandled meta page detected");
 
     if (compr != 0)
       stop("File contains unhandled compression");
