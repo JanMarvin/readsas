@@ -23,7 +23,7 @@ devtools::install_git("https://github.com/JanMarvin/readsas.git")
 The documentation of the sas7bdat package by Matt Shotwell and Clint Cummins in
 their R package [`sas7bdat`](https://github.com/BioStatMatt/sas7bdat) and by 
 Jared Hobbs for the python library 
-[`sas7bdat`](https://github.com/BioStatMatt/sas7bdat) was crucial!
+[`sas7bdat`](https://bitbucket.org/jaredhobbs/sas7bdat/src/master/) was crucial!
 
 Additional testing was done using the R package 
 [`haven`](https://github.com/tidyverse/haven) by Hadley Wickam and Evan Miller.
