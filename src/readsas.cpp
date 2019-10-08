@@ -126,6 +126,9 @@ Rcpp::List readsas(const char * filePath, const bool debug)
     if (ENDIANNESS != 1)
       stop("Big Endian found");
 
+    if (!(PAGE_TYPE == 512 | PAGE_TYPE == 256 | PAGE_TYPE == 0))
+      stop("Unhandled page Type %d detected", PAGE_TYPE);
+
 
     readbin(unk8, sas, 0);
 
@@ -323,7 +326,7 @@ Rcpp::List readsas(const char * filePath, const bool debug)
     int64_t rowlength = 0, rowcount = 0;
     int64_t colf_p1 = 0, colf_p2 = 0;
     int64_t colnum = 0;
-    std::vector<std::string> stringvec ;
+    std::vector<std::string> stringvec(pagecount) ;
 
     auto totalrows = 0;
     std::vector<int32_t> totalrowsvec(pagecount);
@@ -422,25 +425,12 @@ Rcpp::List readsas(const char * filePath, const bool debug)
         }
       }
 
-      //   if (PAGE_TYPE == 256 || PAGE_TYPE == 512) {
-      //     sh_end_pos = sas.tellg();
-      //     // debug
-      //     Rprintf("position: %d\n", sh_end_pos);
-      //
-      //     data_pos.push_back( sh_end_pos );
-      //
-      //   }
+      // debug
 
-
-      // if ((PAGE_TYPE == 256) | (PAGE_TYPE == 512)) {
-      // Guess?
       while (sas.tellg() % 8 != 0) {
         readbin(unk32, sas, 0); // padding?
       }
-      // }
-      // Rcout << sas.tellg() <<  "--------------------------" <<std::endl;
 
-      // debug
       auto sh_end_pos = sas.tellg();
       Rprintf("sh_end_pos: %d\n", sh_end_pos);
       data_pos.push_back( sh_end_pos );
@@ -450,6 +440,11 @@ Rcpp::List readsas(const char * filePath, const bool debug)
         if ((PAGE_TYPE == 256) | (PAGE_TYPE == 512)) {
           auto pos = pagestart + potabs[sc].SH_OFF;
           sas.seekg(pos, sas.beg);
+        } else if (PAGE_TYPE == 0) {
+
+          auto pos = headersize + (pg+1) * potabs[sc].SH_OFF;
+          sas.seekg(pos, sas.beg);
+
         } else if (PAGE_TYPE == 1024) {
           auto pos = (headersize + pg * pagesize) + potabs[sc].SH_OFF;
           sas.seekg(pos, sas.beg);
@@ -1083,7 +1078,7 @@ Rcpp::List readsas(const char * filePath, const bool debug)
 
 
 
-          stringvec.push_back(CN_IDX_STR);
+          stringvec[pg] = CN_IDX_STR;
 
           break;
         }
@@ -1108,7 +1103,7 @@ Rcpp::List readsas(const char * filePath, const bool debug)
 
           auto cmax = (lenremain + alignval)/8;
 
-          Rcout << offset << std::endl;
+          // Rcout << offset << std::endl;
 
           /* Column Name Pointers */
           std::vector<CN_Poi> cnpois(cmax);
@@ -1120,19 +1115,15 @@ Rcpp::List readsas(const char * filePath, const bool debug)
             auto zeros  = readbin(cnpois[i].zeros,  sas, 0);
 
 
-            // if (debug)
+            if (debug)
             Rprintf("CN_IDX %d; CN_OFF %d; CN_LEN %d; zeros %d \n",
                     idx, off, len, zeros);
 
             if (len > 0) {
               off -= offset;
-              // off = 2;
-
-              Rprintf("CN_IDX %d; CN_OFF %d; CN_LEN %d; zeros %d \n",
-                      idx, off, len, zeros);
 
               std::string varname = stringvec[idx].substr(off, len);
-              Rcout << varname << std::endl;
+              // Rcout << varname << std::endl;
               varnames.push_back(varname);
             }
 
@@ -1179,7 +1170,7 @@ Rcpp::List readsas(const char * filePath, const bool debug)
             capois[i].UNK8       = readbin(capois[i].UNK8, sas, 0);
 
 
-            if (debug)
+            // if (debug)
               Rprintf("OFF %d; WID: %d; FLAG %d; TYP %d; UNK8 %d\n",
                       capois[i].CN_OFF, capois[i].CN_WID, capois[i].NM_FLAG,
                       capois[i].CN_TYP, capois[i].UNK8 );
@@ -1198,12 +1189,23 @@ Rcpp::List readsas(const char * filePath, const bool debug)
           // not implemented ------------------------------------------------ //
         default:
         {
-          sas_hex = int32_to_hex(sas_offset);
-          Rcout << sas_hex << std::endl;
+          Rcout << "------------- unimplemented ---------------" << std::endl;
 
-          std::string unkstr (potabs[sc].SH_LEN, '\0');
+          // else it is padding?
+          if (potabs[sc].SH_LEN > alignval)
+          {
+            sas_hex = int32_to_hex(sas_offset);
+            Rcout << sas_hex << std::endl;
+            Rcout << "at offset " << sas.tellg() << std::endl;
 
-          unkstr = readstring(unkstr, sas);
+            auto unklen = potabs[sc].SH_LEN - alignval;
+
+            std::string unkstr (unklen, '\0');
+
+            unkstr = readstring(unkstr, sas);
+            // std::cout << unkstr << std::endl;
+
+          }
 
           break;
         }
