@@ -336,6 +336,7 @@ Rcpp::List readsas(const char * filePath, const bool debug)
     for (auto pg = 0; pg < pagecount; ++pg) {
 
       Rcout << "########### PAGE" << pg << " ###############"  << std::endl;
+      Rcout << "########### " << sas.tellg() << " ###############"  << std::endl;
 
 
       if (pagecount > 0) {
@@ -427,28 +428,38 @@ Rcpp::List readsas(const char * filePath, const bool debug)
 
       // debug
 
-      while (sas.tellg() % 8 != 0) {
-        readbin(unk32, sas, 0); // padding?
+      if (pg == 0) {
+        while (sas.tellg() % 8 != 0) {
+          readbin(unk32, sas, 0); // padding?
+        }
       }
 
-      auto sh_end_pos = sas.tellg();
+      auto sh_end_pos = 0;
+
+      if (PAGE_TYPE != 0)
+        sh_end_pos = sas.tellg();
+
       Rprintf("sh_end_pos: %d\n", sh_end_pos);
       data_pos.push_back( sh_end_pos );
 
       for (auto sc = 0; sc < SUBHEADER_COUNT; ++sc)
       {
-        if ((PAGE_TYPE == 256) | (PAGE_TYPE == 512)) {
-          auto pos = pagestart + potabs[sc].SH_OFF;
-          sas.seekg(pos, sas.beg);
-        } else if (PAGE_TYPE == 0) {
+        // if ((PAGE_TYPE == 256) | (PAGE_TYPE == 512)) {
+        //   auto pos = pagestart + potabs[sc].SH_OFF;
+        //   sas.seekg(pos, sas.beg);
+        // } else if (PAGE_TYPE == 0 || PAGE_TYPE == 1024) {
 
-          auto pos = headersize + (pg+1) * potabs[sc].SH_OFF;
-          sas.seekg(pos, sas.beg);
-
-        } else if (PAGE_TYPE == 1024) {
-          auto pos = (headersize + pg * pagesize) + potabs[sc].SH_OFF;
-          sas.seekg(pos, sas.beg);
-        }
+        //   auto pos = headersize + (pg+1) * potabs[sc].SH_OFF;
+        //
+        //   if (pg != 0)
+        //     pos = headersize + (pg+1) * potabs[sc].SH_OFF;
+        //
+        //   sas.seekg(pos, sas.beg);
+        //
+        // } else if (PAGE_TYPE == 1024) {
+        auto pos = (headersize + pg * pagesize) + potabs[sc].SH_OFF;
+        sas.seekg(pos, sas.beg);
+        // }
         // if (debug) Rprintf("%d \n", pos);
 
 
@@ -490,7 +501,7 @@ Rcpp::List readsas(const char * filePath, const bool debug)
         { /* Row Size */
 
 
-          Rcout << "----------- case 1 ---------" << std::endl;
+          Rcout << "-------- case 1 "<< sas.tellg() << " --------" << std::endl;
 
           int16_t pgwpossh = 0, pgwpossh2 = 0, numzeros = 37,
             sh_num = 0, cn_maxlen = 0, l_maxlen = 0,
@@ -845,7 +856,7 @@ Rcpp::List readsas(const char * filePath, const bool debug)
         case 2:
         {
 
-          Rcout << "----------- case 2 ---------" << std::endl;
+          Rcout << "-------- case 2 "<< sas.tellg() << " --------" << std::endl;
 
           int64_t off = 0;
 
@@ -926,7 +937,7 @@ Rcpp::List readsas(const char * filePath, const bool debug)
         case 3:
         {
 
-          Rcout << "----------- case 3 ---------" << std::endl;
+          Rcout << "-------- case 3 "<< sas.tellg() << " --------" << std::endl;
 
           hasattributes = 1;
 
@@ -970,7 +981,7 @@ Rcpp::List readsas(const char * filePath, const bool debug)
         case 4:
         { /* Column Size */
 
-          Rcout << "----------- case 4 ---------" << std::endl;
+          Rcout << "-------- case 4 "<< sas.tellg() << " --------" << std::endl;
 
           int64_t unk1 = 0;
 
@@ -994,7 +1005,7 @@ Rcpp::List readsas(const char * filePath, const bool debug)
         case 5:
         { /* Column Text */
 
-          Rcout << "----------- case 5 ---------" << std::endl;
+          Rcout << "-------- case 5 "<< sas.tellg() << " --------" << std::endl;
           Rcout << sas.tellg() << std::endl;
 
           int16_t len = 0;
@@ -1071,9 +1082,9 @@ Rcpp::List readsas(const char * filePath, const bool debug)
           CN_IDX_STR = readstring(CN_IDX_STR, sas);
           Rcout << CN_IDX_STR << std::endl;
 
-          // if (debug)
-          Rprintf("SH_LEN %d; len %d; newlen: %d\n",
-                  potabs[sc].SH_LEN, len, newlen);
+          if (debug)
+            Rprintf("SH_LEN %d; len %d; newlen: %d\n",
+                    potabs[sc].SH_LEN, len, newlen);
 
 
 
@@ -1088,7 +1099,7 @@ Rcpp::List readsas(const char * filePath, const bool debug)
         case 6:
         { /* Column Name */
 
-          Rcout << "------------ case 6 -------------" << std::endl;
+          Rcout << "-------- case 6 "<< sas.tellg() << " --------" << std::endl;
 
           int16_t lenremain = 0;
           lenremain = readbin(lenremain, sas, 0);
@@ -1116,8 +1127,8 @@ Rcpp::List readsas(const char * filePath, const bool debug)
 
 
             if (debug)
-            Rprintf("CN_IDX %d; CN_OFF %d; CN_LEN %d; zeros %d \n",
-                    idx, off, len, zeros);
+              Rprintf("CN_IDX %d; CN_OFF %d; CN_LEN %d; zeros %d \n",
+                      idx, off, len, zeros);
 
             if (len > 0) {
               off -= offset;
@@ -1137,7 +1148,7 @@ Rcpp::List readsas(const char * filePath, const bool debug)
         case 7:
         { /* Column Attributes */
 
-          Rcout << "------------ case 7 -------------" << std::endl;
+          Rcout << "-------- case 7 "<< sas.tellg() << " --------" << std::endl;
 
           int16_t lenremain = 0;
           lenremain = readbin(lenremain, sas, 0);
@@ -1171,9 +1182,9 @@ Rcpp::List readsas(const char * filePath, const bool debug)
 
 
             // if (debug)
-              Rprintf("OFF %d; WID: %d; FLAG %d; TYP %d; UNK8 %d\n",
-                      capois[i].CN_OFF, capois[i].CN_WID, capois[i].NM_FLAG,
-                      capois[i].CN_TYP, capois[i].UNK8 );
+            Rprintf("OFF %d; WID: %d; FLAG %d; TYP %d; UNK8 %d\n",
+                    capois[i].CN_OFF, capois[i].CN_WID, capois[i].NM_FLAG,
+                    capois[i].CN_TYP, capois[i].UNK8 );
 
             if (capois[i].CN_TYP > 0) {
               coloffset.push_back( capois[i].CN_OFF );
@@ -1189,14 +1200,15 @@ Rcpp::List readsas(const char * filePath, const bool debug)
           // not implemented ------------------------------------------------ //
         default:
         {
-          Rcout << "------------- unimplemented ---------------" << std::endl;
+
+          Rcout << "---- unimplemented "<< sas.tellg() << " ----" << std::endl;
 
           // else it is padding?
           if (potabs[sc].SH_LEN > alignval)
           {
             sas_hex = int32_to_hex(sas_offset);
-            Rcout << sas_hex << std::endl;
-            Rcout << "at offset " << sas.tellg() << std::endl;
+            // Rcout << sas_hex << std::endl;
+            // Rcout << "at offset " << sas.tellg() << std::endl;
 
             auto unklen = potabs[sc].SH_LEN - alignval;
 
@@ -1231,7 +1243,7 @@ Rcpp::List readsas(const char * filePath, const bool debug)
 
         std::string format = "";
         int64_t fidx = 0, foff = fmt[var].OFF, flen = fmt[var].LEN;
-        Rprintf("fidx %d; foff %d; flen %d \n", fidx, foff, flen);
+        // Rprintf("fidx %d; foff %d; flen %d \n", fidx, foff, flen);
         if (flen > 0) {
           foff -= offset;
           format = stringvec[idx].substr(foff, flen);
@@ -1239,22 +1251,19 @@ Rcpp::List readsas(const char * filePath, const bool debug)
 
         std:: string label = "";
         int64_t lidx = 0, loff = lbl[var].OFF, llen = lbl[var].LEN;
-        Rprintf("lidx %d; loff %d; llen %d \n", lidx, loff, llen);
+        // Rprintf("lidx %d; loff %d; llen %d \n", lidx, loff, llen);
         if (llen > 0) {
           loff -= offset;
           label = stringvec[idx].substr(loff, llen);
         }
 
-        Rcout << format << " : " << label << std::endl;
+        // Rcout << format << " : " << label << std::endl;
 
         formats.push_back( format );
         labels.push_back( label );
       }
 
     }
-
-    if (PAGE_TYPE == 0)
-      stop("unhandled meta page detected");
 
     if (compr != 0)
       stop("File contains unhandled compression");
@@ -1292,15 +1301,29 @@ Rcpp::List readsas(const char * filePath, const bool debug)
     auto ii = 0;
     for (auto i = 0; i < rowcount; ++i) {
 
-      if (totalrowsvec[page] == i) {
-        ++page;
-        ii = 0;
+      if (pagecount>0) {
+        while (totalrowsvec[page] == 0) {
+          ++page;
+          ii = 0;
+
+          if (page == pagecount)
+            break;
+        }
+
+        if (totalrowsvec[page] == i) {
+          ++page;
+          ii = 0;
+        }
       }
 
-      // Rcout << ii << std::endl;
+      // Rcout << totalrowsvec[page] << std::endl;
       // Rprintf("ii: %d\n", ii);
 
-      sas.seekg((data_pos[page] + rowlength * ii), sas.beg);
+      auto pp = data_pos[page];
+      Rcout << pp << std::endl;
+
+      sas.seekg((pp + rowlength * ii), sas.beg);
+      Rcout << "---- data "<< sas.tellg() << " ----" << std::endl;
       // Rcout << "page: " << page << std::endl;
       int64_t tempoffs = sas.tellg();
       // Rcout << tempoffs << std::endl;
