@@ -505,6 +505,10 @@ Rcpp::List readsas(const char * filePath, const bool debug)
               //   }
             // }
 
+      while((sas.tellg() % 8) != 0) {
+        readbin(unk32, sas, swapit);
+      }
+
       auto sh_end_pos = 0;
 
       if (PAGE_TYPE != 0)
