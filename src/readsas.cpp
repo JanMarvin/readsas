@@ -432,11 +432,14 @@ Rcpp::List readsas(const char * filePath, const bool debug)
 
       // debug
 
-      // if (pg == 0) {
+      /* if pagesize == headersize or
+       * if pagesize is even multiple of headersize
+       */
+      if ((pagesize == headersize) | ((pagesize / headersize) % 2 == 0)) {
         while (sas.tellg() % 8 != 0) {
           readbin(unk32, sas, 0); // padding?
         }
-      // }
+      }
 
       auto sh_end_pos = 0;
 
