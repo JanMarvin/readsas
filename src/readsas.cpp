@@ -55,6 +55,9 @@ Rcpp::List readsas(const char * filePath, const bool debug)
       addtextoff = 0;
     int16_t PAGE_TYPE = 0, BLOCK_COUNT = 0, SUBHEADER_COUNT = 0;
 
+    double created = 0; // 8
+    double modified = 0; // 16
+
     std::vector<idxofflen> fmt;
     std::vector<idxofflen> lbl;
     std::vector<idxofflen> unk;
@@ -222,16 +225,17 @@ Rcpp::List readsas(const char * filePath, const bool debug)
     readstring(filetype, sas);
     Rcout << filetype << std::endl;
 
-    double created = 0;
+    unk32 = readbin(unk32, sas, swapit);
+    Rcout << unk32 << std::endl;
+
     created = readbin(created, sas, swapit);
     Rcout << created << std::endl;
 
-    double modified = 0;
     modified = readbin(modified, sas, swapit);
     Rcout << modified << std::endl;
 
-    unkdub = readbin(unkdub, sas, swapit);
-    Rcout << unkdub << std::endl;
+    unk32 = readbin(unk32, sas, swapit);
+    Rcout << unk32 << std::endl;
 
     unkdub = readbin(unkdub, sas, swapit);
     if (debug) Rcout << unkdub << std::endl;
