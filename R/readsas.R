@@ -29,12 +29,15 @@ read.sas <- function(file, debug = FALSE, convert.dates = TRUE) {
 
   data <- readsas(filepath, debug)
 
-  formats <- attr(data, "formats")
+  labels  <- attr(data, "labels")[1:ncol(data)]
+  formats <- attr(data, "formats")[1:ncol(data)]
 
   if (convert.dates) {
 
     vars <- which(formats == "MMDDYY" | formats == "DATE")
     # z <- 1472562988
+
+    print(vars)
 
     # no leapseconds applied (is it required?)
     for (var in vars) {
