@@ -37,8 +37,6 @@ read.sas <- function(file, debug = FALSE, convert.dates = TRUE) {
     vars <- which(formats == "MMDDYY" | formats == "DATE")
     # z <- 1472562988
 
-    print(vars)
-
     # no leapseconds applied (is it required?)
     for (var in vars) {
       data[[var]] <- as.Date(
