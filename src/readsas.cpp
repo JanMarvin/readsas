@@ -55,7 +55,8 @@ Rcpp::List readsas(const char * filePath, const bool debug)
       addtextoff = 0;
     int16_t PAGE_TYPE = 0, BLOCK_COUNT = 0, SUBHEADER_COUNT = 0;
 
-    int64_t pageseqnum = 0;
+    int32_t pageseqnum32 = 0;
+    int64_t pageseqnum64 = 0;
 
     double created = 0; // 8
     double modified = 0; // 16
@@ -330,13 +331,15 @@ Rcpp::List readsas(const char * filePath, const bool debug)
     unkdub = readbin(unkdub, sas, swapit); // 0
     Rcout << unkdub << std::endl;
 
-    // page seq num
-    int32_t PAGE_SIZE = 0, PAGE_COUNT = 0;
-    pageseqnum = readbin(pageseqnum, sas, swapit);
-    Rprintf("PAGE_SIZE: %d \n", pageseqnum);
+    // Rcout << sas.tellg() << std::endl;
 
-    PAGE_COUNT = readbin(PAGE_COUNT, sas, swapit);
-    Rprintf("PAGE_COUNT: %d \n", PAGE_COUNT);
+    // page seq num at 320|328
+    int32_t PAGE_SIZE = 0, PAGE_COUNT = 0;
+    pageseqnum32 = readbin(pageseqnum32, sas, swapit);
+    Rprintf("pageseqnum32: %d \n", pageseqnum32);
+
+    unk32 = readbin(unk32, sas, swapit); // 0 padding?
+    Rprintf("unk32: %d \n", unk32);
 
     // 3rd timestamp ? 0
     double thrdts = 0;
@@ -386,17 +389,17 @@ Rcpp::List readsas(const char * filePath, const bool debug)
 
       // Page Offset Table
       if (u64 == 4) {
-        pageseqnum = readbin(pageseqnum, sas, swapit);
+        pageseqnum64 = readbin(pageseqnum64, sas, swapit);
         unk1 = readbin(unk1, sas, swapit);
         unk2 = readbin(unk2, sas, swapit);
         unk3 = readbin(unk3, sas, swapit);
       } else {
-        pageseqnum = readbin((int32_t)pageseqnum, sas, swapit);
+        pageseqnum64 = readbin((int32_t)pageseqnum64, sas, swapit);
         unk1 = readbin((int32_t)unk1, sas, swapit);
         unk2 = readbin((int32_t)unk2, sas, swapit);
         unk3 = readbin((int32_t)unk3, sas, swapit);
       }
-      Rprintf("pageseqnum: %d \n", pageseqnum);
+      Rprintf("pageseqnum: %d \n", pageseqnum64);
       Rcout << unk1 << " " << unk2 << " " << unk3 << std::endl;
 
       PAGE_TYPE = readbin(PAGE_TYPE, sas, swapit);
@@ -1580,6 +1583,7 @@ Rcpp::List readsas(const char * filePath, const bool debug)
     df.attr("formats") = formats;
     df.attr("created") = created;
     df.attr("modified") = modified;
+    df.attr("thrdts") = thrdts;
 
     return(df);
 
