@@ -113,7 +113,8 @@ struct idxofflen {
 };
 
 
-inline std::string int32_to_hex (int32_t val) {
+template <typename T>
+inline std::string int_to_hex (T val) {
   std::stringstream stream;
   stream << std::hex << val;
   std::string res( stream.str() );
