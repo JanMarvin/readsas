@@ -1191,37 +1191,6 @@ Rcpp::List readsas(const char * filePath, const bool debug)
                 //   ", " << unks.LEN << std::endl;
               }
 
-              pos = sas.tellg();
-
-
-              Rcout << varname_pos[pg_vars] << " : "<< pg_vars << std::endl;
-
-              /* read formats and labels */
-              std::string format = "";
-              if (fmts.LEN > 0) {
-                int64_t fpos = (varname_pos[fmts.IDX] + fmts.OFF);
-                sas.seekg(fpos, sas.beg);
-                Rcout << fpos << std::endl;
-                format.resize(fmts.LEN, '\0');
-                format = readstring(format, sas);
-              }
-
-              std:: string label = "";
-              if (lbls.LEN > 0) {
-                int64_t lpos = (varname_pos[lbls.IDX] + lbls.OFF);
-                sas.seekg(lpos, sas.beg);
-                Rcout <<  lpos << std::endl;
-                label.resize(lbls.LEN, '\0');
-                label = readstring(label, sas);
-              }
-
-              // Rcout << format << " : " << label << std::endl;
-
-              formats.push_back( format );
-              labels.push_back( label );
-
-              sas.seekg(pos, sas.beg);
-
               break;
             }
 
@@ -1586,6 +1555,46 @@ Rcpp::List readsas(const char * filePath, const bool debug)
       } else{
         Rcout << "found unimplemented PAGE_TYPE " << PAGE_TYPE << std::endl;
       }
+    }
+
+
+    if (hasattributes) {
+
+      // pos = sas.tellg();
+
+
+      // Rcout << varname_pos[pg_vars] << " : "<< pg_vars << std::endl;
+
+      int len = fmt.size();
+
+      for (int i = 0; i < len; ++i) {
+
+        /* read formats and labels */
+        std::string format = "";
+        if (fmt[i].LEN > 0) {
+          uint64_t fpos = (varname_pos[fmt[i].IDX] + fmt[i].OFF);
+          sas.seekg(fpos, sas.beg);
+          Rcout << fpos << std::endl;
+          format.resize(fmt[i].LEN, '\0');
+          format = readstring(format, sas);
+        }
+
+        std:: string label = "";
+        if (lbl[i].LEN > 0) {
+          uint64_t lpos = (varname_pos[lbl[i].IDX] + lbl[i].OFF);
+          sas.seekg(lpos, sas.beg);
+          Rcout <<  lpos << std::endl;
+          label.resize(lbl[i].LEN, '\0');
+          label = readstring(label, sas);
+        }
+
+        // Rcout << format << " : " << label << std::endl;
+
+        formats.push_back( format );
+        labels.push_back( label );
+      }
+
+      // sas.seekg(pos, sas.beg);
     }
 
     if (compr != 0)
