@@ -470,7 +470,8 @@ Rcpp::List readsas(const char * filePath, const bool debug)
       int64_t sh_tot_len = 0;
       uint64_t dataoff = 0;
 
-      if (( PAGE_TYPE == 640 || PAGE_TYPE == 512 || PAGE_TYPE == 256 || PAGE_TYPE == 0))
+
+      if (( PAGE_TYPE == 1024 || PAGE_TYPE == 640 || PAGE_TYPE == 512 || PAGE_TYPE == 256 || PAGE_TYPE == 0))
       {
         for (auto i = 0; i < SUBHEADER_COUNT; ++i) {
           if (u64 == 4) {
