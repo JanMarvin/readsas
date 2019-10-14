@@ -1470,7 +1470,7 @@ Rcpp::List readsas(const char * filePath, const bool debug)
                           capois[i].CN_OFF, capois[i].CN_WID, capois[i].NM_FLAG,
                           capois[i].CN_TYP, capois[i].UNK8 );
 
-                if (capois[i].CN_TYP > 0) {
+                if ((capois[i].CN_TYP >= 1) & (capois[i].CN_TYP <= 2)) {
                   coloffset.push_back( capois[i].CN_OFF );
                   colwidth.push_back( capois[i].CN_WID );
                   vartyps.push_back( capois[i].CN_TYP );
@@ -1642,6 +1642,9 @@ Rcpp::List readsas(const char * filePath, const bool debug)
           }
         }
 
+        Rcout << page << std::endl;
+        Rcout << i << " " << ii << std::endl;
+
         // Rcout << totalrowsvec[page] << std::endl;
 
         auto pp = data_pos[page];
@@ -1649,9 +1652,8 @@ Rcpp::List readsas(const char * filePath, const bool debug)
 
 
         /* unknown */
-        if (!(dataoffset == 256) & (page == 0)) {
+        if (!(dataoffset == 256) & (page == 0))
           pos += alignval;
-        }
 
         sas.seekg(pos, sas.beg);
 
@@ -1665,6 +1667,9 @@ Rcpp::List readsas(const char * filePath, const bool debug)
 
           auto wid = colwidth[j];
           auto typ = vartyps[j];
+
+
+          Rcout  << varnames[j] << std::endl;
 
           uint64_t off = coloffset[j];
           uint64_t readpos = tempoffs + off;
@@ -1770,6 +1775,9 @@ Rcpp::List readsas(const char * filePath, const bool debug)
     df.attr("fmt32") = fmt32s;
     df.attr("ifmt32") = ifmt32s;
 
+    df.attr("colwidth") = colwidth;
+    df.attr("coloffset") = coloffset;
+    df.attr("vartyps") = vartyps;
 
     return(df);
 
