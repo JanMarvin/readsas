@@ -1600,6 +1600,7 @@ Rcpp::List readsas(const char * filePath, const bool debug)
 
     // new offset ----------------------------------------------------------- //
 
+    bool firstpage = 0;
     if (compr == 0) {
 
       auto page = 0;
@@ -1609,6 +1610,7 @@ Rcpp::List readsas(const char * filePath, const bool debug)
       for (auto i = 0; i < rowcount; ++i) {
 
         if (pagecount>0) {
+
           while (totalrowsvec[page] == 0) {
             ++page;
             ii = 0;
@@ -1620,6 +1622,7 @@ Rcpp::List readsas(const char * filePath, const bool debug)
           if (totalrowsvec[page] == i) {
             ++page;
             ii = 0;
+            firstpage = 1;
           }
         }
 
@@ -1637,7 +1640,7 @@ Rcpp::List readsas(const char * filePath, const bool debug)
         // Rcout << i << " " << dataoffset << " " << (int)alignval << std::endl;
 
         /* unknown */
-        if (!(dataoffset == 256) & (page == 0)) {
+        if (!(dataoffset == 256) & (firstpage == 0)) {
           pos += alignval;
         }
 
