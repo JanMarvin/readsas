@@ -791,8 +791,8 @@ Rcpp::List readsas(const char * filePath, const bool debug)
                 for (int z = 0; z < 20; ++z) {
                   unk16 = readbin(unk16, sas, swapit); // 0
                   if (unk16 != 0) {
-                  //   warning("val4 is %d at %d. expected a zero",
-                  //           unk16, sas.tellg());
+                    //   warning("val4 is %d at %d. expected a zero",
+                    //           unk16, sas.tellg());
                     datofs = unk16;
                   }
                 }
@@ -1271,84 +1271,20 @@ Rcpp::List readsas(const char * filePath, const bool debug)
               unk16 = readbin(unk16, sas, swapit); // 0
               // Rcout << unk16 << std::endl;
 
-              if (varname_pos.size() > 0) {
+              /* Column Name Pointers */
+              CN_Poi cnpoi;
 
-                if (!(PAGE_TYPE == 1024)) {
+              for (auto cn = 0; cn < colnum; ++cn) {
 
-                  uint64_t pos_beg = sas.tellg();
-                  int8_t tmp = 16; // always 16?
-                  if (!hasproc) tmp = 0;
+                cnpoi.CN_IDX    = readbin(cnpoi.CN_IDX, sas, swapit);
+                cnpoi.CN_OFF    = readbin(cnpoi.CN_OFF, sas, swapit);
+                cnpoi.CN_LEN    = readbin(cnpoi.CN_LEN, sas, swapit);
+                cnpoi.zeros     = readbin(cnpoi.zeros,  sas, swapit);
 
-                  if (debug)
-                    Rprintf("%d, %d, %d, %d; %d\n",
-                            comprlen, tmp, proclen, swlen, varname_pos[0]);
+                // additional guard here against crazy values?
+                if ((cnpoi.CN_IDX >= 0) & (cnpoi.CN_IDX < pagecount))
+                  cnpois.push_back( cnpoi );
 
-                  uint64_t txtpos = varname_pos[0] + 12;
-
-                  sas.seekg(txtpos, sas.beg);
-
-                  // compression
-                  if (comprlen > 0) {
-                    compression.resize(comprlen, '\0');
-                    compression = readstring(compression, sas);
-
-                    if (compression.compare("SASYZCRL") == 0)
-                      compr = 1;
-
-                    if (compression.compare("SASYZCR2") == 0)
-                      compr = 2;
-                    // Rcout << compression << std::endl;
-                  }
-
-                  // 16 whitespaces
-                  std::string empty (tmp, '\0');
-                  if (tmp > 0) {
-                    empty = readstring(empty, sas);
-                    if (!(empty.compare("                ") == 0))
-                      warning("non empty 'empty' string found %s \n",
-                              empty);
-                  }
-
-                  // proc that created the file
-                  if (proclen > 0) {
-                    proc.resize(proclen, '\0');
-                    proc = readstring(proc, sas);
-                  }
-
-                  // additional software string
-                  if (swlen > 0) {
-                    sw.resize(swlen, '\0');
-                    sw = readstring(sw, sas);
-                  }
-
-
-                  if (debug)
-                    Rcout << "here we go!\n" <<
-                      compression << "\n" <<
-                        empty << "\n" <<
-                          proc << "\n" <<
-                            sw << std::endl;
-
-                  // Rprintf("compr %d \n", compr  );
-
-                  sas.seekg(pos_beg, sas.beg);
-                }
-
-                /* Column Name Pointers */
-                CN_Poi cnpoi;
-
-                for (auto cn = 0; cn < colnum; ++cn) {
-
-                  cnpoi.CN_IDX    = readbin(cnpoi.CN_IDX, sas, swapit);
-                  cnpoi.CN_OFF    = readbin(cnpoi.CN_OFF, sas, swapit);
-                  cnpoi.CN_LEN    = readbin(cnpoi.CN_LEN, sas, swapit);
-                  cnpoi.zeros     = readbin(cnpoi.zeros,  sas, swapit);
-
-                  // additional guard here against crazy values?
-                  if ((cnpoi.CN_IDX >= 0) & (cnpoi.CN_IDX < pagecount))
-                    cnpois.push_back( cnpoi );
-
-                }
               }
 
               break;
@@ -1524,7 +1460,7 @@ Rcpp::List readsas(const char * filePath, const bool debug)
     varname_pos.erase(
       std::remove(varname_pos.begin(), varname_pos.end(), 0),
       varname_pos.end()
-      );
+    );
 
     label_pos.erase(
       std::remove(label_pos.begin(), label_pos.end(), 0),
@@ -1562,6 +1498,70 @@ Rcpp::List readsas(const char * filePath, const bool debug)
       if (debug)
         Rcout << i << " : " << vpos << " : " << varname << std::endl;
 
+    }
+
+    if (varname_pos.size() > 0) {
+
+      if (!(PAGE_TYPE == 1024)) {
+
+        uint64_t pos_beg = sas.tellg();
+        int8_t tmp = 16; // always 16?
+        if (!hasproc) tmp = 0;
+
+        if (debug)
+          Rprintf("%d, %d, %d, %d; %d\n",
+                  comprlen, tmp, proclen, swlen, varname_pos[0]);
+
+        uint64_t txtpos = varname_pos[0] + 12;
+
+        sas.seekg(txtpos, sas.beg);
+
+        // compression
+        if (comprlen > 0) {
+          compression.resize(comprlen, '\0');
+          compression = readstring(compression, sas);
+
+          if (compression.compare("SASYZCRL") == 0)
+            compr = 1;
+
+          if (compression.compare("SASYZCR2") == 0)
+            compr = 2;
+          // Rcout << compression << std::endl;
+        }
+
+        // 16 whitespaces
+        std::string empty (tmp, '\0');
+        if (tmp > 0) {
+          empty = readstring(empty, sas);
+          if (!(empty.compare("                ") == 0))
+            warning("non empty 'empty' string found %s \n",
+                    empty);
+        }
+
+        // proc that created the file
+        if (proclen > 0) {
+          proc.resize(proclen, '\0');
+          proc = readstring(proc, sas);
+        }
+
+        // additional software string
+        if (swlen > 0) {
+          sw.resize(swlen, '\0');
+          sw = readstring(sw, sas);
+        }
+
+
+        if (debug)
+          Rcout << "here we go!\n" <<
+            compression << "\n" <<
+              empty << "\n" <<
+                proc << "\n" <<
+                  sw << std::endl;
+
+        // Rprintf("compr %d \n", compr  );
+
+        sas.seekg(pos_beg, sas.beg);
+      }
     }
 
 
@@ -1782,7 +1782,7 @@ Rcpp::List readsas(const char * filePath, const bool debug)
     // 3. Create a data.frame
     df.attr("row.names") = rvec;
     // if (compr == 0)
-      df.attr("names") = varnames;
+    df.attr("names") = varnames;
     // else
     //   df.attr("names") = cvec;
     df.attr("class") = "data.frame";
