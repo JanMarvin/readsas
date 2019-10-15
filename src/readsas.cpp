@@ -1698,6 +1698,20 @@ Rcpp::List readsas(const char * filePath, const bool debug)
           uint64_t off = coloffset[j];
           uint64_t readpos = tempoffs + off;
 
+          // Rcout << "fistpage " << firstpage << " pp " << pp <<
+          //   " pos " << pos <<
+          //     " pagetype  " << page_type[page] <<
+          //       " off "              << off <<
+          //         " readpos "              << readpos <<
+          //           " i " << i << " j " << j <<
+          //             std::endl;
+          //
+          // if (totalrowsvec[page] == i)
+          //   Rcout << "yes" << std::endl;
+          //
+          // if (as<std::string>(varnames[j]).compare("VIOINC04") == 0)
+          //   stop("stop");
+
           if (wid < 8 & typ == 1) {
 
             double val_d = 0.0;
