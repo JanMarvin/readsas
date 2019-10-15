@@ -1270,9 +1270,9 @@ Rcpp::List readsas(const char * filePath, const bool debug)
 
                   if (debug)
                     Rprintf("%d, %d, %d, %d; %d\n",
-                            comprlen, tmp, proclen, swlen, varname_pos[vnidx]);
+                            comprlen, tmp, proclen, swlen, varname_pos[0]);
 
-                  uint64_t txtpos = varname_pos[vnidx] + 12;
+                  uint64_t txtpos = varname_pos[0] + 12;
 
                   sas.seekg(txtpos, sas.beg);
 
