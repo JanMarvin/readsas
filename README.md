@@ -1,7 +1,7 @@
 # Readsas [![Build Status](https://travis-ci.org/JanMarvin/readsas.svg?branch=master)](https://travis-ci.org/JanMarvin/readsas) [![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/JanMarvin/readsas?branch=master&svg=true)](https://ci.appveyor.com/project/JanMarvin/readsas)
 
 R package using Rcpp to parse an SAS file into a data.frame(). Currently 
-`read.sas` is the main functions and feature of this package.
+`read.sas` is the main function and feature of this package.
 
 The package features (experimental) reading of sas7bdat files that are
 
@@ -17,6 +17,13 @@ With `devtools`:
 ```R
 devtools::install_git("https://github.com/JanMarvin/readsas.git")
 ```
+## Usage
+```R
+fl <- system.file("extdata", "cars.sas7bdat", package="readsas")
+
+dd <- read.sas(fl)
+```
+
 
 ## Thanks
 
