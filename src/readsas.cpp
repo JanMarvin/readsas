@@ -1742,7 +1742,7 @@ Rcpp::List readsas(const char * filePath, const bool debug)
     // close file
     sas.close();
 
-    df.attr("varnames") = varnames;
+    // df.attr("varnames") = varnames;
     df.attr("labels") = labels;
     df.attr("formats") = formats;
     df.attr("created") = created;
