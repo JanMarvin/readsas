@@ -326,6 +326,12 @@ Rcpp::List readsas(const char * filePath, const bool debug)
     }
     if (debug) Rprintf("pagecount: %d \n", pagecount);
 
+    /*
+     * theoretically every page contains data and/or varnames. practically
+     * this must not be true. 1024 does not contain data, only varnames. 512
+     * might contain both or only varnames.
+     */
+
     std::vector<int64_t> data_pos(pagecount);
     std::vector<uint64_t> varname_pos(pagecount);
     std::vector<int64_t> rowsperpage(pagecount);
@@ -416,6 +422,7 @@ Rcpp::List readsas(const char * filePath, const bool debug)
     auto totalrows = 0;
     std::vector<int32_t> totalrowsvec(pagecount);
 
+    auto vnidx = 0;
 
     // begin reading pages ---------------------------------------------------//
     for (auto pg = 0; pg < pagecount; ++pg) {
@@ -1203,7 +1210,7 @@ Rcpp::List readsas(const char * filePath, const bool debug)
 
               int16_t len = 0;
 
-              varname_pos[pg] = sas.tellg();
+              varname_pos[vnidx] = sas.tellg();
 
               len = readbin(len, sas, swapit);
               // Rcout << len << std::endl;
@@ -1263,9 +1270,9 @@ Rcpp::List readsas(const char * filePath, const bool debug)
 
                   if (debug)
                     Rprintf("%d, %d, %d, %d; %d\n",
-                            comprlen, tmp, proclen, swlen, varname_pos[0]);
+                            comprlen, tmp, proclen, swlen, varname_pos[vnidx]);
 
-                  uint64_t txtpos = varname_pos[0] + 12;
+                  uint64_t txtpos = varname_pos[vnidx] + 12;
 
                   sas.seekg(txtpos, sas.beg);
 
@@ -1496,13 +1503,18 @@ Rcpp::List readsas(const char * filePath, const bool debug)
       } else{
         Rcout << "found unimplemented PAGE_TYPE " << PAGE_TYPE << std::endl;
       }
+
+
+
+      // increase varname index
+      if ((PAGE_TYPE == 0) | (PAGE_TYPE == 512) | (PAGE_TYPE == 1024))
+        ++vnidx;
     }
 
 
-    // int32_t len = colnum;
-
-    // if (cnpois[i].CN_LEN > 0) {
     for (auto i = 0; i < colnum; ++i) {
+
+      // Rcout << "varnames ----------------------------" << std::endl;
 
       if (debug)
         Rprintf("CN_IDX %d; CN_OFF %d; CN_LEN %d; zeros %d \n",
@@ -1526,9 +1538,9 @@ Rcpp::List readsas(const char * filePath, const bool debug)
 
     if (hasattributes) {
 
-      auto len = fmt.size();
+      // auto len = fmt.size();
 
-      for (auto i = 0; i < len; ++i) {
+      for (auto i = 0; i < colnum; ++i) {
 
         /* read formats and labels */
         std::string format = "";
@@ -1537,6 +1549,9 @@ Rcpp::List readsas(const char * filePath, const bool debug)
           sas.seekg(fpos, sas.beg);
           format.resize(fmt[i].LEN, '\0');
           format = readstring(format, sas);
+
+          // Rcout << fpos << "; " << fmt[i].IDX << "; " << varname_pos[fmt[i].IDX] <<
+          //   "; " << fmt[i].OFF << std::endl;
         }
 
         std:: string label = "";
