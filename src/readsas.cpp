@@ -84,6 +84,8 @@ Rcpp::List readsas(const char * filePath, const bool debug)
     std::vector<idxofflen> lbl;
     std::vector<idxofflen> unk;
 
+    // std::vector<uint64_t> coloffset;
+
     Rcpp::NumericVector fmt32s;
     Rcpp::NumericVector ifmt32s;
     Rcpp::NumericVector fmtkeys;
@@ -332,9 +334,10 @@ Rcpp::List readsas(const char * filePath, const bool debug)
      * might contain both or only varnames.
      */
 
-    std::vector<int64_t> data_pos(pagecount);
-    std::vector<uint64_t> varname_pos(pagecount);
-    std::vector<int64_t> rowsperpage(pagecount);
+    std::vector<int64_t>  data_pos(pagecount, 0);
+    std::vector<uint64_t> varname_pos(pagecount, 0);
+    std::vector<uint64_t> label_pos(pagecount, 0);
+    std::vector<int64_t>  rowsperpage(pagecount, 0);
 
     unkdub = readbin(unkdub, sas, swapit); // 0
     if (debug) Rcout << unkdub << std::endl;
@@ -437,6 +440,7 @@ Rcpp::List readsas(const char * filePath, const bool debug)
 
 
       int64_t unk1 = 0, unk2 = 0, unk3 = 0;
+      int32_t c5typ = 0; /* check if variable name, format or label */
 
       // Page Offset Table
       if (u64 == 4) {
@@ -1210,7 +1214,14 @@ Rcpp::List readsas(const char * filePath, const bool debug)
 
               int16_t len = 0;
 
-              varname_pos[vnidx] = sas.tellg();
+              if (c5typ == 0)
+                varname_pos[pg] = sas.tellg();
+
+
+
+              label_pos[pg] = varname_pos[pg];
+              if (c5typ == 1)
+                label_pos[pg] = sas.tellg();
 
               len = readbin(len, sas, swapit);
               // Rcout << len << std::endl;
@@ -1223,9 +1234,9 @@ Rcpp::List readsas(const char * filePath, const bool debug)
 
               // not sure yet. pg == 0 is required
               if ((PAGE_TYPE != 1024) & (c5first == 0)) {
-                unk16 = readbin(unk16, sas, swapit); // 0
+                unk16 = readbin(unk16, sas, swapit); // 0 |     0 | 27977
                 // Rcout << unk16 << std::endl;
-                unk16 = readbin(unk16, sas, swapit); // 0
+                unk16 = readbin(unk16, sas, swapit); // 0 | 15872 | 30064
                 // Rcout << unk16 << std::endl;
               }
 
@@ -1233,7 +1244,7 @@ Rcpp::List readsas(const char * filePath, const bool debug)
                 Rprintf("SH_LEN %d; len %d; newlen: %d\n",
                         potabs[sc].SH_LEN, len);
 
-              c5first = 1;
+              ++c5typ;
 
               break;
             }
@@ -1334,7 +1345,7 @@ Rcpp::List readsas(const char * filePath, const bool debug)
                   cnpoi.zeros     = readbin(cnpoi.zeros,  sas, swapit);
 
                   // additional guard here against crazy values?
-                  if (cnpoi.CN_IDX < pagecount)
+                  if ((cnpoi.CN_IDX >= 0) & (cnpoi.CN_IDX < pagecount))
                     cnpois.push_back( cnpoi );
 
                 }
@@ -1363,10 +1374,10 @@ Rcpp::List readsas(const char * filePath, const bool debug)
               unk16 = readbin(unk16, sas, swapit); // 0
               // Rcout << unk16 << std::endl;
 
-              // auto cmax = (lenremain + alignval) / (alignval);
+              auto cmax = (lenremain + alignval) / (alignval);
               // if (debug) Rcout << cmax << std::endl;
 
-              auto cmax = colf_p1; if (pg == 2) cmax = colf_p2;
+              // auto cmax = colf_p1; if (pg == 2) cmax = colf_p2;
 
               /* Column Attributes Pointers */
               std::vector<CN_Att> capois(cmax);
@@ -1483,11 +1494,14 @@ Rcpp::List readsas(const char * filePath, const bool debug)
               if ((potabs[sc].SH_LEN > alignval) &
                   (potabs[sc].COMPRESSION != 4))
             {
-              Rcout << "---- unimplemented "<< sas.tellg() << std::endl;
-              Rcout << "SAS HEX STRING: "  << sas_hex << std::endl;
 
               auto unklen = potabs[sc].SH_LEN - alignval;
-              Rcout << "unklen is " << unklen << std::endl;
+
+              if (debug) {
+                Rcout << "---- unimplemented "<< sas.tellg() << std::endl;
+                Rcout << "SAS HEX STRING: "  << sas_hex << std::endl;
+                Rcout << "unklen is " << unklen << std::endl;
+              }
 
 
               sas.seekg(unklen, sas.cur);
@@ -1503,18 +1517,33 @@ Rcpp::List readsas(const char * filePath, const bool debug)
       } else{
         Rcout << "found unimplemented PAGE_TYPE " << PAGE_TYPE << std::endl;
       }
-
-
-
-      // increase varname index
-      if ((PAGE_TYPE == 0) | (PAGE_TYPE == 512) | (PAGE_TYPE == 1024))
-        ++vnidx;
     }
 
 
-    for (auto i = 0; i < colnum; ++i) {
+    // remove if 0
+    varname_pos.erase(
+      std::remove(varname_pos.begin(), varname_pos.end(), 0),
+      varname_pos.end()
+      );
 
-      // Rcout << "varnames ----------------------------" << std::endl;
+    label_pos.erase(
+      std::remove(label_pos.begin(), label_pos.end(), 0),
+      label_pos.end()
+    );
+
+    // for (int i = 0; i < data_pos.size(); ++i){
+    //   Rcout << data_pos[i] << std::endl;
+    // }
+    // for (int i = 0; i < varname_pos.size(); ++i){
+    //   Rcout << varname_pos[i] << std::endl;
+    // }
+    // for (int i = 0; i < label_pos.size(); ++i){
+    //   Rcout << label_pos[i] << std::endl;
+    // }
+
+
+    // Rcout << "varnames ----------------------------" << std::endl;
+    for (auto i = 0; i < colnum; ++i) {
 
       if (debug)
         Rprintf("CN_IDX %d; CN_OFF %d; CN_LEN %d; zeros %d \n",
@@ -1545,18 +1574,18 @@ Rcpp::List readsas(const char * filePath, const bool debug)
         /* read formats and labels */
         std::string format = "";
         if (fmt[i].LEN > 0) {
-          uint64_t fpos = (varname_pos[fmt[i].IDX] + fmt[i].OFF);
+          uint64_t fpos = (label_pos[fmt[i].IDX] + fmt[i].OFF);
           sas.seekg(fpos, sas.beg);
           format.resize(fmt[i].LEN, '\0');
           format = readstring(format, sas);
 
-          // Rcout << fpos << "; " << fmt[i].IDX << "; " << varname_pos[fmt[i].IDX] <<
+          // Rcout << fpos << "; " << fmt[i].IDX << "; " << label_pos[fmt[i].IDX] <<
           //   "; " << fmt[i].OFF << std::endl;
         }
 
         std:: string label = "";
         if (lbl[i].LEN > 0) {
-          uint64_t lpos = (varname_pos[lbl[i].IDX] + lbl[i].OFF);
+          uint64_t lpos = (label_pos[lbl[i].IDX] + lbl[i].OFF);
           sas.seekg(lpos, sas.beg);
           label.resize(lbl[i].LEN, '\0');
           label = readstring(label, sas);
@@ -1573,6 +1602,8 @@ Rcpp::List readsas(const char * filePath, const bool debug)
     if (compr != 0)
       warning("File contains unhandled compression. No data read. %d\n",
               compression);
+
+    // Rcout << "---- data part ----" << std::endl;
 
 
     // ---------------------------------------------------------------------- //
