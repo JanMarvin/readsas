@@ -79,12 +79,10 @@ Rcpp::List readsas(const char * filePath, const bool debug)
     std::string osname   (16, '\0');
     std::string dataset  (64, '\0');
 
+    std::vector<CN_Poi> cnpois;
     std::vector<idxofflen> fmt;
     std::vector<idxofflen> lbl;
     std::vector<idxofflen> unk;
-
-    std::vector<int64_t> data_pos;
-    std::vector<uint64_t> varname_pos;
 
     Rcpp::NumericVector fmt32s;
     Rcpp::NumericVector ifmt32s;
@@ -328,6 +326,8 @@ Rcpp::List readsas(const char * filePath, const bool debug)
     }
     if (debug) Rprintf("pagecount: %d \n", pagecount);
 
+    std::vector<int64_t> data_pos(pagecount);
+    std::vector<uint64_t> varname_pos(pagecount);
     std::vector<int64_t> rowsperpage(pagecount);
 
     unkdub = readbin(unkdub, sas, swapit); // 0
@@ -526,13 +526,10 @@ Rcpp::List readsas(const char * filePath, const bool debug)
         auto sh_end_pos = 0;
 
         if (PAGE_TYPE != 0) sh_end_pos = sas.tellg();
-        data_pos.push_back( sh_end_pos );
+        data_pos[pg] = sh_end_pos;
 
         if (debug)
           Rprintf("sh_end_pos: %d\n", sh_end_pos);
-
-
-        auto pg_vars = 0;
 
 
         // from now on, we will seek to every position inside the sas file
@@ -1206,13 +1203,13 @@ Rcpp::List readsas(const char * filePath, const bool debug)
 
               int16_t len = 0;
 
-              varname_pos.push_back( sas.tellg() );
+              varname_pos[pg] = sas.tellg();
 
               len = readbin(len, sas, swapit);
               // Rcout << len << std::endl;
-              unk16 = readbin(unk16, sas, swapit); // 0 vars on p1 ?
+              unk16 = readbin(unk16, sas, swapit); // 0
               // Rcout << unk16 << std::endl;
-              unk16 = readbin(unk16, sas, swapit); // 0 vars on p2 ?
+              unk16 = readbin(unk16, sas, swapit); // 0
               // Rcout << unk16 << std::endl;
               unk16 = readbin(unk16, sas, swapit); // 0
               // Rcout << unk16 << std::endl;
@@ -1319,49 +1316,21 @@ Rcpp::List readsas(const char * filePath, const bool debug)
                   sas.seekg(pos_beg, sas.beg);
                 }
 
-
-                // stop("stop");
-
-
                 /* Column Name Pointers */
-                auto cmax = (lenremain + alignval)/8;
+                CN_Poi cnpoi;
 
-                // Rcout << cmax << std::endl;
+                for (auto cn = 0; cn < colnum; ++cn) {
 
-                std::vector<CN_Poi> cnpois(cmax);
+                  cnpoi.CN_IDX    = readbin(cnpoi.CN_IDX, sas, swapit);
+                  cnpoi.CN_OFF    = readbin(cnpoi.CN_OFF, sas, swapit);
+                  cnpoi.CN_LEN    = readbin(cnpoi.CN_LEN, sas, swapit);
+                  cnpoi.zeros     = readbin(cnpoi.zeros,  sas, swapit);
 
-                for (auto i = 0; i < cmax; ++i) {
-
-                  auto idx    = readbin(cnpois[i].CN_IDX, sas, swapit);
-                  auto off    = readbin(cnpois[i].CN_OFF, sas, swapit);
-                  auto len    = readbin(cnpois[i].CN_LEN, sas, swapit);
-                  auto zeros  = readbin(cnpois[i].zeros,  sas, swapit);
-
-                  pos = sas.tellg();
-
-
-                  if (len > 0) {
-
-                    if (debug)
-                      Rprintf("CN_IDX %d; CN_OFF %d; CN_LEN %d; zeros %d \n",
-                              idx, off, len, zeros);
-
-                    int64_t vpos = (varname_pos[pg_vars] + off);
-                    sas.seekg(vpos, sas.beg);
-
-                    std::string varname(len, '\0');
-                    varname = readstring(varname, sas);
-                    varnames.push_back(varname);
-
-                    // Rcout << vpos << " : " << varname << std::endl;
-
-                    sas.seekg(pos, sas.beg);
-
-                  }
+                  // additional guard here against crazy values?
+                  if (cnpoi.CN_IDX < pagecount)
+                    cnpois.push_back( cnpoi );
 
                 }
-
-                ++pg_vars;
               }
 
               break;
@@ -1527,6 +1496,31 @@ Rcpp::List readsas(const char * filePath, const bool debug)
       } else{
         Rcout << "found unimplemented PAGE_TYPE " << PAGE_TYPE << std::endl;
       }
+    }
+
+
+    // int32_t len = colnum;
+
+    // if (cnpois[i].CN_LEN > 0) {
+    for (auto i = 0; i < colnum; ++i) {
+
+      if (debug)
+        Rprintf("CN_IDX %d; CN_OFF %d; CN_LEN %d; zeros %d \n",
+                cnpois[i].CN_IDX, cnpois[i].CN_OFF,
+                cnpois[i].CN_LEN, cnpois[i].zeros);
+
+      int64_t vpos = (varname_pos[cnpois[i].CN_IDX] + cnpois[i].CN_OFF);
+      // Rcout << vpos << "; " << varname_pos[cnpois[i].CN_IDX] <<
+      //   "; " << cnpois[i].CN_OFF << std::endl;
+      sas.seekg(vpos, sas.beg);
+
+      std::string varname(cnpois[i].CN_LEN, '\0');
+      varname = readstring(varname, sas);
+      varnames.push_back(varname);
+
+      if (debug)
+        Rcout << i << " : " << vpos << " : " << varname << std::endl;
+
     }
 
 
@@ -1720,14 +1714,14 @@ Rcpp::List readsas(const char * filePath, const bool debug)
 
     if (rowcount > 0)
       rvec = seq(1, rowcount);
-    Rcpp::IntegerVector cvec = seq(1, colnum);
+    // Rcpp::IntegerVector cvec = seq(1, colnum);
 
     // 3. Create a data.frame
     df.attr("row.names") = rvec;
-    if (compr == 0)
+    // if (compr == 0)
       df.attr("names") = varnames;
-    else
-      df.attr("names") = cvec;
+    // else
+    //   df.attr("names") = cvec;
     df.attr("class") = "data.frame";
 
     // close file
