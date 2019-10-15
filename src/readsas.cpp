@@ -780,9 +780,9 @@ Rcpp::List readsas(const char * filePath, const bool debug)
                 /* maybe SAS version information at o131018 ? */
                 for (int z = 0; z < 3; ++z) {
                   unk32 = readbin(unk32, sas, swapit); // 0
-                  if (unk32 != 0)
-                    warning("val3 is %d at %d. expected a zero",
-                            unk32, sas.tellg());
+                  // if (unk32 != 0)
+                  //   warning("val3 is %d at %d. expected a zero",
+                  //           unk32, sas.tellg());
                 }
 
                 rowsonpg = readbin(rowsonpg, sas, swapit);
@@ -791,8 +791,8 @@ Rcpp::List readsas(const char * filePath, const bool debug)
                 for (int z = 0; z < 20; ++z) {
                   unk16 = readbin(unk16, sas, swapit); // 0
                   if (unk16 != 0) {
-                    warning("val4 is %d at %d. expected a zero",
-                            unk16, sas.tellg());
+                  //   warning("val4 is %d at %d. expected a zero",
+                  //           unk16, sas.tellg());
                     datofs = unk16;
                   }
                 }
@@ -952,8 +952,8 @@ Rcpp::List readsas(const char * filePath, const bool debug)
 
                 for (int z = 0; z < 8; ++z) {
                   unk32 = readbin(unk32, sas, swapit); // 0
-                  if (unk32 != 0)
-                    warning("val3 is %d. expected a zero", unk32);
+                  // if (unk32 != 0)
+                  //   warning("val3 is %d. expected a zero", unk32);
                 }
 
                 unk16 = readbin(unk16, sas, swapit); // 4
@@ -973,8 +973,8 @@ Rcpp::List readsas(const char * filePath, const bool debug)
                 for (int z = 0; z < 20; ++z) {
                   unk16 = readbin(unk16, sas, swapit); // 0
                   if (unk16 != 0) {
-                    warning("val4 is %d at %d. expected a zero",
-                            unk16, sas.tellg());
+                    // warning("val4 is %d at %d. expected a zero",
+                    //         unk16, sas.tellg());
                     datofs = unk16;
                   }
                 }
