@@ -1716,8 +1716,10 @@ Rcpp::List readsas(const char * filePath, const bool debug)
     if (debug)
       Rprintf("%d %d \n", rowcount, colnum);
 
+    Rcpp::IntegerVector rvec(rowcount);
 
-    Rcpp::IntegerVector rvec = seq(1, rowcount);
+    if (rowcount > 0)
+      rvec = seq(1, rowcount);
     Rcpp::IntegerVector cvec = seq(1, colnum);
 
     // 3. Create a data.frame
