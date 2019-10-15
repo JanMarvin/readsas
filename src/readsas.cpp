@@ -1310,10 +1310,10 @@ Rcpp::List readsas(const char * filePath, const bool debug)
                   }
 
                   // proc that created the file
-                  // if (proclen > 0) {
-                  //   proc.resize(proclen, '\0');
-                  //   proc = readstring(proc, sas);
-                  // }
+                  if (proclen > 0) {
+                    proc.resize(proclen, '\0');
+                    proc = readstring(proc, sas);
+                  }
 
                   // additional software string
                   if (swlen > 0) {
