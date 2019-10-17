@@ -5,12 +5,13 @@
 #'@param file file to read
 #'@param debug print debug information
 #'@param convert.dates default is TRUE
+#'@param recode default is TRUE
 #'
 #'@useDynLib readsas, .registration=TRUE
 #'@importFrom utils download.file
 #'
 #'@export
-read.sas <- function(file, debug = FALSE, convert.dates = TRUE) {
+read.sas <- function(file, debug = FALSE, convert.dates = TRUE, recode = TRUE) {
 
   # Check if path is a url
   if (length(grep("^(http|ftp|https)://", file))) {
@@ -29,20 +30,35 @@ read.sas <- function(file, debug = FALSE, convert.dates = TRUE) {
 
   data <- readsas(filepath, debug)
 
-  labels  <- attr(data, "labels")[1:ncol(data)]
-  formats <- attr(data, "formats")[1:ncol(data)]
+  labels  <- attr(data, "labels")
+  formats <- attr(data, "formats")
+  encoding <- attr(data, "encoding")
+
+  # override encoding argument if file contains no valid information
+  if (encoding == "")
+    recode = FALSE
+
 
   if (convert.dates) {
 
     vars <- which(formats == "MMDDYY" | formats == "DATE")
-    # z <- 1472562988
 
-    # no leapseconds applied (is it required?)
     for (var in vars) {
       data[[var]] <- as.Date(
         as.POSIXct( data[[var]] * 24 * 60 * 60, origin = "1960-01-01")
         )
     }
+
+  }
+
+  if (recode) {
+
+    vars <- which(sapply(data, is.character))
+
+    data[vars] <- mapply(iconv, data[vars], MoreArgs=list(from = encoding))
+
+    labels <- iconv(labels, from = encoding)
+    attr(data, "labels") <- labels
 
   }
 

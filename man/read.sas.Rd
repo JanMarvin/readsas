@@ -4,7 +4,7 @@
 \alias{read.sas}
 \title{read.sas}
 \usage{
-read.sas(file, debug = FALSE, convert.dates = TRUE)
+read.sas(file, debug = FALSE, convert.dates = TRUE, recode = TRUE)
 }
 \arguments{
 \item{file}{file to read}
@@ -12,6 +12,8 @@ read.sas(file, debug = FALSE, convert.dates = TRUE)
 \item{debug}{print debug information}
 
 \item{convert.dates}{default is TRUE}
+
+\item{recode}{default is TRUE}
 }
 \description{
 read.sas

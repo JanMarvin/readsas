@@ -55,6 +55,7 @@ Rcpp::List readsas(const char * filePath, const bool debug)
     double unkdub = 0;
 
     int8_t u64 = 0;
+    uint8_t encoding = 0;
     int16_t dataoffset = 0;
     int16_t swlen = 0, proclen = 0, comprlen = 0, textoff = 0, todata = 0,
       addtextoff = 0, fmtkey = 0, fmtkey2 = 0,
@@ -69,6 +70,7 @@ Rcpp::List readsas(const char * filePath, const bool debug)
 
     std::string compression = "";
     std::string proc = "";
+    std::string enc = "";
     std::string sw = "";
     std::string sasfile  (8, '\0');
     std::string filetype (8, '\0');
@@ -255,8 +257,9 @@ Rcpp::List readsas(const char * filePath, const bool debug)
     if (debug) Rprintf("%d\n", unk8);
     unk8 = readbin(unk8, sas, swapit); // data representation 1 linux ?
     if (debug) Rprintf("%d\n", unk8);
-    unk8 = readbin(unk8, sas, swapit); // file encoding?
-    if (debug) Rprintf("%d\n", unk8);
+    encoding = readbin(encoding, sas, swapit); // file encoding?
+    if (debug) Rprintf("%d\n", encoding);
+    enc = SASEncoding(encoding);
     unk8 = readbin(unk8, sas, swapit); // sys encoding?
     if (debug) Rprintf("%d\n", unk8);
 
@@ -1810,6 +1813,7 @@ Rcpp::List readsas(const char * filePath, const bool debug)
     df.attr("osver") = osver;
     df.attr("osmaker") = osmaker;
     df.attr("osname") = osname;
+    df.attr("encoding") = enc;
     df.attr("fmtkeys") = fmtkeys;
     df.attr("fmt32") = fmt32s;
     df.attr("ifmt32") = ifmt32s;
