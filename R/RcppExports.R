@@ -5,9 +5,10 @@
 #'
 #' @param filePath The full systempath to the sas7bdat file you want to import.
 #' @param debug print debug information
+#' @param kk kk
 #' @import Rcpp
 #' @export
-readsas <- function(filePath, debug) {
-    .Call(`_readsas_readsas`, filePath, debug)
+readsas <- function(filePath, debug, kk) {
+    .Call(`_readsas_readsas`, filePath, debug, kk)
 }
 

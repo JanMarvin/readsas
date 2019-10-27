@@ -11,7 +11,8 @@
 #'@importFrom utils download.file
 #'
 #'@export
-read.sas <- function(file, debug = FALSE, convert.dates = TRUE, recode = TRUE) {
+read.sas <- function(file, debug = FALSE, convert.dates = TRUE, recode = TRUE,
+                     rowcount = -1) {
 
   # Check if path is a url
   if (length(grep("^(http|ftp|https)://", file))) {
@@ -28,7 +29,7 @@ read.sas <- function(file, debug = FALSE, convert.dates = TRUE, recode = TRUE) {
 
 
 
-  data <- readsas(filepath, debug)
+  data <- readsas(filepath, debug, rowcount)
 
   labels  <- attr(data, "labels")
   formats <- attr(data, "formats")
@@ -55,7 +56,8 @@ read.sas <- function(file, debug = FALSE, convert.dates = TRUE, recode = TRUE) {
 
     vars <- which(sapply(data, is.character))
 
-    data[vars] <- mapply(iconv, data[vars], MoreArgs=list(from = encoding))
+    data[vars] <- mapply(iconv, data[vars], MoreArgs=list(from = encoding),
+                         SIMPLIFY = FALSE)
 
     labels <- iconv(labels, from = encoding)
     attr(data, "labels") <- labels

@@ -9,6 +9,23 @@
 
 #include "swap_endian.h"
 
+inline void writestr(std::string val_s, int32_t len, std::fstream& sav)
+{
+
+  std::stringstream val_stream;
+  val_stream << std::left << std::setw(len) << std::setfill(' ') << val_s;
+  std::string val_strl = val_stream.str();
+
+  sav.write(val_strl.c_str(),val_strl.length());
+
+}
+
+
+
+inline Rcpp::IntegerVector order(Rcpp::IntegerVector x) {
+  Rcpp::IntegerVector sorted = Rcpp::clone(x).sort();
+  return match(sorted, x) -1;
+}
 
 template <typename T>
 T readbin( T t , std::istream& sas, bool swapit)
@@ -55,23 +72,6 @@ inline std::string readstring(std::string &mystring, T& sas)
 
   return(mystring);
 }
-
-
-// std::string decode ( const std::string & to_decode ) {
-//   boost::regex e ( "(\\d+)(\\w)" ) ;
-//   boost::match_results<std::string::const_iterator> matches ;
-//   std::ostringstream oss ;
-//   std::string::const_iterator start = to_decode.begin( ) , end = to_decode.end( ) ;
-//   while ( boost::regex_search ( start , end , matches , e ) ) {
-//     std::string numberstring ( matches[ 1 ].first , matches[ 1 ].second ) ;
-//     int number = atoi( numberstring.c_str( ) ) ;
-//     std::string character ( matches[ 2 ].first , matches[ 2 ].second ) ;
-//     for ( int i = 0 ; i < number ; i++ )
-//       oss << character ;
-//     start = matches[ 2 ].second ;
-//   }
-//   return oss.str( ) ;
-// }
 
 // PAGE_OFFSET_TABLE
 struct PO_Tab {

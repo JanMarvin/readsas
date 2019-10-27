@@ -6,20 +6,21 @@
 using namespace Rcpp;
 
 // readsas
-Rcpp::List readsas(const char * filePath, const bool debug);
-RcppExport SEXP _readsas_readsas(SEXP filePathSEXP, SEXP debugSEXP) {
+Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk);
+RcppExport SEXP _readsas_readsas(SEXP filePathSEXP, SEXP debugSEXP, SEXP kkSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const char * >::type filePath(filePathSEXP);
     Rcpp::traits::input_parameter< const bool >::type debug(debugSEXP);
-    rcpp_result_gen = Rcpp::wrap(readsas(filePath, debug));
+    Rcpp::traits::input_parameter< const int32_t >::type kk(kkSEXP);
+    rcpp_result_gen = Rcpp::wrap(readsas(filePath, debug, kk));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_readsas_readsas", (DL_FUNC) &_readsas_readsas, 2},
+    {"_readsas_readsas", (DL_FUNC) &_readsas_readsas, 3},
     {NULL, NULL, 0}
 };
 
