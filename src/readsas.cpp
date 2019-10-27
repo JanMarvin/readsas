@@ -569,7 +569,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
 
           // not sure yet, whats the right thing to do here
           bool page0not = 0;
-          if (pg == 0 & sc != 3)
+          if ((pg == 0) & (sc != 3))
             page0not = (PAGE_TYPE == 0) &  (potabs[sc].SH_LEN == rowlength);
 
           // if ((pg > 0 ) & (BLOCK_COUNT == SUBHEADER_COUNT))
@@ -1214,7 +1214,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
 
               unk.push_back(unks);
 
-              if (unks.IDX != 0 | unks.OFF != 0 | unks.LEN != 0) {
+              if ((unks.IDX != 0) | (unks.OFF != 0) | (unks.LEN != 0)) {
                 warning("case3: unk is not 0 as expected, but %d %d %d\n",
                         unks.IDX, unks.OFF, unks.LEN);
                 // Rcout << unks.IDX << ", " << unks.OFF <<
@@ -1816,7 +1816,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
           // if (totalrowsvec[page] == i)
           //   Rcout << "yes" << std::endl;
 
-          if (wid < 8 & typ == 1) {
+          if ((wid < 8) & (typ == 1)) {
 
             double val_d = 0.0;
 
@@ -1831,7 +1831,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
 
           }
 
-          if (wid == 8 & typ == 1) {
+          if ((wid == 8) & (typ == 1)) {
 
             double val_d = 0.0;
 
@@ -1846,7 +1846,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
 
           }
 
-          if (wid > 0 & typ == 2) {
+          if ((wid > 0) & (typ == 2)) {
 
             std::string val_s(wid, ' ');
 
@@ -1903,7 +1903,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
 
           }
 
-          if (wid == 8 & typ == 1) {
+          if ((wid == 8) & (typ == 1)) {
 
             double val_d = 0.0;
 
@@ -1918,7 +1918,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
 
           }
 
-          if (wid > 0 & typ == 2) {
+          if ((wid > 0) & (typ == 2)) {
 
             std::string val_s(wid, ' ');
 
