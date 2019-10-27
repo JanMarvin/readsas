@@ -1888,7 +1888,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
           auto wid = colwidth[ord];
           auto typ = vartyps[ord];
 
-          if (wid < 8 & typ == 1) {
+          if ((wid < 8) & (typ == 1)) {
 
             double val_d = 0.0;
 
