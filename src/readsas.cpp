@@ -478,6 +478,11 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
       unk16 = readbin(unk16, sas, swapit);
       if (debug) Rprintf("unk16: %d \n", unk16);
 
+      Rcout << "#################################################" << std::endl;
+      Rcout << "#################################################" << std::endl;
+      Rcout << "#################################################" << std::endl;
+      Rcout << sas.tellg() << std::endl;
+
       page_type.push_back(PAGE_TYPE);
 
       rowsperpage[pg] = BLOCK_COUNT - SUBHEADER_COUNT;
@@ -495,8 +500,15 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
 
       std::vector<PO_Tab> potabs(SUBHEADER_COUNT);
 
+      if (PAGE_TYPE == -28672) {
+        // sas.seekg(pagenumx, sas.beg);
 
-      if ((PAGE_TYPE == -28672 || PAGE_TYPE == 16384 ||
+      }
+
+
+      if ((
+          PAGE_TYPE == -28672 ||
+          PAGE_TYPE == 16384 ||
           PAGE_TYPE == 1024 || PAGE_TYPE == 640 || PAGE_TYPE == 512 ||
           PAGE_TYPE == 256 || PAGE_TYPE == 0))
       {
@@ -517,8 +529,8 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
 
           } else {
 
-            potabs[i].SH_OFF = readbin((int32_t)potabs[i].SH_OFF, sas, swapit);
-            potabs[i].SH_LEN = readbin((int32_t)potabs[i].SH_LEN, sas, swapit);
+            potabs[i].SH_OFF = readbin((uint32_t)potabs[i].SH_OFF, sas, swapit);
+            potabs[i].SH_LEN = readbin((uint32_t)potabs[i].SH_LEN, sas, swapit);
             potabs[i].COMPRESSION = readbin(potabs[i].COMPRESSION, sas, swapit);
             potabs[i].SH_TYPE = readbin(potabs[i].SH_TYPE, sas, swapit);
 
@@ -1549,9 +1561,21 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
               if (debug)
                 Rcout << "-------- case 10 "<< sas.tellg()  << std::endl;
 
+
+              // if (PAGE_TYPE != -28672) {
+              //   readbin(unk32, sas, 0);
+
             //   if ((potabs[sc].SH_LEN > alignval) &
             //       (potabs[sc].COMPRESSION == 4))
             // {
+
+
+            Rprintf("PAGE_TYPE: %d ; BLOCK_COUNT: %d ; SUBHEADER_COUNT: %d ---- \n",
+                    PAGE_TYPE, BLOCK_COUNT, SUBHEADER_COUNT);
+
+            Rprintf("SH_OFF: %d ; SH_LEN: %d ; COMPR.: %d ; SH_TYPE: %d \n",
+                    potabs[sc].SH_OFF, potabs[sc].SH_LEN,
+                    potabs[sc].COMPRESSION, potabs[sc].SH_TYPE);
 
               auto clen = potabs[sc].SH_LEN;
               std::string cstr(clen, '\0');

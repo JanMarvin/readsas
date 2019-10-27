@@ -75,10 +75,10 @@ inline std::string readstring(std::string &mystring, T& sas)
 
 // PAGE_OFFSET_TABLE
 struct PO_Tab {
-  int64_t SH_OFF = 0;
-  int64_t SH_LEN = 0;
-  int8_t COMPRESSION = 0;
-  int8_t SH_TYPE = 0;
+  uint64_t SH_OFF = 0;
+  uint64_t SH_LEN = 0;
+  uint8_t COMPRESSION = 0;
+  uint8_t SH_TYPE = 0;
 };
 
 // COLUMN_NAME_POINTER
