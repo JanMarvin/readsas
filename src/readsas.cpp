@@ -42,7 +42,8 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
   if (sas) {
 
 
-    std::fstream out ("/tmp/sasfile.sas7bdat", std::ios::out | std::ios::binary);
+    const std::string tempstr = ".readsas_unc_tmp_file";
+    std::fstream out (tempstr, std::ios::out | std::ios::binary);
     // std::fstream tmpfile ("/tmp/unk.sas7bdat", std::ios::out | std::ios::binary);
     // if (out.is_open())
 
@@ -1872,7 +1873,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
 
     if ((compr == 1) | (compr == 2)) {
 
-      std::ifstream sas("/tmp/sasfile.sas7bdat",
+      std::ifstream sas(tempstr,
                         std::ios::in | std::ios::binary);
 
       auto page = 0;
