@@ -6,6 +6,8 @@
 #'@param debug print debug information
 #'@param convert.dates default is TRUE
 #'@param recode default is TRUE
+#'@param rowcount number of rows to import (from start). negative values are
+#' ignored
 #'
 #'@useDynLib readsas, .registration=TRUE
 #'@importFrom utils download.file

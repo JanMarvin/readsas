@@ -4,7 +4,8 @@
 \alias{read.sas}
 \title{read.sas}
 \usage{
-read.sas(file, debug = FALSE, convert.dates = TRUE, recode = TRUE)
+read.sas(file, debug = FALSE, convert.dates = TRUE, recode = TRUE,
+  rowcount = -1)
 }
 \arguments{
 \item{file}{file to read}
@@ -14,6 +15,9 @@ read.sas(file, debug = FALSE, convert.dates = TRUE, recode = TRUE)
 \item{convert.dates}{default is TRUE}
 
 \item{recode}{default is TRUE}
+
+\item{rowcount}{number of rows to import (from start). negative values are
+ignored}
 }
 \description{
 read.sas
