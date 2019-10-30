@@ -471,6 +471,8 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
         unk3 = readbin((int32_t)unk3, sas, swapit);
       }
 
+      pageseqnum[pg] = pageseqnum32;
+
       // Rcout << "pageseqnum: " << pageseqnum32 << std::endl;
       // Rcout << unk1 << " " << unk2 << " " << unk3 << std::endl;
 
@@ -478,12 +480,8 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
       BLOCK_COUNT = readbin(BLOCK_COUNT, sas, swapit);
       SUBHEADER_COUNT = readbin(SUBHEADER_COUNT, sas, swapit);
       unk16 = readbin(unk16, sas, swapit);
-      if (debug) Rprintf("unk16: %d \n", unk16);
 
-      Rcout << "#################################################" << std::endl;
-      Rcout << "#################################################" << std::endl;
-      Rcout << "#################################################" << std::endl;
-      Rcout << sas.tellg() << std::endl;
+      // Rcout << sas.tellg() << std::endl;
 
       page_type.push_back(PAGE_TYPE);
 
@@ -492,8 +490,8 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
       totalrowsvec[pg] = totalrows;
 
       if (debug)
-        Rprintf("PAGE_TYPE: %d ; BLOCK_COUNT: %d ; SUBHEADER_COUNT: %d ---- \n",
-                PAGE_TYPE, BLOCK_COUNT, SUBHEADER_COUNT);
+        Rprintf("PAGE_TYPE: %d ; BC: %d ; SC: %d ; unk16: %d ---- \n",
+                PAGE_TYPE, BLOCK_COUNT, SUBHEADER_COUNT, unk16);
 
 
       int16_t zero = 0;
@@ -502,17 +500,18 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
 
       std::vector<PO_Tab> potabs(SUBHEADER_COUNT);
 
-      if (PAGE_TYPE == -28672) {
-        // sas.seekg(pagenumx, sas.beg);
-
-      }
+      // if (PAGE_TYPE == -28672) {
+      //   // sas.seekg(pagenumx, sas.beg);
+      //
+      // }
 
 
       if ((
           PAGE_TYPE == -28672 ||
           PAGE_TYPE == 16384 ||
-          PAGE_TYPE == 1024 || PAGE_TYPE == 640 || PAGE_TYPE == 512 ||
-          PAGE_TYPE == 256 || PAGE_TYPE == 0))
+            PAGE_TYPE == 1024 ||
+            PAGE_TYPE == 640 || PAGE_TYPE == 512 || PAGE_TYPE == 256 ||
+            PAGE_TYPE == 0))
       {
         for (auto i = 0; i < SUBHEADER_COUNT; ++i) {
           if (u64 == 4) {
@@ -1568,17 +1567,9 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
               // if (PAGE_TYPE != -28672) {
               //   readbin(unk32, sas, 0);
 
-            //   if ((potabs[sc].SH_LEN > alignval) &
-            //       (potabs[sc].COMPRESSION == 4))
-            // {
-
-
-            Rprintf("PAGE_TYPE: %d ; BLOCK_COUNT: %d ; SUBHEADER_COUNT: %d ---- \n",
-                    PAGE_TYPE, BLOCK_COUNT, SUBHEADER_COUNT);
-
-            Rprintf("SH_OFF: %d ; SH_LEN: %d ; COMPR.: %d ; SH_TYPE: %d \n",
-                    potabs[sc].SH_OFF, potabs[sc].SH_LEN,
-                    potabs[sc].COMPRESSION, potabs[sc].SH_TYPE);
+              //   if ((potabs[sc].SH_LEN > alignval) &
+              //       (potabs[sc].COMPRESSION == 4))
+              // {
 
               auto clen = potabs[sc].SH_LEN;
               std::string cstr(clen, '\0');
@@ -1592,7 +1583,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
                 ustr = SASYZCR2(clen, rowlength, cstr, debug);
 
               writestr(ustr, ustr.size(), out);
-            // }
+              // }
 
               break;
             }
@@ -1604,13 +1595,13 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
 
               if ((potabs[sc].SH_LEN > alignval) &
                   (potabs[sc].SH_LEN < pagesize))
-            {
-              // uncompressed row containing data
-              auto unklen = potabs[sc].SH_LEN;
-              std::string unkstr(unklen, '\0');
-              unkstr = readstring(unkstr, sas);
-              writestr(unkstr, unkstr.size(), out);
-            }
+              {
+                // uncompressed row containing data
+                auto unklen = potabs[sc].SH_LEN;
+                std::string unkstr(unklen, '\0');
+                unkstr = readstring(unkstr, sas);
+                writestr(unkstr, unkstr.size(), out);
+              }
 
               break;
             }
@@ -1639,13 +1630,13 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
               {
 
 
-              auto unklen = potabs[sc].SH_LEN;
-              std::string unkstr(unklen, '\0');
-              // unkstr += "WOOOHA!";
-              // unkstr = readstring(unkstr, sas);
-              // writestr(unkstr, unkstr.size(), tmpfile);
+                auto unklen = potabs[sc].SH_LEN;
+                std::string unkstr(unklen, '\0');
+                // unkstr += "WOOOHA!";
+                // unkstr = readstring(unkstr, sas);
+                // writestr(unkstr, unkstr.size(), tmpfile);
 
-            }
+              }
 
               break;
             }
@@ -1653,7 +1644,9 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
           }
         }
 
-      } else{
+      }
+      else
+      {
         Rcout << "found unimplemented PAGE_TYPE " << PAGE_TYPE << std::endl;
       }
     }
@@ -1786,6 +1779,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
       Rcout << "ordered " << ordered << std::endl;
     }
 
+    // Rcout << "compr: " << compr << std::endl;
 
     // new offset ----------------------------------------------------------- //
 
@@ -1898,7 +1892,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
     // close file. compressed data is imported from a different file
     sas.close();
 
-    if ((compr == 1) | (compr == 2)) {
+    if ((compr == 1) || (compr == 2)) {
 
       std::ifstream sas(tempstr,
                         std::ios::in | std::ios::binary);
@@ -1909,13 +1903,24 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
       auto ii = 0;
       for (auto i = 0; i < rowcount; ++i) {
 
+        if (debug)
+          Rcout << "i: " << i << std::endl;
+
         for (auto j = 0; j < colnum; ++j) {
+
+          if (debug)
+            Rcout << "j: " << j << std::endl;
 
           auto ord = ordered[j];
           auto wid = colwidth[ord];
           auto typ = vartyps[ord];
 
-          if ((wid < 8) & (typ == 1)) {
+
+          if (debug)
+            Rcout << ord << " : " << wid << " : " << typ << std::endl;
+
+
+          if ((wid > 0) & (wid < 8) & (typ == 1)) {
 
             double val_d = 0.0;
 

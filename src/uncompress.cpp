@@ -202,8 +202,8 @@ std::string SASYZCR2(uint64_t rowlen, uint64_t reslen, std::string rowstr,
       ++rowoff;
       resoff += len;
 
-      if (debug)
-        Rcpp::Rcout << "d1 " << std::endl;
+      // if (debug)
+        // Rcpp::Rcout << "d1 " << std::endl;
 
       break;
     }
@@ -217,8 +217,8 @@ std::string SASYZCR2(uint64_t rowlen, uint64_t reslen, std::string rowstr,
       ++rowoff;
       resoff += len;
 
-      if (debug)
-        Rcpp::Rcout << "d2 " << std::endl;
+      // if (debug)
+        // Rcpp::Rcout << "d2 " << std::endl;
 
       break;
     }
@@ -233,8 +233,8 @@ std::string SASYZCR2(uint64_t rowlen, uint64_t reslen, std::string rowstr,
       if (pos< 0)
         pos = abs(pos);
 
-      if (debug)
-        Rcpp::Rcout << "d3 " << resoff << " " << ofs << " " << pos << std::endl;
+      // if (debug)
+        // Rcpp::Rcout << "d3 " << resoff << " " << ofs << " " << pos << std::endl;
 
       res += res.substr(pos, len);
       resoff += len;
@@ -251,8 +251,8 @@ std::string SASYZCR2(uint64_t rowlen, uint64_t reslen, std::string rowstr,
       if (pos< 0)
         pos = abs(pos);
 
-      if (debug)
-        Rcpp::Rcout << "d4 " << resoff << " " << ofs << " " << pos << std::endl;
+      // if (debug)
+        // Rcpp::Rcout << "d4 " << resoff << " " << ofs << " " << pos << std::endl;
 
       res += res.substr(pos, cmd);
       resoff += cmd;
