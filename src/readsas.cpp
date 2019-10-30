@@ -16,6 +16,7 @@
  */
 
 #include <Rcpp.h>
+#include <cstdio>
 #include <stdint.h>
 #include <string>
 #include <fstream>
@@ -437,6 +438,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
 
     auto totalrows = 0;
     std::vector<int32_t> totalrowsvec(pagecount);
+    std::vector<int32_t> pageseqnum(pagecount);
 
     auto vnidx = 0;
 
@@ -1434,7 +1436,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
               unk16 = readbin(unk16, sas, swapit); // 0
               // Rcout << unk16 << std::endl;
 
-              // this cmax is plain wrong. works most of the time, but requires
+              // this cmax is plain WRONG. works most of the time, but requires
               // the fixes later on.
               // ToDo: Fix this
               auto cmax = (lenremain + alignval) / (alignval);
@@ -1461,6 +1463,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
                 // condition is required to find valid cases, since cmax
                 // can not be trusted
                 if ((capois[i].CN_TYP >= 1) & (capois[i].CN_TYP <= 2) &
+                    (capois[i].CN_WID >= 0) & // just > ?
                     (capois[i].CN_WID <= pagesize)) {
                   if (debug)
                     Rprintf("OFF %d; WID: %d; FLAG %d; TYP %d; UNK8 %d\n",
@@ -1966,52 +1969,56 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
 
     }
 
+    if (!debug)
+      if ( remove(tempstr.c_str()) != 0 )
+        warning("Could not remove temporary file containing",
+                "uncompressed data");
 
-    if (debug)
-      Rprintf("%d %d \n", rowcount, colnum);
+      if (debug)
+        Rprintf("%d %d \n", rowcount, colnum);
 
-    Rcpp::IntegerVector rvec(rowcount);
+      Rcpp::IntegerVector rvec(rowcount);
 
-    if (rowcount > 0)
-      rvec = seq(1, rowcount);
+      if (rowcount > 0)
+        rvec = seq(1, rowcount);
 
-    // 3. Create a data.frame
-    df.attr("row.names") = rvec;
-    df.attr("names") = varnames;
-    df.attr("class") = "data.frame";
+      // 3. Create a data.frame
+      df.attr("row.names") = rvec;
+      df.attr("names") = varnames;
+      df.attr("class") = "data.frame";
 
-    // df.attr("varnames") = varnames;
-    df.attr("labels") = labels;
-    df.attr("formats") = formats;
-    df.attr("created") = created;
-    df.attr("created2") = created2;
-    df.attr("modified") = modified;
-    df.attr("modified2") = modified2;
-    df.attr("thrdts") = thrdts;
+      // df.attr("varnames") = varnames;
+      df.attr("labels") = labels;
+      df.attr("formats") = formats;
+      df.attr("created") = created;
+      df.attr("created2") = created2;
+      df.attr("modified") = modified;
+      df.attr("modified2") = modified2;
+      df.attr("thrdts") = thrdts;
 
-    df.attr("sasfile") = sasfile;
-    df.attr("dataset") = dataset;
-    df.attr("filetype") = filetype;
-    df.attr("compression") = compression;
-    df.attr("proc") = proc;
-    df.attr("sw") = sw;
-    df.attr("sasrel") = sasrel;
-    df.attr("sasserv") = sasserv;
-    df.attr("osver") = osver;
-    df.attr("osmaker") = osmaker;
-    df.attr("osname") = osname;
-    df.attr("encoding") = enc;
-    df.attr("fmtkeys") = fmtkeys;
-    df.attr("fmt32") = fmt32s;
-    df.attr("ifmt32") = ifmt32s;
+      df.attr("sasfile") = sasfile;
+      df.attr("dataset") = dataset;
+      df.attr("filetype") = filetype;
+      df.attr("compression") = compression;
+      df.attr("proc") = proc;
+      df.attr("sw") = sw;
+      df.attr("sasrel") = sasrel;
+      df.attr("sasserv") = sasserv;
+      df.attr("osver") = osver;
+      df.attr("osmaker") = osmaker;
+      df.attr("osname") = osname;
+      df.attr("encoding") = enc;
+      df.attr("fmtkeys") = fmtkeys;
+      df.attr("fmt32") = fmt32s;
+      df.attr("ifmt32") = ifmt32s;
 
-    df.attr("rowcount") = rowcount;
-    df.attr("rowlength") = rowlength;
-    df.attr("colwidth") = colwidth;
-    df.attr("coloffset") = coloffset;
-    df.attr("vartyps") = vartyps;
+      df.attr("rowcount") = rowcount;
+      df.attr("rowlength") = rowlength;
+      df.attr("colwidth") = colwidth;
+      df.attr("coloffset") = coloffset;
+      df.attr("vartyps") = vartyps;
 
-    return(df);
+      return(df);
 
   } else {
     return (-1);
