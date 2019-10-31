@@ -1395,6 +1395,14 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
 
               lenremain = readbin(lenremain, sas, swapit);
               if (debug) Rprintf("lenremain %d \n", lenremain);
+
+
+              int8_t div = 8;
+              lenremain -= 8;
+
+              auto cmax = lenremain / div;
+
+
               unk16 = readbin(unk16, sas, swapit); // 0
               // Rcout << unk16 << std::endl;
               unk16 = readbin(unk16, sas, swapit); // 0
@@ -1405,7 +1413,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
               /* Column Name Pointers */
               CN_Poi cnpoi;
 
-              for (auto cn = 0; cn < colnum; ++cn) {
+              for (auto cn = 0; cn < cmax; ++cn) {
 
                 cnpoi.CN_IDX    = readbin(cnpoi.CN_IDX, sas, swapit);
                 cnpoi.CN_OFF    = readbin(cnpoi.CN_OFF, sas, swapit);
