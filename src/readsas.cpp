@@ -536,6 +536,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
             potabs[i].SH_TYPE = readbin(potabs[i].SH_TYPE, sas, swapit);
 
             zero = readbin(zero, sas, swapit);
+            // Rcout << zero << std::endl;
           }
 
           if (debug)
@@ -576,6 +577,12 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
           if(potabs[sc].SH_OFF >= 0) // 2 files, where this is a problem
             pagepos = (headersize + pg * pagesize) + potabs[sc].SH_OFF;
 
+
+          if(potabs[sc].SH_OFF == 0) // 2 files, where this is a problem
+            break;
+
+          // if (PAGE_TYPE == -28672)
+          //   Rcout << "pagepos: " << pagepos << std::endl;
 
           sas.seekg(pagepos, sas.beg);
 
@@ -1435,10 +1442,18 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
               unk16 = readbin(unk16, sas, swapit); // 0
               // Rcout << unk16 << std::endl;
 
-              // this cmax is plain WRONG. works most of the time, but requires
-              // the fixes later on.
-              // ToDo: Fix this
-              auto cmax = (lenremain + alignval) / (alignval);
+              int8_t divs = 16;
+              if (u64 != 4) divs = 12;
+
+              lenremain -= 8;
+
+              // auto cmax = (lenremain + alignval) / (alignval);
+              auto cmax = lenremain / divs;
+              // Rcout << lenremain << std::endl;
+              // Rcout << cmax << std::endl;
+
+              // stop("stop");
+
 
               // auto cmax = colf_p1; if (pg == 2) cmax = colf_p2;
 
@@ -1775,6 +1790,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
 
     if (debug)
     {
+      Rcout << "vartyps " << vartyps << std::endl;
       Rcout << "coloffset " << coloffset << std::endl;
       Rcout << "ordered " << ordered << std::endl;
     }
@@ -1903,13 +1919,13 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
       auto ii = 0;
       for (auto i = 0; i < rowcount; ++i) {
 
-        if (debug)
-          Rcout << "i: " << i << std::endl;
+        // if (debug)
+        //   Rcout << "i: " << i << std::endl;
 
         for (auto j = 0; j < colnum; ++j) {
 
-          if (debug)
-            Rcout << "j: " << j << std::endl;
+          // if (debug)
+          //   Rcout << "j: " << j << std::endl;
 
           auto ord = ordered[j];
           auto wid = colwidth[ord];

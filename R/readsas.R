@@ -64,6 +64,8 @@ read.sas <- function(file, debug = FALSE, convert.dates = TRUE, recode = TRUE,
     labels <- iconv(labels, from = encoding)
     attr(data, "labels") <- labels
 
+    names(data) <- iconv(names(data), from = encoding)
+
   }
 
   created   <- attr(data, "created")
