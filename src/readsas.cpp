@@ -70,7 +70,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
 
     uint32_t pageseqnum32 = 0;
 
-    double created = 0, created2 = 0; // 8
+    double created = 0, created2 = 0;   // 8
     double modified = 0, modified2 = 0; // 16
 
     std::string compression = "";
@@ -91,6 +91,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
     std::vector<idxofflen> fmt;
     std::vector<idxofflen> lbl;
     std::vector<idxofflen> unk;
+    std::vector<int16_t> c8vec;
 
     // std::vector<uint64_t> coloffset;
 
@@ -1382,7 +1383,6 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
               lenremain = readbin(lenremain, sas, swapit);
               if (debug) Rprintf("lenremain %d \n", lenremain);
 
-
               int8_t div = 8;
               lenremain -= 8;
 
@@ -1390,11 +1390,11 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
 
 
               unk16 = readbin(unk16, sas, swapit); // 0
-              // Rcout << unk16 << std::endl;
+              if (unk16 != 0) stop("unk16 1. expected 0 is %d", unk16);
               unk16 = readbin(unk16, sas, swapit); // 0
-              // Rcout << unk16 << std::endl;
+              if (unk16 != 0) stop("unk16 2. expected 0 is %d", unk16);
               unk16 = readbin(unk16, sas, swapit); // 0
-              // Rcout << unk16 << std::endl;
+              if (unk16 != 0) stop("unk16 3. expected 0 is %d", unk16);
 
               /* Column Name Pointers */
               CN_Poi cnpoi;
@@ -1492,60 +1492,75 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
           case 8:
             {
 
-              if (debug)
+              // if (debug)
                 Rcout << "-------- case 8 "<< sas.tellg() << std::endl;
 
               int16_t cls = 0;
+              int64_t lenremain = 0;
 
-              unk32 = readbin(unk32, sas, swapit); // ?
-              // Rcout << unk32 << std::endl;
-              unk16 = readbin(unk16, sas, swapit); // padding? 0
-              // Rcout << unk16 << std::endl;
-              unk16 = readbin(unk16, sas, swapit); // padding? 0
-              // Rcout << unk16 << std::endl;
+              unk32 = readbin(unk32, sas, swapit); // unkown large number
+              Rcout << unk32 << std::endl;
+              unk16 = readbin(unk16, sas, swapit); // 0
+              Rcout << unk16 << std::endl;
+              unk16 = readbin(unk16, sas, swapit); // 0
+              Rcout << unk16 << std::endl;
 
               if (u64 == 4) {  // lenremain
-                unk64 = readbin(unk64, sas, swapit);
+                lenremain = readbin(lenremain, sas, swapit);
               } else {
-                unk64 = readbin((int32_t)unk64, sas, swapit); //
+                lenremain = readbin((int32_t)lenremain, sas, swapit);
               }
 
-              if (debug)
-                Rcout << "lenremain "<< unk64 << std::endl; // 92
+              // if (debug)
+                Rcout << "lenremain "<< lenremain << std::endl; // 92
 
-              unk16 = readbin(unk16, sas, swapit);  // 25
-              // Rcout << unk16 << std::endl;
-              cls = readbin(cls, sas, swapit);      // 37
-              // Rcout << cls << std::endl;
-              unk16 = readbin(unk16, sas, swapit);  // 1
-              // Rcout << unk16 << std::endl;
-              unk16 = readbin(unk16, sas, swapit);  // 25
-              // Rcout << unk16 << std::endl;
+              unk16 = readbin(unk16, sas, swapit);
+              Rcout << unk16 << std::endl; // number of varnames?
+              cls = readbin(cls, sas, swapit);
+              Rcout << cls << std::endl;   // counter for unk loop below
+              unk16 = readbin(unk16, sas, swapit);
+              Rcout << unk16 << std::endl; // 1
+              unk16 = readbin(unk16, sas, swapit);
+              Rcout << unk16 << std::endl; // number of varnames?
               unk16 = readbin(unk16, sas, swapit);  // 3233
-              // Rcout << unk16 << std::endl;
+              Rcout << unk16 << std::endl; // 0
               unk16 = readbin(unk16, sas, swapit);  // 3233
-              // Rcout << unk16 << std::endl;
+              Rcout << unk16 << std::endl; // 0
               unk16 = readbin(unk16, sas, swapit);  // 3233
-              // Rcout << unk16 << std::endl;
+              Rcout << unk16 << std::endl; // 0
+
+              lenremain -= 14;
+
+              Rcout << lenremain << " " << cls << std::endl;
+
+              int8_t uunk1 = 0, uunk2 = 0;
 
               // 2 * CL
               for (auto cl = 0; cl < cls; ++cl) {
-                // Rcout << "------" << std::endl;
-                unk1 = readbin((int8_t)unk1, sas, swapit); //
-                unk2 = readbin((int8_t)unk2, sas, swapit); //
-                if (debug) Rcout << unk1 <<  " : " << unk2 << std::endl;
+
+                int16_t res = 0;
+                res = readbin(res, sas, swapit);
+
+                // if (debug)
+                  // Rcout << res[0] <<  " : " << res[1] << std::endl;
+
+                  c8vec.push_back(res);
               }
 
 
+              Rcout << "---------------------------" << std::endl;
+
               // 8
               unk16 = readbin((int8_t)unk16, sas, swapit); // 0
-              // Rcout << unk16 << std::endl;
+              Rcout << unk16 << std::endl;
               unk16 = readbin((int8_t)unk16, sas, swapit); // 0
-              // Rcout << unk16 << std::endl;
+              Rcout << unk16 << std::endl;
               unk16 = readbin((int8_t)unk16, sas, swapit); // 0
-              // Rcout << unk16 << std::endl;
+              Rcout << unk16 << std::endl;
               unk16 = readbin((int8_t)unk16, sas, swapit); // 0
-              // Rcout << unk16 << std::endl;
+              Rcout << unk16 << std::endl;
+
+              Rcout << "---------------------------" << std::endl;
 
               break;
 
@@ -2035,6 +2050,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
       df.attr("colwidth") = colwidth;
       df.attr("coloffset") = coloffset;
       df.attr("vartyps") = vartyps;
+      df.attr("c8vec") = c8vec;
 
       return(df);
 
