@@ -48,10 +48,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
     // std::fstream tmpfile ("/tmp/unk.sas7bdat", std::ios::out | std::ios::binary);
     // if (out.is_open())
 
-
-    auto k = 0;
     int compr = 0;
-    auto ctr = 0, varoffset = 0, offset = 0;
 
     bool hasattributes = 0, hasproc = 1, swapit = 0, c5first = 0;
     int8_t  unk8  = 0;
@@ -72,8 +69,6 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
     int16_t PAGE_TYPE = 0, BLOCK_COUNT = 0, SUBHEADER_COUNT = 0;
 
     uint32_t pageseqnum32 = 0;
-    uint64_t pageseqnum64 = 0;
-    auto comprrowidx = 0;
 
     double created = 0, created2 = 0; // 8
     double modified = 0, modified2 = 0; // 16
@@ -396,8 +391,6 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
     // Rcout << sas.tellg() << std::endl;
 
     // page seq num at 320|328
-    int32_t PAGE_SIZE = 0, PAGE_COUNT = 0;
-
     pageseqnum32 = readbin(pageseqnum32, sas, swapit);
     if (debug) Rcout << "pageseqnum: " << pageseqnum32 << std::endl;
 
@@ -440,7 +433,6 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
     std::vector<int32_t> totalrowsvec(pagecount);
     std::vector<int32_t> pageseqnum(pagecount);
 
-    auto vnidx = 0;
 
     // begin reading pages ---------------------------------------------------//
     for (auto pg = 0; pg < pagecount; ++pg) {
@@ -553,13 +545,10 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
           Rcout << "data offset ------------------------------- " << std::endl;
         }
 
-
-        uint64_t pos = sas.tellg();
-
-
         auto sh_end_pos = 0;
 
         if (PAGE_TYPE != 0) sh_end_pos = sas.tellg();
+
         data_pos[pg] = sh_end_pos;
 
         if (debug)
@@ -573,9 +562,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
           if (debug)
             Rcout << "Subheader Count: " << sc << std::endl;
 
-          auto pagepos = 0;
-          if(potabs[sc].SH_OFF >= 0) // 2 files, where this is a problem
-            pagepos = (headersize + pg * pagesize) + potabs[sc].SH_OFF;
+          auto pagepos = (headersize + pg * pagesize) + potabs[sc].SH_OFF;
 
 
           if(potabs[sc].SH_OFF == 0) // 2 files, where this is a problem
@@ -1284,7 +1271,6 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
                 varname_pos[pg] = sas.tellg();
 
 
-
               label_pos[pg] = varname_pos[pg];
               if (c5typ == 1)
                 label_pos[pg] = sas.tellg();
@@ -1710,14 +1696,22 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
                 cnpois[i].CN_IDX, cnpois[i].CN_OFF,
                 cnpois[i].CN_LEN, cnpois[i].zeros);
 
+      // std::reverse(varname_pos.begin(),varname_pos.end());
+
       int64_t vpos = (varname_pos[cnpois[i].CN_IDX] + cnpois[i].CN_OFF);
-      // Rcout << vpos << "; " << varname_pos[cnpois[i].CN_IDX] <<
-      //   "; " << cnpois[i].CN_OFF << std::endl;
+
+      // if (varname_pos[cnpois[i].CN_IDX])
+
       sas.seekg(vpos, sas.beg);
 
       std::string varname(cnpois[i].CN_LEN, '\0');
       varname = readstring(varname, sas);
       varnames.push_back(varname);
+
+
+      Rcout << vpos << "; " << varname_pos[cnpois[i].CN_IDX] <<
+        "; " << cnpois[i].CN_OFF << "; " << cnpois[i].CN_LEN <<
+          "; " <<cnpois[i].zeros << "; " << varname << std::endl;
 
       if (debug)
         Rcout << i << " : " << vpos << " : " << varname << std::endl;
@@ -1846,10 +1840,6 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
         if (pos != sas.tellg())
           sas.seekg(pos, sas.beg);
 
-        uint64_t tempoffs = sas.tellg();
-
-        // Rcout << tempoffs << std::endl;
-
         pos = 0;
 
         for (auto j = 0; j < colnum; ++j) {
@@ -1921,7 +1911,6 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
       std::ifstream sas(tempstr,
                         std::ios::in | std::ios::binary);
 
-      auto page = 0;
       // sas.seekg(data_pos[0], sas.beg);
 
       auto ii = 0;
