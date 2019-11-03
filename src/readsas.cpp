@@ -37,7 +37,7 @@ using namespace Rcpp;
 //' @import Rcpp
 //' @export
 // [[Rcpp::export]]
-Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
+Rcpp::List readsas(const char * filePath, const bool debug, const uint64_t kk)
 {
   std::ifstream sas(filePath, std::ios::in | std::ios::binary);
   if (sas) {
@@ -412,7 +412,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
 
     // Rcout << num_zeros << std::endl;
 
-    for (int i = 0; i < num_zeros; ++i) {
+    for (uint64_t i = 0; i < num_zeros; ++i) {
       int8_t zero = 0;
       zero = readbin(zero, sas, swapit);
       if (zero!=0)
@@ -429,7 +429,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
     int8_t alignval = 8;
     if (u64 != 4) alignval = 4;
 
-    int64_t rowlength = 0, rowcount = 0;
+    uint64_t rowlength = 0, rowcount = 0;
     int64_t colf_p1 = 0, colf_p2 = 0;
     int64_t colnum = 0;
     std::vector<std::string> stringvec(pagecount) ;
@@ -1148,8 +1148,6 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
 
               hasattributes = 1;
 
-              int64_t unk64 = 0;
-
               unk16 = readbin(unk16, sas, swapit);           // 1
               // Rcout << unk16 << std::endl;
               unk16 = readbin(unk16, sas, swapit);           // 2
@@ -1383,8 +1381,6 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
 
 
               int16_t lenremain = 0;
-              int8_t tmp = 16; // always 16?
-              if (!hasproc) tmp = 0;
 
               lenremain = readbin(lenremain, sas, swapit);
               if (debug) Rprintf("lenremain %d \n", lenremain);
@@ -1545,8 +1541,6 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
 
               // Rcout << lenremain << " " << cls << std::endl;
 
-              int8_t uunk1 = 0, uunk2 = 0;
-
               // 2 * CL
               for (auto cl = 0; cl < cls; ++cl) {
 
@@ -1584,8 +1578,8 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
                 Rcout << "-------- case 9 "<< sas.tellg()  << std::endl;
 
               /* not sure about the purpose. appears in a few SAS 9 files */
-              auto unklen = potabs[sc].SH_LEN - alignval;
-              for (auto ul = 0; ul < unklen; ++ul) {
+              uint64_t unklen = potabs[sc].SH_LEN - alignval;
+              for (uint64_t ul = 0; ul < unklen; ++ul) {
                 unk8 = readbin(unk8, sas, 0);
                 if (debug) Rprintf("%d\n", unk8);
               }
@@ -1716,7 +1710,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
     if (debug)
       Rcout << "varnames ----------------------------" << std::endl;
 
-    for (auto i = 0; i < cnpois.size(); ++i) {
+    for (size_t i = 0; i < cnpois.size(); ++i) {
 
       if (debug)
         Rprintf("CN_IDX %d; CN_OFF %d; CN_LEN %d; zeros %d \n",
@@ -1734,7 +1728,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
       std::string varname(cnpois[i].CN_LEN, '\0');
       varname = readstring(varname, sas);
 
-      if (varname.size() == cnpois[i].CN_LEN)
+      if ((int16_t)varname.size() == cnpois[i].CN_LEN)
         varnames.push_back(varname);
 
       // if (i != 2375)
@@ -1838,7 +1832,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
       sas.seekg(data_pos[0], sas.beg);
 
       auto ii = 0;
-      for (auto i = 0; i < rowcount; ++i) {
+      for (uint64_t i = 0; i < rowcount; ++i) {
 
         if (pagecount>0) {
 
@@ -1867,7 +1861,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
 
 
         // check if position is equal to expected position
-        if (pos != sas.tellg())
+        if (pos != (uint64_t)sas.tellg())
           sas.seekg(pos, sas.beg);
 
         pos = 0;
@@ -1942,7 +1936,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
                         std::ios::in | std::ios::binary);
 
       auto ii = 0;
-      for (auto i = 0; i < rowcount; ++i) {
+      for (uint64_t i = 0; i < rowcount; ++i) {
 
         // if (debug)
         //   Rcout << "i: " << i << std::endl;
@@ -2015,75 +2009,77 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
 
     }
 
-    if (!debug)
+    if (!debug) {
       if ( remove(tempstr.c_str()) != 0 )
         warning("Could not remove temporary file containing",
                 "uncompressed data");
+    }
 
-      if (debug)
-        Rprintf("%d %d \n", rowcount, colnum);
+    if (debug) {
+      Rprintf("%d %d \n", rowcount, colnum);
+    }
 
-      Rcpp::IntegerVector rvec(rowcount);
+    Rcpp::IntegerVector rvec(rowcount);
 
-      if (rowcount > 0)
-        rvec = seq(1, rowcount);
-
-
-      Rcpp::IntegerVector cvec;
-      if (varnames.size() > colnum)
-        cvec = seq(1, colnum);
-
-      // 3. Create a data.frame
-      df.attr("row.names") = rvec;
-
-      if (varnames.size() == colnum)
-        df.attr("names") = varnames;
-      else
-        df.attr("names") = cvec;
-      df.attr("class") = "data.frame";
-
-      if (varnames.size() > colnum)
-        df.attr("varnames") = varnames;
-      df.attr("labels") = labels;
-      df.attr("formats") = formats;
-      df.attr("created") = created;
-      df.attr("created2") = created2;
-      df.attr("modified") = modified;
-      df.attr("modified2") = modified2;
-      df.attr("thrdts") = thrdts;
-
-      df.attr("sasfile") = sasfile;
-      df.attr("dataset") = dataset;
-      df.attr("filetype") = filetype;
-      df.attr("compression") = compression;
-      df.attr("proc") = proc;
-      df.attr("sw") = sw;
-      df.attr("sasrel") = sasrel;
-      df.attr("sasserv") = sasserv;
-      df.attr("osver") = osver;
-      df.attr("osmaker") = osmaker;
-      df.attr("osname") = osname;
-      df.attr("encoding") = enc;
-      df.attr("fmtkeys") = fmtkeys;
-      df.attr("fmt32") = fmt32s;
-      df.attr("ifmt32") = ifmt32s;
-
-      df.attr("rowcount") = rowcount;
-      df.attr("rowlength") = rowlength;
-      df.attr("colwidth") = colwidth;
-      df.attr("coloffset") = coloffset;
-      df.attr("vartyps") = vartyps;
-      df.attr("c8vec") = c8vec;
-
-      if (debug) {
-        df.attr("cnidx") = cnidx;
-        df.attr("cnoff") = cnoff;
-        df.attr("cnlen") = cnlen;
-        df.attr("cnzer") = cnzer;
-      }
+    if (rowcount > 0)
+      rvec = seq(1, rowcount);
 
 
-      return(df);
+    Rcpp::IntegerVector cvec;
+    if (varnames.size() > colnum)
+      cvec = seq(1, colnum);
+
+    // 3. Create a data.frame
+    df.attr("row.names") = rvec;
+
+    if (varnames.size() == colnum)
+      df.attr("names") = varnames;
+    else
+      df.attr("names") = cvec;
+    df.attr("class") = "data.frame";
+
+    if (varnames.size() > colnum)
+      df.attr("varnames") = varnames;
+    df.attr("labels") = labels;
+    df.attr("formats") = formats;
+    df.attr("created") = created;
+    df.attr("created2") = created2;
+    df.attr("modified") = modified;
+    df.attr("modified2") = modified2;
+    df.attr("thrdts") = thrdts;
+
+    df.attr("sasfile") = sasfile;
+    df.attr("dataset") = dataset;
+    df.attr("filetype") = filetype;
+    df.attr("compression") = compression;
+    df.attr("proc") = proc;
+    df.attr("sw") = sw;
+    df.attr("sasrel") = sasrel;
+    df.attr("sasserv") = sasserv;
+    df.attr("osver") = osver;
+    df.attr("osmaker") = osmaker;
+    df.attr("osname") = osname;
+    df.attr("encoding") = enc;
+    df.attr("fmtkeys") = fmtkeys;
+    df.attr("fmt32") = fmt32s;
+    df.attr("ifmt32") = ifmt32s;
+
+    df.attr("rowcount") = rowcount;
+    df.attr("rowlength") = rowlength;
+    df.attr("colwidth") = colwidth;
+    df.attr("coloffset") = coloffset;
+    df.attr("vartyps") = vartyps;
+    df.attr("c8vec") = c8vec;
+
+    if (debug) {
+      df.attr("cnidx") = cnidx;
+      df.attr("cnoff") = cnoff;
+      df.attr("cnlen") = cnlen;
+      df.attr("cnzer") = cnzer;
+    }
+
+
+    return(df);
 
   } else {
     return (-1);

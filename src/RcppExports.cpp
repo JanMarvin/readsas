@@ -6,14 +6,14 @@
 using namespace Rcpp;
 
 // readsas
-Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk);
+Rcpp::List readsas(const char * filePath, const bool debug, const uint64_t kk);
 RcppExport SEXP _readsas_readsas(SEXP filePathSEXP, SEXP debugSEXP, SEXP kkSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const char * >::type filePath(filePathSEXP);
     Rcpp::traits::input_parameter< const bool >::type debug(debugSEXP);
-    Rcpp::traits::input_parameter< const int32_t >::type kk(kkSEXP);
+    Rcpp::traits::input_parameter< const uint64_t >::type kk(kkSEXP);
     rcpp_result_gen = Rcpp::wrap(readsas(filePath, debug, kk));
     return rcpp_result_gen;
 END_RCPP
