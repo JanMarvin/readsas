@@ -1,8 +1,7 @@
 Package: readsas
 Type: Package
 Title: Importing SAS Files
-Version: 0.1
-Date: 2019-08-30
+Version: 0.2
 Authors@R: c(
     person("Jan Marvin", "Garbuszus",
     email = "jan.garbuszus@ruhr-uni-bochum.de", role = c("aut", "cre"))
@@ -13,7 +12,7 @@ License: GPL (>= 2) | file LICENSE
 LazyData: TRUE
 Imports: Rcpp (>= 1.0.2)
 LinkingTo: Rcpp, BH
-SystemRequirements: C++11, OpenSSL >= 1.0.1
+SystemRequirements: C++11
 Suggests: testthat, foreign, datasets
 ByteCompile: yes
 RoxygenNote: 6.1.1

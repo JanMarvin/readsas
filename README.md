@@ -12,10 +12,18 @@ exactly as possible. Speed is welcome, but a second seat passenger.
 
 ## Installation
 
+With `drat`:
+```R
+drat::addRepo("JanMarvin")
+install.packages("readsas")
+```
+
 With `devtools`:
 ```R
 devtools::install_git("https://github.com/JanMarvin/readsas.git")
 ```
+
+
 ## Usage
 ```R
 fl <- system.file("extdata", "cars.sas7bdat", package="readsas")
