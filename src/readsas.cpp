@@ -37,7 +37,7 @@ using namespace Rcpp;
 //' @import Rcpp
 //' @export
 // [[Rcpp::export]]
-Rcpp::List readsas(const char * filePath, const bool debug, const uint64_t kk)
+Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
 {
   std::ifstream sas(filePath, std::ios::in | std::ios::binary);
   if (sas) {
@@ -45,8 +45,6 @@ Rcpp::List readsas(const char * filePath, const bool debug, const uint64_t kk)
 
     const std::string tempstr = ".readsas_unc_tmp_file";
     std::fstream out (tempstr, std::ios::out | std::ios::binary);
-    // std::fstream tmpfile ("/tmp/unk.sas7bdat", std::ios::out | std::ios::binary);
-    // if (out.is_open())
 
     int compr = 0;
 
@@ -92,8 +90,6 @@ Rcpp::List readsas(const char * filePath, const bool debug, const uint64_t kk)
     std::vector<idxofflen> lbl;
     std::vector<idxofflen> unk;
     std::vector<int16_t> c8vec;
-
-    // std::vector<uint64_t> coloffset;
 
     Rcpp::NumericVector fmt32s;
     Rcpp::NumericVector ifmt32s;
@@ -410,12 +406,10 @@ Rcpp::List readsas(const char * filePath, const bool debug, const uint64_t kk)
     // rest is filled with zeros. read it anyway.
     uint64_t num_zeros = headersize - sas.tellg();
 
-    // Rcout << num_zeros << std::endl;
-
     for (uint64_t i = 0; i < num_zeros; ++i) {
       int8_t zero = 0;
       zero = readbin(zero, sas, swapit);
-      if (zero!=0)
+      if (zero!=0 && debug)
         warning("debug: expected 0, is %d", zero);
     }
 
@@ -497,12 +491,6 @@ Rcpp::List readsas(const char * filePath, const bool debug, const uint64_t kk)
 
       std::vector<PO_Tab> potabs(SUBHEADER_COUNT);
 
-      // if (PAGE_TYPE == -28672) {
-      //   // sas.seekg(pagenumx, sas.beg);
-      //
-      // }
-
-
       if ((
           PAGE_TYPE == -28672 ||
             PAGE_TYPE == 16384 ||
@@ -574,21 +562,12 @@ Rcpp::List readsas(const char * filePath, const bool debug, const uint64_t kk)
           if(potabs[sc].SH_OFF == 0 || potabs[sc].SH_LEN == 0)
             break;
 
-          // if (PAGE_TYPE == -28672)
-          //   Rcout << "pagepos: " << pagepos << std::endl;
-
           sas.seekg(pagepos, sas.beg);
-
 
           // not sure yet, whats the right thing to do here
           bool page0not = 0;
           if ((pg == 0) & (sc != 3))
             page0not = (PAGE_TYPE == 0) &  (potabs[sc].SH_LEN == rowlength);
-
-          // if ((pg > 0 ) & (BLOCK_COUNT == SUBHEADER_COUNT))
-          //   page0not = 1;
-
-          // Rprintf("page0not %d\n", page0not);
 
           int64_t sas_offset = alignval;
           if (! ((potabs[sc].COMPRESSION == 4) |
@@ -642,10 +621,6 @@ Rcpp::List readsas(const char * filePath, const bool debug, const uint64_t kk)
           if (page0not)
             sas_offset_table = 11;
 
-
-          // if (sas_offset_table == 0 | sas_offset_table > 8)
-          // if (PAGE_TYPE != 0)
-          //   stop("stop %d", sas_offset_table);
 
           switch(sas_offset_table)
           {
@@ -761,7 +736,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const uint64_t kk)
 
                 for (int z = 0; z < 10; ++z) {
                   unk64 = readbin(unk64, sas, swapit); // 0
-                  if (unk64 != 0)
+                  if (unk64 != 0 && debug)
                     warning("val1 is %d. expected a zero", unk64);
                 }
 
@@ -791,8 +766,6 @@ Rcpp::List readsas(const char * filePath, const bool debug, const uint64_t kk)
                 if (debug) Rcout << unk16 << std::endl;
                 unk16 = readbin(unk16, sas, swapit); // 8
                 if (debug) Rcout << unk16 << std::endl;
-                // unk64 = readbin(unk64, sas, swapit); // ?
-                // Rcout << unk64 << std::endl;
 
                 if (debug) Rcout << "###############" << std::endl;
 
@@ -896,7 +869,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const uint64_t kk)
 
                 for (int z = 0; z < numzeros; ++z) {
                   unk64 = readbin((int32_t)unk64, sas, swapit);
-                  if (unk64 != 0)
+                  if (unk64 != 0 && debug)
                     warning("val1 is %d. expected a zero", unk64);
                 }
 
@@ -1043,7 +1016,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const uint64_t kk)
                         swlen, todata, textoff);
 
 
-              if (!((dataoffset == 256) | (dataoffset == 1280)))
+              if (!((dataoffset == 256) | (dataoffset == 1280)) && debug)
                 warning("debug: dataoffset is unexpectedly %d\n",
                         dataoffset);
 
@@ -1190,8 +1163,6 @@ Rcpp::List readsas(const char * filePath, const bool debug, const uint64_t kk)
                 // Rcout << unk16 << std::endl;
               }
 
-              // Rcout << "-------- case 3 "<< sas.tellg()  << std::endl;
-
               fmt32s.push_back(  fmt32  + (double)fmt322/10);
               ifmt32s.push_back( ifmt32 + (double)ifmt322/10);
               fmtkeys.push_back( fmtkey + (double)fmtkey2/10);
@@ -1273,13 +1244,6 @@ Rcpp::List readsas(const char * filePath, const bool debug, const uint64_t kk)
 
               varname_pos.push_back( sas.tellg() );
 
-              // Rcout << "varname_pos: "<< sas.tellg() << std::endl;
-
-
-              // // label_pos[pg] = varname_pos[pg];
-              // if (c5typ == 1)
-              //   label_pos.push_back( sas.tellg() );
-
               len = readbin(len, sas, swapit);
               // Rcout << len << std::endl;
               unk16 = readbin(unk16, sas, swapit); // 0
@@ -1289,7 +1253,6 @@ Rcpp::List readsas(const char * filePath, const bool debug, const uint64_t kk)
               unk16 = readbin(unk16, sas, swapit); // 0
               // Rcout << unk16 << std::endl;
 
-              // not sure yet. pg == 0 is required
               if ((PAGE_TYPE != 1024) & (c5first == 0)) {
                 unk16 = readbin(unk16, sas, swapit); // 0 |     0 | 27977
                 // Rcout << unk16 << std::endl;
@@ -1298,8 +1261,6 @@ Rcpp::List readsas(const char * filePath, const bool debug, const uint64_t kk)
               }
 
               if ((c5typ == 0) & (pg == 0)) {
-
-                // if (!(PAGE_TYPE == 1024)) {
 
                 uint64_t pos_beg = sas.tellg();
                 int8_t tmp = 16; // always 16?
@@ -1355,10 +1316,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const uint64_t kk)
                         proc << "\n" <<
                           sw << std::endl;
 
-                // Rprintf("compr %d \n", compr  );
-
                 sas.seekg(pos_beg, sas.beg);
-                // }
               }
 
               if (debug)
@@ -1408,8 +1366,6 @@ Rcpp::List readsas(const char * filePath, const bool debug, const uint64_t kk)
                 cnpoi.CN_LEN    = readbin(cnpoi.CN_LEN, sas, swapit);
                 cnpoi.zeros     = readbin(cnpoi.zeros,  sas, swapit);
 
-                // additional guard here against crazy values?
-                // if ((cnpoi.CN_IDX >= 0) & (cnpoi.CN_IDX < pagecount))
                 cnpois.push_back( cnpoi );
 
                 cnidx.push_back( cnpoi.CN_IDX );
@@ -1449,15 +1405,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const uint64_t kk)
 
               lenremain -= 8;
 
-              // auto cmax = (lenremain + alignval) / (alignval);
               auto cmax = lenremain / divs;
-              // Rcout << lenremain << std::endl;
-              // Rcout << cmax << std::endl;
-
-              // stop("stop");
-
-
-              // auto cmax = colf_p1; if (pg == 2) cmax = colf_p2;
 
               /* Column Attributes Pointers */
               std::vector<CN_Att> capois(cmax);
@@ -1476,8 +1424,6 @@ Rcpp::List readsas(const char * filePath, const bool debug, const uint64_t kk)
                 capois[i].UNK8       = readbin(capois[i].UNK8, sas, swapit);
 
 
-                // condition is required to find valid cases, since cmax
-                // can not be trusted
                 if ((capois[i].CN_TYP >= 1) & (capois[i].CN_TYP <= 2) &
                     (capois[i].CN_WID >= 0) & // just > ?
                     (capois[i].CN_WID <= pagesize)) {
@@ -1541,15 +1487,9 @@ Rcpp::List readsas(const char * filePath, const bool debug, const uint64_t kk)
 
               // Rcout << lenremain << " " << cls << std::endl;
 
-              // 2 * CL
               for (auto cl = 0; cl < cls; ++cl) {
-
                 int16_t res = 0;
                 res = readbin(res, sas, swapit);
-
-                // if (debug)
-                // Rcout << res[0] <<  " : " << res[1] << std::endl;
-
                 c8vec.push_back(res);
               }
 
@@ -1594,13 +1534,6 @@ Rcpp::List readsas(const char * filePath, const bool debug, const uint64_t kk)
                 Rcout << "-------- case 10 "<< sas.tellg()  << std::endl;
 
 
-              // if (PAGE_TYPE != -28672) {
-              //   readbin(unk32, sas, 0);
-
-              //   if ((potabs[sc].SH_LEN > alignval) &
-              //       (potabs[sc].COMPRESSION == 4))
-              // {
-
               auto clen = potabs[sc].SH_LEN;
               std::string cstr(clen, '\0');
               std::string ustr(rowlength, '\0');
@@ -1613,7 +1546,6 @@ Rcpp::List readsas(const char * filePath, const bool debug, const uint64_t kk)
                 ustr = SASYZCR2(clen, rowlength, cstr, debug);
 
               writestr(ustr, ustr.size(), out);
-              // }
 
               break;
             }
@@ -1652,20 +1584,14 @@ Rcpp::List readsas(const char * filePath, const bool debug, const uint64_t kk)
             }
 
               // some subheaders are pointers to positions inside the file.
-              // their requirement is unknown and they are not required for R.
+              // their use for SAS is unknown and they are not required for R.
               // if SC_LEN == alignval it is just padding?
               if ((potabs[sc].SH_LEN > alignval) &
                   (potabs[sc].SH_LEN < pagesize) &
                   (potabs[sc].COMPRESSION != 4) )
               {
-
-
                 auto unklen = potabs[sc].SH_LEN;
                 std::string unkstr(unklen, '\0');
-                // unkstr += "WOOOHA!";
-                // unkstr = readstring(unkstr, sas);
-                // writestr(unkstr, unkstr.size(), tmpfile);
-
               }
 
               break;
@@ -1682,29 +1608,6 @@ Rcpp::List readsas(const char * filePath, const bool debug, const uint64_t kk)
     }
 
     out.close();
-    // tmpfile.close();
-
-
-    // remove if 0
-    // varname_pos.erase(
-    //   std::remove(varname_pos.begin(), varname_pos.end(), 0),
-    //   varname_pos.end()
-    // );
-
-    // label_pos.erase(
-    //   std::remove(label_pos.begin(), label_pos.end(), 0),
-    //   label_pos.end()
-    // );
-
-    // for (int i = 0; i < data_pos.size(); ++i){
-    //   Rcout << data_pos[i] << std::endl;
-    // }
-    // for (int i = 0; i < varname_pos.size(); ++i){
-    //   Rcout << varname_pos[i] << std::endl;
-    // }
-    // for (int i = 0; i < label_pos.size(); ++i){
-    //   Rcout << label_pos[i] << std::endl;
-    // }
 
 
     if (debug)
@@ -1717,12 +1620,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const uint64_t kk)
                 cnpois[i].CN_IDX, cnpois[i].CN_OFF,
                 cnpois[i].CN_LEN, cnpois[i].zeros);
 
-      // std::reverse(varname_pos.begin(),varname_pos.end());
-
       int64_t vpos = (varname_pos[cnpois[i].CN_IDX] + cnpois[i].CN_OFF);
-
-      // if (varname_pos[cnpois[i].CN_IDX])
-
       sas.seekg(vpos, sas.beg);
 
       std::string varname(cnpois[i].CN_LEN, '\0');
@@ -1755,9 +1653,6 @@ Rcpp::List readsas(const char * filePath, const bool debug, const uint64_t kk)
           sas.seekg(fpos, sas.beg);
           format.resize(fmt[i].LEN, '\0');
           format = readstring(format, sas);
-
-          // Rcout << fpos << "; " << fmt[i].IDX << "; " << label_pos[fmt[i].IDX] <<
-          //   "; " << fmt[i].OFF << std::endl;
         }
 
         std:: string label = "";
@@ -1798,8 +1693,6 @@ Rcpp::List readsas(const char * filePath, const bool debug, const uint64_t kk)
     {
       int32_t const type = vartyps[i];
 
-      // Rcout << type << std::endl;
-
       switch(type)
       {
       case 1:
@@ -1820,8 +1713,6 @@ Rcpp::List readsas(const char * filePath, const bool debug, const uint64_t kk)
       Rcout << "coloffset " << coloffset << std::endl;
       Rcout << "ordered " << ordered << std::endl;
     }
-
-    // Rcout << "compr: " << compr << std::endl;
 
     // new offset ----------------------------------------------------------- //
 
@@ -1937,14 +1828,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const uint64_t kk)
 
       auto ii = 0;
       for (uint64_t i = 0; i < rowcount; ++i) {
-
-        // if (debug)
-        //   Rcout << "i: " << i << std::endl;
-
         for (auto j = 0; j < colnum; ++j) {
-
-          // if (debug)
-          //   Rcout << "j: " << j << std::endl;
 
           auto ord = ordered[j];
           auto wid = colwidth[ord];
@@ -2067,7 +1951,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const uint64_t kk)
     df.attr("rowcount") = rowcount;
     df.attr("rowlength") = rowlength;
     df.attr("colwidth") = colwidth;
-    df.attr("coloffset") = coloffset;
+    // df.attr("coloffset") = coloffset;
     df.attr("vartyps") = vartyps;
     df.attr("c8vec") = c8vec;
 
