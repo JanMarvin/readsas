@@ -100,8 +100,12 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
     Rcpp::NumericVector fmtkeys;
     Rcpp::IntegerVector vartyps;
     Rcpp::IntegerVector colwidth;
-    Rcpp::IntegerVector coloffset;
     Rcpp::IntegerVector page_type;
+    Rcpp::IntegerVector coloffset;
+    Rcpp::IntegerVector cnidx;
+    Rcpp::IntegerVector cnoff;
+    Rcpp::IntegerVector cnlen;
+    Rcpp::IntegerVector cnzer;
 
     Rcpp::CharacterVector labels;
     Rcpp::CharacterVector formats;
@@ -345,8 +349,8 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
      */
 
     std::vector<int64_t>  data_pos(pagecount, 0);
-    std::vector<uint64_t> varname_pos(pagecount, 0);
-    std::vector<uint64_t> label_pos(pagecount, 0);
+    std::vector<uint64_t> varname_pos;
+    std::vector<uint64_t> label_pos;
     std::vector<int64_t>  rowsperpage(pagecount, 0);
 
     unkdub = readbin(unkdub, sas, swapit); // 0
@@ -501,7 +505,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
 
       if ((
           PAGE_TYPE == -28672 ||
-          PAGE_TYPE == 16384 ||
+            PAGE_TYPE == 16384 ||
             PAGE_TYPE == 1024 ||
             PAGE_TYPE == 640 || PAGE_TYPE == 512 || PAGE_TYPE == 256 ||
             PAGE_TYPE == 0))
@@ -566,7 +570,8 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
           auto pagepos = (headersize + pg * pagesize) + potabs[sc].SH_OFF;
 
 
-          if(potabs[sc].SH_OFF == 0) // 2 files, where this is a problem
+          // 2 files, where this is a problem
+          if(potabs[sc].SH_OFF == 0 || potabs[sc].SH_LEN == 0)
             break;
 
           // if (PAGE_TYPE == -28672)
@@ -1268,13 +1273,14 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
 
               int16_t len = 0;
 
-              if (c5typ == 0)
-                varname_pos[pg] = sas.tellg();
+              varname_pos.push_back( sas.tellg() );
+
+              // Rcout << "varname_pos: "<< sas.tellg() << std::endl;
 
 
-              label_pos[pg] = varname_pos[pg];
-              if (c5typ == 1)
-                label_pos[pg] = sas.tellg();
+              // // label_pos[pg] = varname_pos[pg];
+              // if (c5typ == 1)
+              //   label_pos.push_back( sas.tellg() );
 
               len = readbin(len, sas, swapit);
               // Rcout << len << std::endl;
@@ -1407,8 +1413,14 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
                 cnpoi.zeros     = readbin(cnpoi.zeros,  sas, swapit);
 
                 // additional guard here against crazy values?
-                if ((cnpoi.CN_IDX >= 0) & (cnpoi.CN_IDX < pagecount))
-                  cnpois.push_back( cnpoi );
+                // if ((cnpoi.CN_IDX >= 0) & (cnpoi.CN_IDX < pagecount))
+                cnpois.push_back( cnpoi );
+
+                cnidx.push_back( cnpoi.CN_IDX );
+                cnoff.push_back( cnpoi.CN_OFF );
+                cnlen.push_back( cnpoi.CN_LEN );
+                cnzer.push_back( cnpoi.zeros );
+
 
               }
 
@@ -1492,18 +1504,18 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
           case 8:
             {
 
-              // if (debug)
+              if (debug)
                 Rcout << "-------- case 8 "<< sas.tellg() << std::endl;
 
               int16_t cls = 0;
               int64_t lenremain = 0;
 
               unk32 = readbin(unk32, sas, swapit); // unkown large number
-              Rcout << unk32 << std::endl;
+              // Rcout << unk32 << std::endl;
               unk16 = readbin(unk16, sas, swapit); // 0
-              Rcout << unk16 << std::endl;
+              // Rcout << unk16 << std::endl;
               unk16 = readbin(unk16, sas, swapit); // 0
-              Rcout << unk16 << std::endl;
+              // Rcout << unk16 << std::endl;
 
               if (u64 == 4) {  // lenremain
                 lenremain = readbin(lenremain, sas, swapit);
@@ -1511,27 +1523,27 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
                 lenremain = readbin((int32_t)lenremain, sas, swapit);
               }
 
-              // if (debug)
+              if (debug)
                 Rcout << "lenremain "<< lenremain << std::endl; // 92
 
               unk16 = readbin(unk16, sas, swapit);
-              Rcout << unk16 << std::endl; // number of varnames?
+              // Rcout << unk16 << std::endl; // number of varnames?
               cls = readbin(cls, sas, swapit);
-              Rcout << cls << std::endl;   // counter for unk loop below
+              // Rcout << cls << std::endl;   // counter for unk loop below
               unk16 = readbin(unk16, sas, swapit);
-              Rcout << unk16 << std::endl; // 1
+              // Rcout << unk16 << std::endl; // 1
               unk16 = readbin(unk16, sas, swapit);
-              Rcout << unk16 << std::endl; // number of varnames?
+              // Rcout << unk16 << std::endl; // number of varnames?
               unk16 = readbin(unk16, sas, swapit);  // 3233
-              Rcout << unk16 << std::endl; // 0
+              // Rcout << unk16 << std::endl; // 0
               unk16 = readbin(unk16, sas, swapit);  // 3233
-              Rcout << unk16 << std::endl; // 0
+              // Rcout << unk16 << std::endl; // 0
               unk16 = readbin(unk16, sas, swapit);  // 3233
-              Rcout << unk16 << std::endl; // 0
+              // Rcout << unk16 << std::endl; // 0
 
               lenremain -= 14;
 
-              Rcout << lenremain << " " << cls << std::endl;
+              // Rcout << lenremain << " " << cls << std::endl;
 
               int8_t uunk1 = 0, uunk2 = 0;
 
@@ -1542,25 +1554,25 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
                 res = readbin(res, sas, swapit);
 
                 // if (debug)
-                  // Rcout << res[0] <<  " : " << res[1] << std::endl;
+                // Rcout << res[0] <<  " : " << res[1] << std::endl;
 
-                  c8vec.push_back(res);
+                c8vec.push_back(res);
               }
 
 
-              Rcout << "---------------------------" << std::endl;
+              // Rcout << "---------------------------" << std::endl;
 
               // 8
               unk16 = readbin((int8_t)unk16, sas, swapit); // 0
-              Rcout << unk16 << std::endl;
+              // Rcout << unk16 << std::endl;
               unk16 = readbin((int8_t)unk16, sas, swapit); // 0
-              Rcout << unk16 << std::endl;
+              // Rcout << unk16 << std::endl;
               unk16 = readbin((int8_t)unk16, sas, swapit); // 0
-              Rcout << unk16 << std::endl;
+              // Rcout << unk16 << std::endl;
               unk16 = readbin((int8_t)unk16, sas, swapit); // 0
-              Rcout << unk16 << std::endl;
+              // Rcout << unk16 << std::endl;
 
-              Rcout << "---------------------------" << std::endl;
+              // Rcout << "---------------------------" << std::endl;
 
               break;
 
@@ -1680,15 +1692,15 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
 
 
     // remove if 0
-    varname_pos.erase(
-      std::remove(varname_pos.begin(), varname_pos.end(), 0),
-      varname_pos.end()
-    );
+    // varname_pos.erase(
+    //   std::remove(varname_pos.begin(), varname_pos.end(), 0),
+    //   varname_pos.end()
+    // );
 
-    label_pos.erase(
-      std::remove(label_pos.begin(), label_pos.end(), 0),
-      label_pos.end()
-    );
+    // label_pos.erase(
+    //   std::remove(label_pos.begin(), label_pos.end(), 0),
+    //   label_pos.end()
+    // );
 
     // for (int i = 0; i < data_pos.size(); ++i){
     //   Rcout << data_pos[i] << std::endl;
@@ -1704,7 +1716,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
     if (debug)
       Rcout << "varnames ----------------------------" << std::endl;
 
-    for (auto i = 0; i < colnum; ++i) {
+    for (auto i = 0; i < cnpois.size(); ++i) {
 
       if (debug)
         Rprintf("CN_IDX %d; CN_OFF %d; CN_LEN %d; zeros %d \n",
@@ -1721,28 +1733,31 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
 
       std::string varname(cnpois[i].CN_LEN, '\0');
       varname = readstring(varname, sas);
-      varnames.push_back(varname);
 
+      if (varname.size() == cnpois[i].CN_LEN)
+        varnames.push_back(varname);
 
-      Rcout << vpos << "; " << varname_pos[cnpois[i].CN_IDX] <<
-        "; " << cnpois[i].CN_OFF << "; " << cnpois[i].CN_LEN <<
-          "; " <<cnpois[i].zeros << "; " << varname << std::endl;
+      // if (i != 2375)
+      //   Rcout << vpos << "; " << varname_pos[cnpois[i].CN_IDX] <<
+      //     "; " << cnpois[i].CN_OFF << "; " << cnpois[i].CN_LEN <<
+      //       "; " <<cnpois[i].zeros << "; " << varname << std::endl;
 
       if (debug)
         Rcout << i << " : " << vpos << " : " << varname << std::endl;
 
     }
 
-    if (hasattributes) {
 
-      // auto len = fmt.size();
+
+
+    if (hasattributes) {
 
       for (auto i = 0; i < colnum; ++i) {
 
         /* read formats and labels */
         std::string format = "";
         if (fmt[i].LEN > 0) {
-          uint64_t fpos = (label_pos[fmt[i].IDX] + fmt[i].OFF);
+          uint64_t fpos = (varname_pos[fmt[i].IDX] + fmt[i].OFF);
           sas.seekg(fpos, sas.beg);
           format.resize(fmt[i].LEN, '\0');
           format = readstring(format, sas);
@@ -1753,7 +1768,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
 
         std:: string label = "";
         if (lbl[i].LEN > 0) {
-          uint64_t lpos = (label_pos[lbl[i].IDX] + lbl[i].OFF);
+          uint64_t lpos = (varname_pos[lbl[i].IDX] + lbl[i].OFF);
           sas.seekg(lpos, sas.beg);
           label.resize(lbl[i].LEN, '\0');
           label = readstring(label, sas);
@@ -1926,8 +1941,6 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
       std::ifstream sas(tempstr,
                         std::ios::in | std::ios::binary);
 
-      // sas.seekg(data_pos[0], sas.beg);
-
       auto ii = 0;
       for (auto i = 0; i < rowcount; ++i) {
 
@@ -2015,12 +2028,22 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
       if (rowcount > 0)
         rvec = seq(1, rowcount);
 
+
+      Rcpp::IntegerVector cvec;
+      if (varnames.size() > colnum)
+        cvec = seq(1, colnum);
+
       // 3. Create a data.frame
       df.attr("row.names") = rvec;
-      df.attr("names") = varnames;
+
+      if (varnames.size() == colnum)
+        df.attr("names") = varnames;
+      else
+        df.attr("names") = cvec;
       df.attr("class") = "data.frame";
 
-      // df.attr("varnames") = varnames;
+      if (varnames.size() > colnum)
+        df.attr("varnames") = varnames;
       df.attr("labels") = labels;
       df.attr("formats") = formats;
       df.attr("created") = created;
@@ -2051,6 +2074,14 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int32_t kk)
       df.attr("coloffset") = coloffset;
       df.attr("vartyps") = vartyps;
       df.attr("c8vec") = c8vec;
+
+      if (debug) {
+        df.attr("cnidx") = cnidx;
+        df.attr("cnoff") = cnoff;
+        df.attr("cnlen") = cnlen;
+        df.attr("cnzer") = cnzer;
+      }
+
 
       return(df);
 
