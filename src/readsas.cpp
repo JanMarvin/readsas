@@ -423,7 +423,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
     int8_t alignval = 8;
     if (u64 != 4) alignval = 4;
 
-    uint64_t rowlength = 0, rowcount = 0;
+    uint64_t rowlength = 0, rowcount = 0, delobs = 0;
     int64_t colf_p1 = 0, colf_p2 = 0;
     int64_t colnum = 0;
     std::vector<std::string> stringvec(pagecount) ;
@@ -661,8 +661,8 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
                 if (debug) Rcout << "rowlength " << rowlength << std::endl;
                 rowcount = readbin(rowcount, sas, swapit);
                 if (debug) Rcout << "rowcount " << rowcount << std::endl;
-                unk64 = readbin(unk64, sas, swapit);
-                if (debug) Rcout << unk64 << std::endl;
+                delobs = readbin(delobs, sas, swapit);
+                if (debug) Rcout << "delobs " << delobs << std::endl;
                 unk64 = readbin(unk64, sas, swapit);
                 if (debug) Rcout << unk64 << std::endl;
 
@@ -841,11 +841,11 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
                 if (debug) Rcout << unk32 << std::endl;
 
                 rowlength = readbin((int32_t)rowlength, sas, swapit);
-                if (debug) Rcout << "rowlength "<< rowlength << std::endl;
+                if (debug) Rcout << "rowlength " << rowlength << std::endl;
                 rowcount = readbin((int32_t)rowcount, sas, swapit);
-                if (debug) Rcout << "rowcount "<< rowcount << std::endl;
-                unk32 = readbin(unk32, sas, swapit); // deleted variables?
-                if (debug) Rcout << unk32 << std::endl;
+                if (debug) Rcout << "rowcount " << rowcount << std::endl;
+                delobs = readbin((int32_t)delobs, sas, swapit); // deleted obs?
+                if (debug) Rcout << "delobs " << delobs << std::endl;
                 unk32 = readbin(unk32, sas, swapit);
                 if (debug) Rcout << unk32 << std::endl;
                 colf_p1 = readbin((int32_t)colf_p1, sas, swapit);
@@ -1950,6 +1950,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
 
     df.attr("rowcount") = rowcount;
     df.attr("rowlength") = rowlength;
+    df.attr("deleted_rows") = delobs;
     df.attr("colwidth") = colwidth;
     // df.attr("coloffset") = coloffset;
     df.attr("vartyps") = vartyps;
