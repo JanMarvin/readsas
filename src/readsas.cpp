@@ -814,26 +814,52 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
                 if (debug) Rcout << l_maxlen << std::endl;
 
                 /* maybe SAS version information at o131018 ? */
-                for (int z = 0; z < 3; ++z) {
-                  unk32 = readbin(unk32, sas, swapit); // 0
-                  if (unk32 != 0)
-                    warning("val3 is %d at %d. expected a zero",
-                            unk32, sas.tellg());
-                }
+                unk32 = readbin(unk32, sas, swapit); // 1
+                Rcout << "1 " << unk32 << std::endl;
+                unk32 = readbin(unk32, sas, swapit); // 2
+                if (unk32 != 0) stop("unk32 1. expected 0 is %d", unk32);
+                unk32 = readbin(unk32, sas, swapit); // 3
+                if (unk32 != 0) stop("unk32 1. expected 0 is %d", unk32);
 
                 rowsonpg = readbin(rowsonpg, sas, swapit);
 
-                int datofs = 0;
-                for (int z = 0; z < 20; ++z) {
-                  unk16 = readbin(unk16, sas, swapit); // 0
-                  if (unk16 != 0) {
-                      warning("val4 is %d at %d. expected a zero",
-                              unk16, sas.tellg());
-                    datofs = unk16;
-                  }
-                }
 
-                dataoffset = datofs;
+                unk16 = readbin(unk16, sas, swapit); // 1
+                if (unk16 != 0) stop("unk16 01. expected 0 is %d", unk16);
+                unk32 = readbin(unk32, sas, swapit); // 2
+                Rcout << "2 " << unk32 << std::endl;
+                unk16 = readbin(unk16, sas, swapit); // 4
+                if (unk16 != 0) stop("unk16 04. expected 0 is %d", unk16);
+                unk16 = readbin(unk16, sas, swapit); // 5
+                if (unk16 != 0) stop("unk16 05. expected 0 is %d", unk16);
+                unk16 = readbin(unk16, sas, swapit); // 6
+                if (unk16 != 0) stop("unk16 06. expected 0 is %d", unk16);
+                unk32 = readbin(unk32, sas, swapit); // 7
+                // Rcout << "7 " << unk32 << std::endl; // nrows
+                unk16 = readbin(unk16, sas, swapit); // 9
+                if (unk16 != 0) stop("unk16 09. expected 0 is %d", unk16);
+                unk32 = readbin(unk32, sas, swapit); // 10
+                Rcout << "10 "<< unk32 << std::endl; // delobs
+                // if (unk16 != 0) stop("unk16 11. expected 0 is %d", unk16);
+                unk16 = readbin(unk16, sas, swapit); // 12
+                if (unk16 != 0) stop("unk16 12. expected 0 is %d", unk16);
+                unk16 = readbin(unk16, sas, swapit); // 13
+                if (unk16 != 0) stop("unk16 13. expected 0 is %d", unk16);
+                unk16 = readbin(unk16, sas, swapit); // 14
+                if (unk16 != 0) stop("unk16 14. expected 0 is %d", unk16);
+                unk16 = readbin(unk16, sas, swapit); // 15
+                if (unk16 != 0) stop("unk16 15. expected 0 is %d", unk16);
+                dataoffset = readbin(dataoffset, sas, swapit); // 16
+                // Rcout << dataoffset << std::endl;
+                unk16 = readbin(unk16, sas, swapit); // 17
+                if (unk16 != 0) stop("unk16 17. expected 0 is %d", unk16);
+                unk16 = readbin(unk16, sas, swapit);// 18
+                if (unk16 != 0) stop("unk16 18. expected 0 is %d", unk16);
+                unk16 = readbin(unk16, sas, swapit); // 19
+                if (unk16 != 0) stop("unk16 19. expected 0 is %d", unk16);
+                unk16 = readbin(unk16, sas, swapit); // 20
+                if (unk16 != 0) stop("unk16 20. expected 0 is %d", unk16);
+
 
                 /* */
 
@@ -991,11 +1017,23 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
 
                 if (debug) Rcout << "###############" << std::endl;
 
-                for (int z = 0; z < 8; ++z) {
-                  unk32 = readbin(unk32, sas, swapit); // 0
-                  if (unk32 != 0)
-                    warning("val3 is %d. expected a zero", unk32);
-                }
+
+                unk32 = readbin(unk32, sas, swapit); // 1
+                Rcout << "1 " << unk32 << std::endl;
+                unk32 = readbin(unk32, sas, swapit); // 2
+                // Rcout << "2 " << unk32 << std::endl;
+                unk32 = readbin(unk32, sas, swapit); // 3
+                // Rcout << "3 " << unk32 << std::endl;
+                unk32 = readbin(unk32, sas, swapit); // 4
+                // Rcout << "4 " << unk32 << std::endl;
+                unk32 = readbin(unk32, sas, swapit); // 5
+                // Rcout << "5 " << unk32 << std::endl;
+                unk32 = readbin(unk32, sas, swapit); // 6
+                // Rcout << "6 " << unk32 << std::endl;
+                unk32 = readbin(unk32, sas, swapit); // 7
+                // Rcout << "7 " << unk32 << std::endl;
+                unk32 = readbin(unk32, sas, swapit); // 8
+                // Rcout << "8 " << unk32 << std::endl;
 
                 unk16 = readbin(unk16, sas, swapit); // 4
                 if (debug) Rcout << unk16 << std::endl;
@@ -1015,17 +1053,42 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
 
                 rowsonpg = readbin(rowsonpg, sas, swapit);
 
-                int datofs = 0;
-                for (int z = 0; z < 20; ++z) {
-                  unk16 = readbin(unk16, sas, swapit); // 0
-                  if (unk16 != 0) {
-                    warning("val4 is %d at %d. expected a zero",
-                            unk16, sas.tellg());
-                    datofs = unk16;
-                  }
-                }
 
-                dataoffset = datofs;
+                unk16 = readbin(unk16, sas, swapit); // 1
+                if (unk16 != 0) stop("unk16 01. expected 0 is %d", unk16);
+                unk32 = readbin(unk32, sas, swapit); // 2
+                Rcout << "2 " << unk32 << std::endl;
+                unk16 = readbin(unk16, sas, swapit); // 4
+                if (unk16 != 0) stop("unk16 04. expected 0 is %d", unk16);
+                unk16 = readbin(unk16, sas, swapit); // 5
+                if (unk16 != 0) stop("unk16 05. expected 0 is %d", unk16);
+                unk16 = readbin(unk16, sas, swapit); // 6
+                if (unk16 != 0) stop("unk16 06. expected 0 is %d", unk16);
+                unk32 = readbin(unk32, sas, swapit); // 7
+                // Rcout << "7 " << unk32 << std::endl; // nrows
+                unk16 = readbin(unk16, sas, swapit); // 9
+                if (unk16 != 0) stop("unk16 09. expected 0 is %d", unk16);
+                unk32 = readbin(unk32, sas, swapit); // 10
+                Rcout << "10 "<< unk32 << std::endl; // delobs
+                // if (unk16 != 0) stop("unk16 11. expected 0 is %d", unk16);
+                unk16 = readbin(unk16, sas, swapit); // 12
+                if (unk16 != 0) stop("unk16 12. expected 0 is %d", unk16);
+                unk16 = readbin(unk16, sas, swapit); // 13
+                if (unk16 != 0) stop("unk16 13. expected 0 is %d", unk16);
+                unk16 = readbin(unk16, sas, swapit); // 14
+                if (unk16 != 0) stop("unk16 14. expected 0 is %d", unk16);
+                unk16 = readbin(unk16, sas, swapit); // 15
+                if (unk16 != 0) stop("unk16 15. expected 0 is %d", unk16);
+                dataoffset = readbin(dataoffset, sas, swapit); // 16
+                // Rcout << dataoffset << std::endl;
+                unk16 = readbin(unk16, sas, swapit); // 17
+                if (unk16 != 0) stop("unk16 17. expected 0 is %d", unk16);
+                unk16 = readbin(unk16, sas, swapit);// 18
+                if (unk16 != 0) stop("unk16 18. expected 0 is %d", unk16);
+                unk16 = readbin(unk16, sas, swapit); // 19
+                if (unk16 != 0) stop("unk16 19. expected 0 is %d", unk16);
+                unk16 = readbin(unk16, sas, swapit); // 20
+                if (unk16 != 0) stop("unk16 20. expected 0 is %d", unk16);
               }
 
               if (debug)
@@ -1972,6 +2035,9 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
     // df.attr("coloffset") = coloffset;
     df.attr("vartyps") = vartyps;
     df.attr("c8vec") = c8vec;
+
+    df.attr("headersize") = headersize;
+    df.attr("pagesize") = pagesize;
 
     if (debug) {
       df.attr("cnidx") = cnidx;
