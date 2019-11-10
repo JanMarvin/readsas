@@ -1562,47 +1562,42 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
               }
 
               if (debug)
-                Rcout << "lenremain "<< lenremain << std::endl; // 92
+                Rcout << "lenremain "<< lenremain << std::endl;
 
-              unk16 = readbin(unk16, sas, swapit);
-              // Rcout << unk16 << std::endl; // number of varnames?
+              int16_t nvar = 0, nvar2 = 0;
+
+              nvar = readbin(nvar, sas, swapit);
+              // Rcout << nvar << std::endl; // number of varnames?
               cls = readbin(cls, sas, swapit);
               // Rcout << cls << std::endl;   // counter for unk loop below
               unk16 = readbin(unk16, sas, swapit);
               // Rcout << unk16 << std::endl; // 1
-              unk16 = readbin(unk16, sas, swapit);
-              // Rcout << unk16 << std::endl; // number of varnames?
-              unk16 = readbin(unk16, sas, swapit);  // 3233
+              nvar2 = readbin(nvar2, sas, swapit);
+              // Rcout << nvar2 << std::endl; // number of varnames?
+              unk16 = readbin(unk16, sas, swapit);  // 3233 | -1 | 21831
               // Rcout << unk16 << std::endl; // 0
-              unk16 = readbin(unk16, sas, swapit);  // 3233
+              unk16 = readbin(unk16, sas, swapit);  // 3233 | -1 | 17741
               // Rcout << unk16 << std::endl; // 0
-              unk16 = readbin(unk16, sas, swapit);  // 3233
+              unk16 = readbin(unk16, sas, swapit);  // 3233 | -4912 | 21582
               // Rcout << unk16 << std::endl; // 0
 
               lenremain -= 14;
 
-              // Rcout << lenremain << " " << cls << std::endl;
+              if (nvar2 > 0) {
 
-              for (auto cl = 0; cl < cls; ++cl) {
-                int16_t res = 0;
-                res = readbin(res, sas, swapit);
-                c8vec.push_back(res);
+                for (auto cl = 0; cl < cls; ++cl) {
+                  int16_t res = 0;
+                  res = readbin(res, sas, swapit);
+                  c8vec.push_back(res);
+                  lenremain -= 2;
+                }
+
+                // 8
+                if (lenremain == 4) {
+                  unk32 = readbin(unk32, sas, swapit); // 0 | 528
+                  // if (unk32 != 0) stop("c8: unk32 not 0, but %d\n", unk32);
+                }
               }
-
-
-              // Rcout << "---------------------------" << std::endl;
-
-              // 8
-              unk16 = readbin((int8_t)unk16, sas, swapit); // 0
-              // Rcout << unk16 << std::endl;
-              unk16 = readbin((int8_t)unk16, sas, swapit); // 0
-              // Rcout << unk16 << std::endl;
-              unk16 = readbin((int8_t)unk16, sas, swapit); // 0
-              // Rcout << unk16 << std::endl;
-              unk16 = readbin((int8_t)unk16, sas, swapit); // 0
-              // Rcout << unk16 << std::endl;
-
-              // Rcout << "---------------------------" << std::endl;
 
               break;
 
