@@ -285,10 +285,10 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
 
     // o80
     unk32 = readbin(unk32, sas, swapit); // 0
-    // Rprintf("%d\n", unk32);
+    if (unk32 != 0) stop("unk32 not 0");
 
     unk32 = readbin(unk32, sas, swapit); // 0
-    // Rprintf("%d\n", unk32);
+    if (unk32 != 0) stop("unk32 not 0");
 
 
     // o84 SAS FILE
@@ -462,6 +462,14 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
         unk3 = readbin((int32_t)unk3, sas, swapit);
       }
 
+      if (debug) {
+        if (u64 == 4) Rcout << unk32 << std::endl;
+
+        Rcout << unk1<< std::endl;
+        Rcout << unk2<< std::endl;
+        Rcout << unk3<< std::endl;
+      }
+
       pageseqnum[pg] = pageseqnum32;
 
       // Rcout << "pageseqnum: " << pageseqnum32 << std::endl;
@@ -491,8 +499,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
 
       std::vector<PO_Tab> potabs(SUBHEADER_COUNT);
 
-      if ((
-          PAGE_TYPE == -28672 ||
+      if (( PAGE_TYPE == -28672 ||
             PAGE_TYPE == 16384 ||
             PAGE_TYPE == 1024 ||
             PAGE_TYPE == 640 || PAGE_TYPE == 512 || PAGE_TYPE == 256 ||
@@ -507,11 +514,11 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
             potabs[i].SH_TYPE = readbin(potabs[i].SH_TYPE, sas, swapit);
 
             zero = readbin(zero, sas, swapit);
-            // Rcout << zero << std::endl;
+            if (zero != 0) stop("zero not 0, but %d", zero);
             zero = readbin(zero, sas, swapit);
-            // Rcout << zero << std::endl;
+            if (zero != 0) stop("zero not 0, but %d", zero);
             zero = readbin(zero, sas, swapit);
-            // Rcout << zero << std::endl;
+            if (zero != 0) stop("zero not 0, but %d", zero);
 
           } else {
 
@@ -521,7 +528,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
             potabs[i].SH_TYPE = readbin(potabs[i].SH_TYPE, sas, swapit);
 
             zero = readbin(zero, sas, swapit);
-            // Rcout << zero << std::endl;
+            if (zero != 0) stop("zero not 0, but %d", zero);
           }
 
           if (debug)
@@ -543,9 +550,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
         if (PAGE_TYPE != 0) sh_end_pos = sas.tellg();
 
         data_pos[pg] = sh_end_pos;
-
-        if (debug)
-          Rprintf("sh_end_pos: %d\n", sh_end_pos);
+        if (debug) Rprintf("sh_end_pos: %d\n", sh_end_pos);
 
 
         // from now on, we will seek to every position inside the sas file
@@ -698,43 +703,66 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
                     warning("val0 is %d. expected a zero", unk64);
                 }
                 unk32 = readbin(unk32, sas, swapit);
+                if (debug) Rcout << unk32 << std::endl;
 
                 unk64 = readbin(unk64, sas, swapit); // val 1?
+                if (debug) Rcout << unk64 << std::endl;
                 unk16 = readbin(unk16, sas, swapit); // val 2?
+                if (debug) Rcout << unk16 << std::endl;
 
                 unk16 = readbin(unk16, sas, swapit); // padding
+                if (debug) Rcout << unk16 << std::endl;
                 unk16 = readbin(unk16, sas, swapit); // padding
+                if (debug) Rcout << unk16 << std::endl;
                 unk16 = readbin(unk16, sas, swapit); // padding
+                if (debug) Rcout << unk16 << std::endl;
 
                 pgwsh = readbin(pgwsh, sas, swapit);
                 pgwpossh = readbin(pgwpossh, sas, swapit);
                 if (debug) Rcout << "pgwpossh " << pgwpossh << std::endl;
 
                 unk16 = readbin(unk16, sas, swapit); // padding
+                if (debug) Rcout << unk16 << std::endl;
                 unk16 = readbin(unk16, sas, swapit); // padding
+                if (debug) Rcout << unk16 << std::endl;
                 unk16 = readbin(unk16, sas, swapit); // padding
+                if (debug) Rcout << unk16 << std::endl;
 
                 pgwsh2 = readbin(pgwsh2, sas, swapit);
+                if (debug) Rcout << "pgwsh2 " << pgwsh2 << std::endl;
                 pgwpossh2 = readbin(pgwpossh2, sas, swapit);
                 if (debug) Rcout << "pgwpossh2 " << pgwpossh2 << std::endl;
 
                 unk16 = readbin(unk16, sas, swapit); // padding
+                if (debug) Rcout << unk16 << std::endl;
                 unk16 = readbin(unk16, sas, swapit); // padding
+                if (debug) Rcout << unk16 << std::endl;
                 unk16 = readbin(unk16, sas, swapit); // padding
+                if (debug) Rcout << unk16 << std::endl;
 
                 pgc = readbin(pgc, sas, swapit);
+                if (debug) Rcout << pgc << std::endl;
 
                 unk16 = readbin(unk16, sas, swapit); // val ?
+                if (debug) Rcout << unk16 << std::endl;
                 unk16 = readbin(unk16, sas, swapit); // padding
+                if (debug) Rcout << unk16 << std::endl;
                 unk16 = readbin(unk16, sas, swapit); // padding
+                if (debug) Rcout << unk16 << std::endl;
                 unk16 = readbin(unk16, sas, swapit); // padding
+                if (debug) Rcout << unk16 << std::endl;
 
                 unk64 = readbin(unk64, sas, swapit); // val 1?
+                if (debug) Rcout << unk64 << std::endl;
 
                 addtextoff = readbin(addtextoff, sas, swapit); // val 7 | 8?
+                if (debug) Rcout << addtextoff << std::endl;
                 unk16 = readbin(unk16, sas, swapit); // padding
+                if (debug) Rcout << unk16 << std::endl;
                 unk16 = readbin(unk16, sas, swapit); // padding
+                if (debug) Rcout << unk16 << std::endl;
                 unk16 = readbin(unk16, sas, swapit); // padding
+                if (debug) Rcout << unk16 << std::endl;
 
                 for (int z = 0; z < 10; ++z) {
                   unk64 = readbin(unk64, sas, swapit); // 0
@@ -823,6 +851,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
                 if (unk32 != 0) stop("unk32 1. expected 0 is %d", unk32);
 
                 rowsonpg = readbin(rowsonpg, sas, swapit);
+                if (debug) Rcout << rowsonpg << std::endl;
 
 
                 unk16 = readbin(unk16, sas, swapit); // 1
@@ -1842,8 +1871,11 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
 
 
         // check if position is equal to expected position
-        if (pos != (uint64_t)sas.tellg())
+        if (pos != (uint64_t)sas.tellg()) {
+          if (debug) Rcout << "repositioning" << std::endl;
+
           sas.seekg(pos, sas.beg);
+        }
 
         pos = 0;
 
