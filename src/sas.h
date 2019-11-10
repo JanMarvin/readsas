@@ -5,7 +5,6 @@
 #include <fstream>
 #include <string>
 #include <sstream>
-#include <boost/regex.hpp>
 
 #include "swap_endian.h"
 
