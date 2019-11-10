@@ -76,7 +76,11 @@ read.sas <- function(file, debug = FALSE, convert.dates = TRUE, recode = TRUE,
 
   created  <- as.POSIXct( created-created2,  origin = "1960-01-01")
   modified <- as.POSIXct( modified-modified2, origin = "1960-01-01")
-  thrdts   <- as.POSIXct( thrdts,   origin = "1960-01-01", "GMT")
+  if (thrdts != 0) {
+    thrdts <- as.POSIXct( thrdts,   origin = "1960-01-01", "GMT")
+  } else {
+    thrdts <- NULL
+  }
 
   attr(data, "created")  <- created
   attr(data, "modified") <- modified
