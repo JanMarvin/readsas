@@ -1940,6 +1940,9 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
       }
     }
 
+    if (debug)
+      Rcout << "position after data " << sas.tellg() << std::endl;
+
     // close file. compressed data is imported from a different file
     sas.close();
 
