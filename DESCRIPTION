@@ -11,7 +11,7 @@ Description: Package to read the SAS file format.
 License: GPL (>= 2) | file LICENSE
 LazyData: TRUE
 Imports: Rcpp (>= 1.0.2)
-LinkingTo: Rcpp, BH
+LinkingTo: Rcpp
 SystemRequirements: C++11
 Suggests: testthat, foreign, datasets
 ByteCompile: yes
