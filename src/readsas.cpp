@@ -2018,7 +2018,6 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
     if (varnames.size() > colnum)
       df.attr("varnames") = varnames;
     df.attr("labels") = labels;
-    df.attr("formats") = formats;
     df.attr("created") = created;
     df.attr("created2") = created2;
     df.attr("modified") = modified;
@@ -2037,6 +2036,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
     df.attr("osmaker") = osmaker;
     df.attr("osname") = osname;
     df.attr("encoding") = enc;
+    df.attr("formats") = formats;
     df.attr("fmtkeys") = fmtkeys;
     df.attr("fmt32") = fmt32s;
     df.attr("ifmt32") = ifmt32s;
