@@ -1302,7 +1302,8 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
             {
               /* Column Size */
 
-              // Rcout << "-------- case 4 "<< sas.tellg() << std::endl;
+              if (debug)
+                Rcout << "-------- case 4 "<< sas.tellg() << std::endl;
 
               uint64_t uunk64 = 0;
 
@@ -1462,11 +1463,12 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
 
                 cnpois.push_back( cnpoi );
 
-                cnidx.push_back( cnpoi.CN_IDX );
-                cnoff.push_back( cnpoi.CN_OFF );
-                cnlen.push_back( cnpoi.CN_LEN );
-                cnzer.push_back( cnpoi.zeros );
-
+                if (debug) {
+                  cnidx.push_back( cnpoi.CN_IDX );
+                  cnoff.push_back( cnpoi.CN_OFF );
+                  cnlen.push_back( cnpoi.CN_LEN );
+                  cnzer.push_back( cnpoi.zeros );
+                }
 
               }
 
