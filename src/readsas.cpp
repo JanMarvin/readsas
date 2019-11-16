@@ -495,7 +495,8 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
           PAGE_TYPE == -28672 ||
             PAGE_TYPE == 16384 ||
             PAGE_TYPE == 1024 ||
-            PAGE_TYPE == 640 || PAGE_TYPE == 512 || PAGE_TYPE == 256 ||
+            PAGE_TYPE == 640 || PAGE_TYPE == 512 ||
+            PAGE_TYPE == 384 || PAGE_TYPE == 256 ||
             PAGE_TYPE == 0))
       {
         for (auto i = 0; i < SUBHEADER_COUNT; ++i) {
