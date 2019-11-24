@@ -297,10 +297,12 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
 
     // o92 dataset name
     dataset = readstring(dataset, sas);
+    dataset = std::regex_replace(dataset, std::regex(" +$"), "$1");
     if (debug) Rcout << dataset << std::endl;
 
     // o156 filetype 'DATA    '
     filetype = readstring(filetype, sas);
+    filetype = std::regex_replace(filetype, std::regex(" +$"), "$1");
     if (debug) Rcout << filetype << std::endl;
 
     if (ALIGN_2_VALUE == 4) {
