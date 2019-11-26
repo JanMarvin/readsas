@@ -515,11 +515,11 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
             potabs[i].SH_TYPE = readbin(potabs[i].SH_TYPE, sas, swapit);
 
             zero = readbin(zero, sas, swapit);
-            if (zero != 0) stop("zero not 0, but %d", zero);
+            // if (zero != 0) stop("zero not 0, but %d", zero);
             zero = readbin(zero, sas, swapit);
-            if (zero != 0) stop("zero not 0, but %d", zero);
+            // if (zero != 0) stop("zero not 0, but %d", zero);
             zero = readbin(zero, sas, swapit);
-            if (zero != 0) stop("zero not 0, but %d", zero);
+            // if (zero != 0) stop("zero not 0, but %d", zero);
 
           } else {
 
@@ -529,7 +529,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
             potabs[i].SH_TYPE = readbin(potabs[i].SH_TYPE, sas, swapit);
 
             zero = readbin(zero, sas, swapit);
-            if (zero != 0) stop("zero not 0, but %d", zero);
+            // if (zero != 0) stop("zero not 0, but %d", zero);
           }
 
           if (debug)
@@ -655,7 +655,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
                 unk64 = readbin(unk64, sas, swapit);
                 if (debug) Rcout << unk64 << std::endl;
                 unk64 = readbin(unk64, sas, swapit);
-                if (debug) Rcout << unk64 << std::endl;
+                Rcout << "miss " << unk64 << std::endl;
                 unk64 = readbin(unk64, sas, swapit);
                 if (debug) Rcout << unk64 << std::endl;
                 unk64 = readbin(unk64, sas, swapit);
@@ -1718,6 +1718,95 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
           }
         }
 
+        // deleted rows on page are noted on the last double on the page
+        if (PAGE_TYPE == 384) {
+          Rcout << "PAGE_TYPE 384" << std::endl;
+
+          int32_t nsc = SUBHEADER_COUNT - 1;
+          if (nsc < 0) nsc = 0;
+
+          // position on page pg right after data
+          auto pagepos = data_pos[pg] + (totalrowsvec[pg] * rowlength);
+          //
+          // if (!(dataoffset == 256)) {
+          //   if (debug) Rcout << "+= alignval" << std::endl;
+          //   pagepos += alignval;
+          // }
+          // sas.seekg(pagepos, sas.beg);
+
+          // position on page pg at end of page or beginning of subheader
+          pagepos = (headersize + pg * pagesize);
+          // if (SUBHEADER_COUNT > 0)
+          //   pagepos += potabs[nsc].SH_OFF;
+          // else
+          pagepos += pagesize;
+          pagepos -= 8;
+
+          sas.seekg(pagepos, sas.beg);
+
+          Rcout << headersize << ", " << pagesize << ", " <<
+            pagepos << std::endl;
+
+          // Rcout << sas.tellg() << " : " << pagepos << std::endl;
+
+          // while( sas.tellg() < pagepos) {
+
+            unkdub = readbin(unkdub, sas, swapit);
+            if (std::signbit(unkdub) == 0)
+              ++unkdub;
+            else if (std::signbit(unkdub) == 1)
+              --unkdub;
+
+            Rcout << unkdub << std::endl;
+            // if (unkdub != 0)
+            //   Rcout << unkdub << std::endl;
+
+          // }
+
+        }
+        if (PAGE_TYPE == 640) {
+          Rcout << "PAGE_TYPE 640" << std::endl;
+
+          int32_t nsc = SUBHEADER_COUNT - 1;
+          if (nsc < 0) nsc = 0;
+
+          // position on page pg right after data
+          auto pagepos = data_pos[pg] + (totalrowsvec[pg] * rowlength);
+          //
+          // if (!(dataoffset == 256)) {
+          //   if (debug) Rcout << "+= alignval" << std::endl;
+          //   pagepos += alignval;
+          // }
+          pagepos = 128449;
+          sas.seekg(pagepos, sas.beg);
+
+          // position on page pg at end of page or beginning of subheader
+          pagepos = (headersize + pg * pagesize);
+            pagepos += potabs[nsc].SH_OFF;
+          // pagepos -= 8;
+
+
+          Rcout << headersize << ", " << pagesize << ", " <<
+            pagepos << std::endl;
+
+          // Rcout << sas.tellg() << " : " << pagepos << std::endl;
+
+          // while( sas.tellg() < pagepos) {
+
+          unkdub = readbin(unkdub, sas, swapit);
+          if (std::signbit(unkdub) == 0)
+            ++unkdub;
+          else if (std::signbit(unkdub) == 1)
+            --unkdub;
+
+          Rcout << unkdub << std::endl;
+          // if (unkdub != 0)
+          //   Rcout << unkdub << std::endl;
+
+          // }
+
+        }
+
       }
       else
       {
@@ -1726,6 +1815,8 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
     }
 
     out.close();
+
+
 
 
     if (debug)
@@ -1794,7 +1885,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
               compression);
 
     if (debug)
-      Rcout << "---- data part ----" << std::endl;
+      Rcout << "---- data part " << sas.tellg() << std::endl;
 
 
     // ---------------------------------------------------------------------- //
@@ -1873,9 +1964,13 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
 
         // check if position is equal to expected position
         if (pos != (uint64_t)sas.tellg()) {
-          if (debug) Rcout << "repositioning" << std::endl;
+          if (debug) {
+          Rcout << pos << " : " << sas.tellg() << std::endl;
+          Rcout << "repositioning" << std::endl;
+          }
 
-          sas.seekg(pos, sas.beg);
+          int64_t skip = pos - sas.tellg();
+          sas.seekg(skip, sas.cur);
         }
 
         pos = 0;
@@ -2078,7 +2173,8 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
     df.attr("rowlength") = rowlength;
     df.attr("deleted_rows") = delobs;
     df.attr("colwidth") = colwidth;
-    // df.attr("coloffset") = coloffset;
+    df.attr("coloffset") = coloffset;
+    df.attr("ordered") = ordered;
     df.attr("vartyps") = vartyps;
     df.attr("c8vec") = c8vec;
 
