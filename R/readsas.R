@@ -6,8 +6,10 @@
 #'@param debug print debug information
 #'@param convert_dates default is TRUE
 #'@param recode default is TRUE
-#'@param rowcount number of rows to import (from start). negative values are
-#' ignored
+#'@param select.rows \emph{integer.} Vector of one or two numbers. If single
+#' value rows from 1:val are selected. If two values of a range are selected
+#' the rows in range will be selected.
+#'@param select.cols \emph{character:} Vector of variables to select.
 #'@param remove_deleted logical if deleted rows should be removed from data
 #'
 #'@useDynLib readsas, .registration=TRUE
@@ -16,7 +18,7 @@
 #'
 #'@export
 read.sas <- function(file, debug = FALSE, convert_dates = TRUE, recode = TRUE,
-                     rowcount = -1, remove_deleted = TRUE) {
+                     select.rows = NULL, select.cols = NULL, remove_deleted = TRUE) {
 
   # Check if path is a url
   if (length(grep("^(http|ftp|https)://", file))) {
@@ -33,7 +35,7 @@ read.sas <- function(file, debug = FALSE, convert_dates = TRUE, recode = TRUE,
 
 
 
-  data <- readsas(filepath, debug, rowcount)
+  data <- readsas(filepath, debug, select.rows, select.cols)
 
   labels  <- attr(data, "labels")
   formats <- attr(data, "formats")
@@ -41,28 +43,11 @@ read.sas <- function(file, debug = FALSE, convert_dates = TRUE, recode = TRUE,
 
   # override encoding argument if file contains no valid information
   if (encoding == "")
-    recode <- FALSE
-
+    recode = FALSE
 
   if (convert_dates) {
 
-    # TODO formula to create possible date formats?
-    dates <- c(
-      "b8601da", "e8601da", "date", "day", "ddmmyy", "ddmmyyb", "ddmmyyc",
-      "ddmmyyd", "ddmmyyn", "ddmmyyp", "ddmmyys", "eurdfdd", "eurdfde",
-      "eurdfdn", "eurdfdwn", "eurdfmy", "eurdfwdx", "eurdfmn", "eurdfwkx",
-      "eurdfmn", "eurdfwkx", "weekdate", "weekdatx", "weekday", "downame",
-      "worddate", "worddatx", "julday", "julian", "nengo", "pdjulg", "pdjuli",
-      "yymm", "yymmc", "yymmd", "yymmn", "yymmp", "yymms", "yymmdd",
-      "yymmddb", "yymmddc", "yymmddd", "yymmddn", "yymmddp", "yymmdds",
-      "yymon", "yyq", "yyqc", "yyqd", "yyqp", "yyqs", "yyqn", "yyqr",
-      "yyqrc", "yyqrd", "yyqrp", "yyqrs", "yyqrn", "year",
-      "mmddyy", "mmddyyc", "mmddyyd", "mmddyyn", "mmddyyp",
-      "mmddyys", "mmyy", "mmyyc", "mmyyd", "mmyyn", "mmyyp", "mmyys",
-      "monname", "month", "monyy", "qtr", "qtrr"
-    )
-
-    vars <- which(toupper(formats) %in% toupper(dates))
+    vars <- which(formats == "MMDDYY" | formats == "DATE")
 
     for (var in vars) {
       data[[var]] <- as.Date(
