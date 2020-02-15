@@ -6,21 +6,22 @@
 using namespace Rcpp;
 
 // readsas
-Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk);
-RcppExport SEXP _readsas_readsas(SEXP filePathSEXP, SEXP debugSEXP, SEXP kkSEXP) {
+Rcpp::List readsas(const char * filePath, const bool debug, const IntegerVector selectrows, const CharacterVector selectcols);
+RcppExport SEXP _readsas_readsas(SEXP filePathSEXP, SEXP debugSEXP, SEXP selectrowsSEXP, SEXP selectcolsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const char * >::type filePath(filePathSEXP);
     Rcpp::traits::input_parameter< const bool >::type debug(debugSEXP);
-    Rcpp::traits::input_parameter< const int64_t >::type kk(kkSEXP);
-    rcpp_result_gen = Rcpp::wrap(readsas(filePath, debug, kk));
+    Rcpp::traits::input_parameter< const IntegerVector >::type selectrows(selectrowsSEXP);
+    Rcpp::traits::input_parameter< const CharacterVector >::type selectcols(selectcolsSEXP);
+    rcpp_result_gen = Rcpp::wrap(readsas(filePath, debug, selectrows, selectcols));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_readsas_readsas", (DL_FUNC) &_readsas_readsas, 3},
+    {"_readsas_readsas", (DL_FUNC) &_readsas_readsas, 4},
     {NULL, NULL, 0}
 };
 
