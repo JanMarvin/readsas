@@ -4,8 +4,14 @@
 \alias{read.sas}
 \title{read.sas}
 \usage{
-read.sas(file, debug = FALSE, convert.dates = TRUE, recode = TRUE,
-  rowcount = -1)
+read.sas(
+  file,
+  debug = FALSE,
+  convert.dates = TRUE,
+  recode = TRUE,
+  select.rows = NULL,
+  select.cols = NULL
+)
 }
 \arguments{
 \item{file}{file to read}
@@ -16,8 +22,11 @@ read.sas(file, debug = FALSE, convert.dates = TRUE, recode = TRUE,
 
 \item{recode}{default is TRUE}
 
-\item{rowcount}{number of rows to import (from start). negative values are
-ignored}
+\item{select.rows}{\emph{integer.} Vector of one or two numbers. If single
+value rows from 1:val are selected. If two values of a range are selected
+the rows in range will be selected.}
+
+\item{select.cols}{\emph{character:} Vector of variables to select.}
 }
 \description{
 read.sas
