@@ -1918,8 +1918,8 @@ Rcpp::List readsas(const char * filePath,
 
     // new offset ----------------------------------------------------------- //
 
-    std::vector<bool> deleted(rowcount);
-    std::vector<bool> valid(rowcount);
+    std::vector<bool> deleted(nn);
+    std::vector<bool> valid(nn);
 
     bool firstpage = 0;
     bool keepr = 0;
@@ -2060,16 +2060,17 @@ Rcpp::List readsas(const char * filePath,
               if (keepc)
                 as<CharacterVector>(df[sel])[i] = val_s;
 
-        }
+          }
 
-        // check if eof is reached sas.eof() did not work
-        if ((sas_size - sas.tellg()) == 0) {
-          // Rcout << "eof reached" << std::endl;
-          break;
-        }
-        // Rcpp::stop("stop");
+          // check if eof is reached sas.eof() did not work
+          if ((sas_size - sas.tellg()) == 0) {
+            // Rcout << "eof reached" << std::endl;
+            break;
+          }
+          // Rcpp::stop("stop");
 
-        ++ii;
+          ++ii;
+        }
       }
     }
 
@@ -2236,9 +2237,9 @@ Rcpp::List readsas(const char * filePath,
     df.attr("headersize") = headersize;
     df.attr("pagesize") = pagesize;
 
-    if (kk >= 0 && (uint64_t)kk == rowcount) {
+    if (kk >= 0 && (uint64_t)kk == nn) {
       // deleted needs to be reduced if we ever skip the first row
-      deleted.resize(rowcount);
+      deleted.resize(nn);
     }
 
     df.attr("deleted") = deleted;
