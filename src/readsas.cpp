@@ -506,7 +506,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
             PAGE_TYPE == 1024 ||
             PAGE_TYPE == 640 || PAGE_TYPE == 512 ||
             PAGE_TYPE == 384 || PAGE_TYPE == 256 ||
-            PAGE_TYPE == 0))
+            PAGE_TYPE == 128 || PAGE_TYPE == 0 ))
       {
         for (auto i = 0; i < SUBHEADER_COUNT; ++i) {
           if (u64 == 4) {
@@ -1729,85 +1729,68 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
 
           // position on page pg right after data
           auto pagepos = data_pos[pg] + (totalrowsvec[pg] * rowlength);
-          //
-          // if (!(dataoffset == 256)) {
-          //   if (debug) Rcout << "+= alignval" << std::endl;
-          //   pagepos += alignval;
-          // }
-          // sas.seekg(pagepos, sas.beg);
 
           // position on page pg at end of page or beginning of subheader
           pagepos = (headersize + pg * pagesize);
-          // if (SUBHEADER_COUNT > 0)
-          //   pagepos += potabs[nsc].SH_OFF;
-          // else
-          pagepos += pagesize;
-          pagepos -= 8;
+          // pagepos += pagesize;
+          // pagepos -= 8;
+          pagepos += 12;
 
           sas.seekg(pagepos, sas.beg);
 
           Rcout << headersize << ", " << pagesize << ", " <<
             pagepos << std::endl;
 
-          // Rcout << sas.tellg() << " : " << pagepos << std::endl;
 
-          // while( sas.tellg() < pagepos) {
-
-            unkdub = readbin(unkdub, sas, swapit);
-            if (std::signbit(unkdub) == 0)
-              ++unkdub;
-            else if (std::signbit(unkdub) == 1)
-              --unkdub;
-
-            Rcout << unkdub << std::endl;
-            // if (unkdub != 0)
-            //   Rcout << unkdub << std::endl;
+            unk32 = readbin(unk32, sas, swapit);
+            Rcout << unk32 << std::endl;
 
           // }
 
+          // pos 128456 in the test.sas7bdat file defines if values are dropped
+          // initial 00 = all is read
+          // 60 = keep only the first
+          // 40 = drop the second
+          // 90 = drop the first
+          // still this position is 980 from sas_offset_table == 3 how does sas
+          // end up there?
+
+          // // ref from parso
+          // // sas.seekg(12, sas.cur);
+          // unk32 = readbin(unk32, sas, swapit);
+          // Rcout << "unk32: " << unkdub << std::endl;
+          //
+          // sas.seekg(pagepos, sas.beg);
+
         }
-        if (PAGE_TYPE == 640) {
+        // if (PAGE_TYPE == 640) {
           Rcout << "PAGE_TYPE 640" << std::endl;
 
           int32_t nsc = SUBHEADER_COUNT - 1;
           if (nsc < 0) nsc = 0;
 
-          // position on page pg right after data
-          auto pagepos = data_pos[pg] + (totalrowsvec[pg] * rowlength);
+          // // position on page pg right after data
+          // auto pagepos = data_pos[pg] + (totalrowsvec[pg] * rowlength);
           //
-          // if (!(dataoffset == 256)) {
-          //   if (debug) Rcout << "+= alignval" << std::endl;
-          //   pagepos += alignval;
-          // }
-          pagepos = 128449;
-          sas.seekg(pagepos, sas.beg);
+          // sas.seekg(pagepos, sas.beg);
+
+          for (int ppp = 0; ppp <= pg; ++ppp)
+            Rcout << "data_pos[ppp]: " << data_pos[ppp] << std::endl;
 
           // position on page pg at end of page or beginning of subheader
-          pagepos = (headersize + pg * pagesize);
-            pagepos += potabs[nsc].SH_OFF;
-          // pagepos -= 8;
+          auto pagepos = (headersize + (pg+1) * pagesize);
+          pagepos -= 24;
+          sas.seekg(pagepos, sas.beg);
 
+          Rcout << "pos: " << sas.tellg() << std::endl;
 
-          Rcout << headersize << ", " << pagesize << ", " <<
-            pagepos << std::endl;
+          unk32 = readbin(unk32, sas, swapit);
+          Rcout << "unk32: " << unk32 << std::endl;
 
-          // Rcout << sas.tellg() << " : " << pagepos << std::endl;
+          sas.seekg(pagepos, sas.beg);
 
-          // while( sas.tellg() < pagepos) {
-
-          unkdub = readbin(unkdub, sas, swapit);
-          if (std::signbit(unkdub) == 0)
-            ++unkdub;
-          else if (std::signbit(unkdub) == 1)
-            --unkdub;
-
-          Rcout << unkdub << std::endl;
-          // if (unkdub != 0)
-          //   Rcout << unkdub << std::endl;
-
-          // }
-
-        }
+        // }
+        if (PAGE_TYPE == -28672) rowcount -= delobs;
 
       }
       else
@@ -1976,6 +1959,9 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
         }
 
         pos = 0;
+
+    // if (i >= 129 & i <= 133)
+        Rcout << "Row "<< i << " at: " << sas.tellg() << std::endl;
 
         for (auto j = 0; j < colnum; ++j) {
 
