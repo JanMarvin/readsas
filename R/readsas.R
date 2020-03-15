@@ -52,6 +52,15 @@ read.sas <- function(file, debug = FALSE, convert.dates = TRUE, recode = TRUE,
         )
     }
 
+    vars <- which(formats == "DATETIME")
+
+    for (var in vars) {
+      data[[var]] <- as.Date(
+        as.POSIXct( data[[var]], origin = "1960-01-01")
+      )
+    }
+
+
   }
 
   if (recode) {
