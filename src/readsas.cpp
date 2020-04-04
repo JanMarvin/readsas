@@ -684,7 +684,6 @@ Rcpp::List readsas(const char * filePath, const bool debug, const uint64_t kk)
                 unk64 = readbin(unk64, sas, swapit);
                 rcmix =  readbin(rcmix, sas, swapit);
 
-                uint64_t uunk64 = 0;
                 /* next two indicate the end of the initial header ? */
                 unk64 = readbin(unk64, sas, swapit);
                 if (debug) Rcout << unk64 << std::endl; // -1
