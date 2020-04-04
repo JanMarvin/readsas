@@ -9,7 +9,8 @@ read.sas(
   debug = FALSE,
   convert.dates = TRUE,
   recode = TRUE,
-  rowcount = -1
+  select.rows = NULL,
+  select.cols = NULL
 )
 }
 \arguments{
@@ -21,8 +22,11 @@ read.sas(
 
 \item{recode}{default is TRUE}
 
-\item{rowcount}{number of rows to import (from start). negative values are
-ignored}
+\item{select.rows}{\emph{integer.} Vector of one or two numbers. If single
+value rows from 1:val are selected. If two values of a range are selected
+the rows in range will be selected.}
+
+\item{select.cols}{\emph{character:} Vector of variables to select.}
 }
 \description{
 read.sas

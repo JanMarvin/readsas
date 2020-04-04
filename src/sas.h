@@ -8,18 +8,40 @@
 
 #include "swap_endian.h"
 
-inline void writestr(std::string val_s, int32_t len, std::fstream& sav)
+inline void writestr(std::string val_s, int32_t len, std::fstream& sas)
 {
 
   std::stringstream val_stream;
   val_stream << std::left << std::setw(len) << std::setfill(' ') << val_s;
   std::string val_strl = val_stream.str();
 
-  sav.write(val_strl.c_str(),val_strl.length());
+  sas.write(val_strl.c_str(), val_strl.length());
 
 }
 
+// return only the matched positions. Either Rcpps in() can't handle Character-
+// Vectors or I could not make it work. Wanted to select the selected varname
+// position from the varnames vector.
+inline Rcpp::IntegerVector choose(Rcpp::CharacterVector x,
+                                  Rcpp::CharacterVector y)
+{
+  Rcpp::IntegerVector mm = Rcpp::match(x, y);
 
+  if (Rcpp::any(Rcpp::is_na(mm))) {
+    Rcpp::LogicalVector ll = !Rcpp::is_na(mm);
+
+    Rcpp::CharacterVector ms = x[ll==0];
+
+    // does not work if ms contains multiple names: Rcpp::as<std::string>(ms)
+    Rcpp::Rcout << "Variable " << ms <<
+      " was not found in sas-file." << std::endl;
+  }
+
+  // report position for found cases
+  mm = Rcpp::match(y, x);
+
+  return(mm);
+}
 
 inline Rcpp::IntegerVector order(Rcpp::IntegerVector x) {
   Rcpp::IntegerVector sorted = Rcpp::clone(x).sort();
