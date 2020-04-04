@@ -90,7 +90,7 @@ struct CN_Poi {
 
 struct CN_Att {
   int64_t CN_OFF  = 0;
-  int32_t CN_WID  = 0;
+  uint32_t CN_WID  = 0;
   int16_t NM_FLAG = 0;
   int8_t  CN_TYP  = 0;
   int8_t  UNK8    = 0;

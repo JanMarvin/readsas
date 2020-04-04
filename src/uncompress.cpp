@@ -19,7 +19,7 @@ std::string SASYZCRL(uint64_t rowlen, uint64_t reslen, std::string rowstr,
 
 
   std::string res = "";
-  int32_t rowoff = 0;
+  uint32_t rowoff = 0;
 
   while (rowoff < rowlen) {
 
@@ -169,7 +169,8 @@ std::string SASYZCR2(uint64_t rowlen, uint64_t reslen, std::string rowstr,
   memcpy(row, rowstr.data(), rowstr.length());
 
   std::string res = "";
-  int32_t rowoff = 0, resoff = 0, ofs = 0, cbit = 0, cmsk = 0;
+  uint32_t rowoff = 0;
+  int32_t resoff = 0, ofs = 0, cbit = 0, cmsk = 0;
 
   while (rowoff < rowlen) {
 

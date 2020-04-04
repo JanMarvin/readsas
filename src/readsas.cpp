@@ -37,7 +37,7 @@ using namespace Rcpp;
 //' @import Rcpp
 //' @export
 // [[Rcpp::export]]
-Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
+Rcpp::List readsas(const char * filePath, const bool debug, const uint64_t kk)
 {
   std::ifstream sas(filePath, std::ios::in | std::ios::binary);
   if (sas) {
@@ -327,7 +327,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
     if (debug) Rprintf("headersize: %d \n", headersize);
     if (headersize <= 0) stop("headersize <= 0");
 
-    int32_t pagesize = 0;
+    uint32_t pagesize = 0;
     pagesize = readbin(pagesize, sas, swapit);
     if (debug) Rprintf("pagesize: %d \n", pagesize);
     if (pagesize <= 0) stop("pagesize <= 0");
@@ -422,7 +422,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
     // end of Header ---------------------------------------------------------//
 
 
-    int8_t alignval = 8;
+    uint8_t alignval = 8;
     if (u64 != 4) alignval = 4;
 
     uint64_t rowlength = 0, rowcount = 0, delobs = 0;
@@ -431,7 +431,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
     std::vector<std::string> stringvec(pagecount) ;
 
     auto totalrows = 0;
-    std::vector<int32_t> totalrowsvec(pagecount);
+    std::vector<uint32_t> totalrowsvec(pagecount);
     std::vector<int32_t> pageseqnum(pagecount);
 
 
@@ -577,7 +577,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
           if ((pg == 0) & (sc != 3))
             page0not = (PAGE_TYPE == 0) &  (potabs[sc].SH_LEN == rowlength);
 
-          int64_t sas_offset = alignval;
+          uint64_t sas_offset = alignval;
           if (! ((potabs[sc].COMPRESSION == 4) |
               (PAGE_TYPE == -28672) | page0not ) ) {
             if (u64 == 4) {
