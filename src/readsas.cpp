@@ -1552,7 +1552,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const uint64_t kk)
 
 
                 if ((capois[i].CN_TYP >= 1) & (capois[i].CN_TYP <= 2) &
-                    (capois[i].CN_WID >= 0) & // just > ?
+                    (capois[i].CN_WID > 0) & // just > ?
                     (capois[i].CN_WID <= pagesize)) {
                   if (debug)
                     Rprintf("OFF %d; WID: %d; FLAG %d; TYP %d; UNK8 %d\n",
@@ -1874,7 +1874,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const uint64_t kk)
 
     // ---------------------------------------------------------------------- //
 
-    if ((kk >= 0) &  (kk < rowcount)) {
+    if (kk < rowcount) {
       warning("User requested to read %d of %d rows", kk, rowcount);
       rowcount = kk;
     }
