@@ -280,9 +280,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
         writebin(unk32, sas, swapit);
         writebin(unk1, sas, swapit);
         writebin(unk2, sas, swapit);
-        unk3 = 54927;
         writebin(unk3, sas, swapit);
-        unk3 = 0;
       } else {
         writebin(pageseqnum32, sas, swapit);
         writebin((int32_t)unk1, sas, swapit);
@@ -317,7 +315,6 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
           writebin(zero16, sas, swapit);
           writebin(zero16, sas, swapit);
 
-        } else {
 
           writebin((uint32_t)potabs[i].SH_OFF, sas, swapit);
           writebin((uint32_t)potabs[i].SH_LEN, sas, swapit);
@@ -526,7 +523,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       uint32_t case72 = 4294967295;
 
       writebin(case71, sas, 0);
-      writebin(case71, sas, 1);
+      writebin(case72, sas, 1);
 
       int8_t divs = 16;
       if (u64 != 4) divs = 12;
@@ -546,7 +543,10 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
        */
       std::vector<CN_Att> capois(k);
 
+      auto prevoffset = 0;
       for (auto i = 0; i < k; ++i) {
+
+        capois[i].CN_OFF = prevoffset;
 
         if (u64 == 4) {
           writebin(capois[i].CN_OFF, sas, swapit);
@@ -556,12 +556,15 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
         }
 
         capois[i].CN_WID = colwidth[i];
+        capois[i].NM_FLAG = 1024; // ?
         capois[i].CN_TYP = vartypes[i];
 
         writebin(capois[i].CN_WID, sas, swapit);
         writebin(capois[i].NM_FLAG, sas, swapit);
         writebin(capois[i].CN_TYP, sas, swapit);
         writebin(capois[i].UNK8, sas, swapit);
+
+        prevoffset += capois[i].CN_WID;
       }
 
 
