@@ -435,6 +435,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
     std::vector<int32_t> pageseqnum(pagecount);
 
 
+
     // begin reading pages ---------------------------------------------------//
     for (auto pg = 0; pg < pagecount; ++pg) {
       checkUserInterrupt();
@@ -466,8 +467,10 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
 
       pageseqnum[pg] = pageseqnum32;
 
-      // Rcout << "pageseqnum: " << pageseqnum32 << std::endl;
-      // Rcout << unk1 << " " << unk2 << " " << unk3 << std::endl;
+      if (debug) {
+        Rcout << "pageseqnum: " << pageseqnum32 << std::endl;
+        Rcout << unk1 << " " << unk2 << " " << unk3 << std::endl;
+      }
 
       PAGE_TYPE = readbin(PAGE_TYPE, sas, swapit);
       BLOCK_COUNT = readbin(BLOCK_COUNT, sas, swapit);
@@ -1738,6 +1741,9 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
 
       for (auto i = 0; i < colnum; ++i) {
 
+        if (debug)
+          Rcout << "format ----------------------------" << std::endl;
+
         /* read formats and labels */
         std::string format = "";
         if (fmt[i].LEN > 0) {
@@ -1746,6 +1752,9 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
           format.resize(fmt[i].LEN, '\0');
           format = readstring(format, sas);
         }
+
+        if (debug)
+          Rcout << "label ----------------------------" << std::endl;
 
         std:: string label = "";
         if (lbl[i].LEN > 0) {
