@@ -17,3 +17,14 @@ readsas <- function(filePath, debug, selectrows_, selectcols_, empty_to_na, temp
     .Call(`_readsas_readsas`, filePath, debug, selectrows_, selectcols_, empty_to_na, tempstr, convert)
 }
 
+#' Writes the binary SAS file
+#'
+#' @param filePath The full systempath to the sas7bdat file you want to export.
+#' @param dat an R-Object of class data.frame.
+#' @param compress the file
+#' @param debug print debug information
+#' @export
+writesas <- function(filePath, dat, compress, debug) {
+    invisible(.Call(`_readsas_writesas`, filePath, dat, compress, debug))
+}
+
