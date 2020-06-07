@@ -538,6 +538,7 @@ Rcpp::List readsas(const char * filePath,
         for (auto i = 0; i < SUBHEADER_COUNT; ++i) {
 
           if (u64 == 4) {
+            Rcout << "pos is " << sas.tellg() << std::endl;
 
             potabs[i].SH_OFF = readbin(potabs[i].SH_OFF, sas, swapit);           // 8
             potabs[i].SH_LEN = readbin(potabs[i].SH_LEN, sas, swapit);           // 16
@@ -1498,6 +1499,12 @@ Rcpp::List readsas(const char * filePath,
 
                 cnpois.push_back( cnpoi );
 
+
+                if (debug)
+                  Rprintf("CN_IDX %d; CN_OFF %d; CN_LEN %d; zeros %d \n",
+                          cnpois[cn].CN_IDX, cnpois[cn].CN_OFF,
+                          cnpois[cn].CN_LEN, cnpois[cn].zeros);
+
                 cnidx.push_back( cnpoi.CN_IDX );
                 cnoff.push_back( cnpoi.CN_OFF );
                 cnlen.push_back( cnpoi.CN_LEN );
@@ -1522,6 +1529,7 @@ Rcpp::List readsas(const char * filePath,
             // new offset --------------------------------------------------- //
           case 7:
             {
+
               /* Column Attributes */
 
               if (debug)
