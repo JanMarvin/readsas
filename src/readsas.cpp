@@ -1776,8 +1776,10 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
       warning("File contains unhandled compression. No data imported. %d\n",
               compression);
 
-    if (debug)
+    if (debug) {
       Rcout << "---- data part ----" << std::endl;
+      Rprintf("%d %d \n", rowcount, colnum);
+    }
 
 
     // ---------------------------------------------------------------------- //
