@@ -55,7 +55,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
     int8_t u64 = 0;
     int8_t zero8 = 0;
     int16_t zero16 = 0;
-    int16_t PAGE_TYPE = 0, BLOCK_COUNT = 0, SUBHEADER_COUNT = 7;
+    int16_t PAGE_TYPE = 512, BLOCK_COUNT = 8, SUBHEADER_COUNT = 8;
 
     // partially known: value is known meaning is unknown
     int8_t
@@ -273,6 +273,9 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       checkUserInterrupt();
 
       pageseqnum32++;
+      unk1 = 0;
+      unk2 = 0;
+      unk3 = 500;
 
       // Page Offset Table
       if (u64 == 4) {
@@ -289,7 +292,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       }
 
 
-      // not really required, but maybe usefull to track positions and length?
+      // not really required, but maybe useful to track positions and length?
       std::vector<PO_Tab> potabs(SUBHEADER_COUNT);
 
       // all 3 values need to be defined depending on the input
@@ -743,93 +746,157 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       //   }
 
 
-      // /**** case 2 ************************************************************/
-      // // case 2:
-      // //   {
-      //
-      //
-      // shc++;
-      // shlen = sas.tellg();
-      // potabs[shc].SH_OFF = pagesize * 2 - shlen;
-      //
-      // if (debug)
-      //   Rcout << "-------- case 2 "<< sas.tellg() << std::endl;
-      //
-      // uint32_t case21 = 4294966272;
-      // uint32_t case22 = 4294967295;
-      //
-      // writebin(case21, sas, 0);
-      // writebin(case22, sas, 0);
-      //
-      // int64_t off = 0;
-      //
-      // if (u64 == 4) {
-      //   writebin(off, sas, swapit);
-      //   writebin(unk64, sas, swapit);
-      // } else {
-      //   writebin((int32_t)off, sas, swapit);
-      //   writebin(unk32, sas, swapit);
+      /**** case 2 ************************************************************/
+      // case 2:
+      //   {
+
+      shc++;
+      Rcout << shc << std::endl;
+      pre_shlen = sas.tellg();
+      potabs[shc].SH_OFF = pre_shlen - pagesize;
+
+      if (debug)
+        Rcout << "-------- case 2 "<< sas.tellg() << std::endl;
+
+      uint32_t case21 = 4294966272;
+      uint32_t case22 = 4294967295;
+
+      writebin(case21, sas, 0);
+      writebin(case22, sas, 0);
+
+      int64_t off = 0;
+
+      if (u64 == 4) {
+        writebin(off, sas, swapit);
+        writebin(unk64, sas, swapit);
+      } else {
+        writebin((int32_t)off, sas, swapit);
+        writebin(unk32, sas, swapit);
+      }
+
+      int16_t num_nonzero = 0;
+      writebin(num_nonzero, sas, swapit);
+
+      int8_t unklen = 94; // should be 94
+      if (u64 != 4) unklen = 50;
+      for (int jj = 0; jj < unklen/2; ++jj) {
+        writebin(unk16, sas, swapit);
+        // 4th from the end is 1804 meaning is unknown
+      }
+
+      std::vector<SCV> scv(12);
+
+      for (int8_t i = 0; i < 12; ++i) {
+
+
+        // SIG -4; FIRST 1; F_POS 6; LAST 1; L_POS 6
+        if (i == 0) {
+          scv[i].SIG = -4;
+          scv[i].FIRST = 1;
+          scv[i].F_POS = 6;
+          scv[i].LAST = 1;
+          scv[i].L_POS = 6;
+        }
+
+        // SIG -3; FIRST 1; F_POS 4; LAST 1; L_POS 4
+        if (i == 1) {
+          scv[i].SIG = -3;
+          scv[i].FIRST = 1;
+          scv[i].F_POS = 4;
+          scv[i].LAST = 1;
+          scv[i].L_POS = 4;
+        }
+
+        // SIG -1; FIRST 1; F_POS 5; LAST 1; L_POS 5
+        if (i == 2) {
+          scv[i].SIG = -1;
+          scv[i].FIRST = 1;
+          scv[i].F_POS = 5;
+          scv[i].LAST = 1;
+          scv[i].L_POS = 5;
+        }
+
+        // SIG -2; FIRST 1; F_POS 7; LAST 1; L_POS 7
+        if (i == 3) {
+          scv[i].SIG = -2;
+          scv[i].FIRST = 1;
+          scv[i].F_POS = 7;
+          scv[i].LAST = 1;
+          scv[i].L_POS = 7;
+        }
+
+        // SIG -5; FIRST 0; F_POS 0; LAST 0; L_POS 0
+        if (i == 4) {
+          scv[i].SIG = -5;
+          scv[i].FIRST = 0;
+          scv[i].F_POS = 0;
+          scv[i].LAST = 0;
+          scv[i].L_POS = 0;
+        }
+        // SIG -6; FIRST 0; F_POS 0; LAST 0; L_POS 0
+        if (i == 5) {
+          scv[i].SIG = -6;
+          scv[i].FIRST = 0;
+          scv[i].F_POS = 0;
+          scv[i].LAST = 0;
+          scv[i].L_POS = 0;
+        }
+        // SIG -7; FIRST 0; F_POS 0; LAST 0; L_POS 0
+        if (i == 6) {
+          scv[i].SIG = -7;
+          scv[i].FIRST = 0;
+          scv[i].F_POS = 0;
+          scv[i].LAST = 0;
+          scv[i].L_POS = 0;
+        }
+
+        if (u64 == 4) {
+          writebin(scv[i].SIG, sas, swapit);
+          writebin(scv[i].FIRST, sas, swapit);
+          writebin(scv[i].F_POS, sas, swapit);
+
+          if ((i == 0) & (scv[i].SIG != -4))
+            warning("first SIG is not -4");
+
+          writebin(unk16, sas, swapit);
+          writebin(unk16, sas, swapit);
+          writebin(unk16, sas, swapit);
+
+          writebin(scv[i].LAST, sas, swapit);
+          writebin(scv[i].L_POS, sas, swapit);
+
+          writebin(unk16, sas, swapit);
+          writebin(unk16, sas, swapit);
+          writebin(unk16, sas, swapit);
+
+        } else {
+          writebin((int32_t)scv[i].SIG, sas, swapit);
+          writebin((int32_t)scv[i].FIRST, sas, swapit);
+          writebin(scv[i].F_POS, sas, swapit);
+
+          writebin(unk16, sas, swapit);
+
+          writebin((int32_t)scv[i].LAST, sas, swapit);
+          writebin(scv[i].L_POS, sas, swapit);
+
+          writebin(unk16, sas, swapit);
+        }
+
+        if (debug)
+          Rprintf("SIG %d; FIRST %d; F_POS %d; LAST %d; L_POS %d\n",
+                  scv[i].SIG, scv[i].FIRST, scv[i].F_POS,
+                  scv[i].LAST, scv[i].L_POS);
+
+      }
+
+
+      post_shlen = sas.tellg();
+
+      potabs[shc].SH_LEN = post_shlen - pre_shlen;//   break;
+        //   break;
       // }
-      //
-      // int16_t num_nonzero = 0;
-      // writebin(num_nonzero, sas, swapit);
-      //
-      // int8_t unklen = 94; // should be 94
-      // if (u64 != 4) unklen = 50;
-      // for (int jj = 0; jj < unklen/2; ++jj) {
-      //   writebin(unk16, sas, swapit);
-      //   // 4th from the end is 1804 meaning is unknown
-      // }
-      //
-      // std::vector<SCV> scv(12);
-      //
-      // for (int8_t i = 0; i < 12; ++i) {
-      //
-      //   if (u64 == 4) {
-      //     writebin(scv[i].SIG, sas, swapit);
-      //     writebin(scv[i].FIRST, sas, swapit);
-      //     writebin(scv[i].F_POS, sas, swapit);
-      //
-      //     if ((i == 0) & (scv[i].SIG != -4))
-      //       warning("first SIG is not -4");
-      //
-      //     writebin(unk16, sas, swapit);
-      //     writebin(unk16, sas, swapit);
-      //     writebin(unk16, sas, swapit);
-      //
-      //     writebin(scv[i].LAST, sas, swapit);
-      //     writebin(scv[i].L_POS, sas, swapit);
-      //
-      //     writebin(unk16, sas, swapit);
-      //     writebin(unk16, sas, swapit);
-      //     writebin(unk16, sas, swapit);
-      //
-      //   } else {
-      //     writebin((int32_t)scv[i].SIG, sas, swapit);
-      //     writebin((int32_t)scv[i].FIRST, sas, swapit);
-      //     writebin(scv[i].F_POS, sas, swapit);
-      //
-      //     writebin(unk16, sas, swapit);
-      //
-      //     writebin((int32_t)scv[i].LAST, sas, swapit);
-      //     writebin(scv[i].L_POS, sas, swapit);
-      //
-      //     writebin(unk16, sas, swapit);
-      //   }
-      //
-      //   if (debug)
-      //     Rprintf("SIG %d; FIRST %d; F_POS %d; LAST %d; L_POS %d\n",
-      //             scv[i].SIG, scv[i].FIRST, scv[i].F_POS,
-      //             scv[i].LAST, scv[i].L_POS);
-      //
-      // }
-      //
-      //
-      //       potabs[shc].SH_LEN = sas.tellg() - shlen;
-      //   //   break;
-      // }
-      //
-      //
+
+
 
       // case 4:
       //   {
