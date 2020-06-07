@@ -8,6 +8,17 @@
 
 #include "swap_endian.h"
 
+template <typename T>
+inline void writebin(T t, std::fstream& sas, bool swapit)
+{
+  if (swapit==1){
+    T t_s = swap_endian(t);
+    sas.write((char*)&t_s, sizeof(t_s));
+  } else {
+    sas.write((char*)&t, sizeof(t));
+  }
+}
+
 inline void writestr(std::string val_s, int32_t len, std::fstream& sav)
 {
 
@@ -18,8 +29,6 @@ inline void writestr(std::string val_s, int32_t len, std::fstream& sav)
   sav.write(val_strl.c_str(),val_strl.length());
 
 }
-
-
 
 inline Rcpp::IntegerVector order(Rcpp::IntegerVector x) {
   Rcpp::IntegerVector sorted = Rcpp::clone(x).sort();
@@ -37,6 +46,7 @@ T readbin( T t , std::istream& sas, bool swapit)
     return(swap_endian(t));
 }
 
+inline
 double readbinlen(double d, std::istream& sas, bool swapit, int len)
 {
 
