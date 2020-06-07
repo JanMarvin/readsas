@@ -467,6 +467,7 @@ Rcpp::List readsas(const char * filePath,
     uint64_t pre_pagenumx = 0;
     uint64_t pagenumx = 0;
 
+
     // begin reading pages ---------------------------------------------------//
     for (auto pg = 0; pg < pagecount; ++pg) {
       checkUserInterrupt();
@@ -504,6 +505,11 @@ Rcpp::List readsas(const char * filePath,
 
       pageseqnum[pg] = pageseqnum32;
 
+      if (debug) {
+        Rcout << "pageseqnum: " << pageseqnum32 << std::endl;
+        Rcout << unk1 << " " << unk2 << " " << unk3 << std::endl;
+      }
+      
       PAGE_TYPE       = readbin(PAGE_TYPE, sas, swapit);
       BLOCK_COUNT     = readbin(BLOCK_COUNT, sas, swapit);
       SUBHEADER_COUNT = readbin(SUBHEADER_COUNT, sas, swapit);
