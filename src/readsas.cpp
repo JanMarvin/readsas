@@ -515,6 +515,14 @@ Rcpp::List readsas(const char * filePath,
       SUBHEADER_COUNT = readbin(SUBHEADER_COUNT, sas, swapit);
       unk16           = readbin(unk16, sas, swapit);
 
+      if(debug) {
+        Rcout << "PAGE_TYPE: " << PAGE_TYPE <<
+          " - BLOCK_COUNT: "  << BLOCK_COUNT <<
+            " - SUBHEADER_COUNT: " << SUBHEADER_COUNT << std::endl;
+      }
+
+      // Rcout << sas.tellg() << std::endl;
+
       page_type.push_back(PAGE_TYPE);
 
       rowsperpage[pg] = BLOCK_COUNT - SUBHEADER_COUNT;
