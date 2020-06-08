@@ -55,7 +55,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
     int8_t u64 = 0;
     int8_t zero8 = 0;
     int16_t zero16 = 0;
-    int16_t PAGE_TYPE = 512, BLOCK_COUNT = 200, SUBHEADER_COUNT = 8;
+    int16_t PAGE_TYPE = 512, BLOCK_COUNT = 200, SUBHEADER_COUNT = (7 + k);
 
     // partially known: value is known meaning is unknown
     int8_t
@@ -1021,6 +1021,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       post_shlen = sas.tellg();
 
       potabs[shc].SH_LEN = post_shlen - pre_shlen;
+      potabs[shc].SH_TYPE = 1;
 
       //   break;
       //   }
@@ -1091,6 +1092,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       post_shlen = sas.tellg();
 
       potabs[shc].SH_LEN = post_shlen - pre_shlen;
+      potabs[shc].SH_TYPE = 1;
 
       //   break;
       // }
@@ -1160,6 +1162,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       post_shlen = sas.tellg();
 
       potabs[shc].SH_LEN = post_shlen - pre_shlen;
+      potabs[shc].SH_TYPE = 1;
 
       // break;
       // }
@@ -1230,6 +1233,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       post_shlen = sas.tellg();
 
       potabs[shc].SH_LEN = post_shlen - pre_shlen;
+      potabs[shc].SH_TYPE = 1;
 
       //   break;
       //
@@ -1238,23 +1242,24 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
 
       /**** case 3 ************************************************************/
 
-      shc++;
-      Rcout << shc << std::endl;
-      pre_shlen = sas.tellg();
-
-      potabs[shc].SH_OFF = pre_shlen - pagesize;
-
-
-      // calc length of len3
-      auto len3 = 0;
-      for (auto i = 0; i < k; ++i) {
-        len3 += 64;
-      }
-
-      bool hasattributes = 0; // TODO: set dynamically
-
       for (auto i = 0; i < k; ++i)
       {
+
+        shc++;
+        Rcout << shc << std::endl;
+        pre_shlen = sas.tellg();
+
+        potabs[shc].SH_OFF = pre_shlen - pagesize;
+
+
+        // calc length of len3
+        auto len3 = 0;
+        for (auto i = 0; i < k; ++i) {
+          len3 += 64;
+        }
+
+        bool hasattributes = 0; // TODO: set dynamically
+
         if (debug)
           Rcout << "-------- case 3 "<< sas.tellg() << std::endl;
 
@@ -1299,7 +1304,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
         writebin(fmts.LEN, sas, swapit);
 
         if (debug)
-          Rcout << fmts.IDX << ", " << fmts.OFF <<
+          Rcout << "fmts: "  << fmts.IDX << ", " << fmts.OFF <<
             ", " << fmts.LEN << std::endl;
 
         // fmt.push_back(fmts);
@@ -1309,7 +1314,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
         writebin(lbls.LEN, sas, swapit);
 
         if (debug)
-          Rcout << lbls.IDX << ", " << lbls.OFF <<
+          Rcout << "lbls: " << lbls.IDX << ", " << lbls.OFF <<
             ", " << lbls.LEN << std::endl;
 
         // lbl.push_back(lbls);
@@ -1330,10 +1335,10 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
 
 
         // break;
-      }
-      post_shlen = sas.tellg();
+        post_shlen = sas.tellg();
 
-      potabs[shc].SH_LEN = post_shlen - pre_shlen;
+        potabs[shc].SH_LEN = post_shlen - pre_shlen;
+      }
 
 
 
