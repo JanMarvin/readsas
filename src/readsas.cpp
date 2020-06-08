@@ -2048,6 +2048,7 @@ Rcpp::List readsas(const char * filePath,
 
       auto page = 0;
       sas.seekg(data_pos[0], sas.beg);
+      if(debug) Rcout << "debug pos: " << sas.tellg() << std::endl;
 
       auto i = -1;  // counter output data frame
       uint64_t ii = 0;  // row on the selected page
