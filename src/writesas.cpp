@@ -55,7 +55,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
     int8_t u64 = 0;
     int8_t zero8 = 0;
     int16_t zero16 = 0;
-    int16_t PAGE_TYPE = 512, SUBHEADER_COUNT = (7 + k);
+    int16_t PAGE_TYPE = 512, SUBHEADER_COUNT = (8 + k);
     int16_t BLOCK_COUNT = n + SUBHEADER_COUNT;
 
     // partially known: value is known meaning is unknown
@@ -461,7 +461,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       int16_t pgwpossh = 0, pgwpossh2 = 0, numzeros = 37,
         sh_num = 0, cn_maxlen = 0, l_maxlen = 0, todata = 0,
         rowsonpg = 0;
-      int32_t pgidx = 0;
+      int32_t pgidx = 0, sasvers = 8;
       int64_t pgsize = pagesize, pgc = 0, rcmix = 0, pgwsh = 0, pgwsh2 = 0;
 
       if (debug)
@@ -479,10 +479,11 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       if (u64 == 4) {
 
         /* */
-        writebin(unk64, sas, swapit);
-        writebin(unk64, sas, swapit);
-        writebin(unk64, sas, swapit);
-        writebin(unk64, sas, swapit);
+        int64_t pkt64_1 = 240, pkt64_2 = 0, pkt64_3 = 0, pkt64_4 = 0;
+        writebin(pkt64_1, sas, swapit);
+        writebin(pkt64_2, sas, swapit);
+        writebin(pkt64_3, sas, swapit);
+        writebin(pkt64_4, sas, swapit);
 
         writebin(rowlength, sas, swapit); // rowlength
         writebin(rowcount, sas, swapit); // rowcount
@@ -588,7 +589,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
         writebin(l_maxlen, sas, swapit);
 
         /* maybe SAS version information at o131018 ? */
-        writebin(unk32, sas, swapit); // 1
+        writebin(sasvers, sas, swapit); // 1
         writebin(unk32, sas, swapit); // 2
         writebin(unk32, sas, swapit); // 3
 
@@ -1336,6 +1337,16 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
         post_shlen = sas.tellg();
         potabs[shc].SH_LEN = post_shlen - pre_shlen;
       }
+
+      // final subheader indication where the data begins
+      shc++;
+      Rcout << shc << std::endl;
+      pre_shlen = sas.tellg();
+      potabs[shc].SH_OFF = pre_shlen - pagesize;
+      post_shlen = sas.tellg();
+      potabs[shc].SH_LEN = post_shlen - pre_shlen;
+      // on the last subheader
+      potabs[shc].COMPRESSION = 1;
 
 
 

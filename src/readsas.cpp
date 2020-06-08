@@ -493,7 +493,7 @@ Rcpp::List readsas(const char * filePath,
       if (u64 == 4) {
         pageseqnum32 = readbin(pageseqnum32, sas, swapit);
         unk32 = readbin(unk32, sas, swapit);
-        unk1 = readbin(unk1, sas, swapit);
+        unk1 = readbin(unk1, sas, swapit); // 2* pagesize - unk1 = beginning of subheaders
         unk2 = readbin(unk2, sas, swapit);
         PAGE_DELETED_POINTER_LENGTH = readbin(PAGE_DELETED_POINTER_LENGTH, sas, swapit);
       } else {
