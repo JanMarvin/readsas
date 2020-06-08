@@ -1307,7 +1307,8 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
             {
               /* Column Size */
 
-              // Rcout << "-------- case 4 "<< sas.tellg() << std::endl;
+              if (debug)
+                Rcout << "-------- case 4 "<< sas.tellg() << std::endl;
 
               uint64_t uunk64 = 0;
 
@@ -1828,8 +1829,10 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
     bool firstpage = 0;
     if (compr == 0) {
 
+      if(debug) Rcout << "debug pos: " << sas.tellg() << std::endl;
       auto page = 0;
       sas.seekg(data_pos[0], sas.beg);
+      if(debug) Rcout << "debug pos: " << sas.tellg() << std::endl;
 
       auto ii = 0;
       for (uint64_t i = 0; i < rowcount; ++i) {
