@@ -1269,7 +1269,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
               fmts.LEN = readbin(fmts.LEN, sas, swapit);
 
               if (debug)
-                Rcout << fmts.IDX << ", " << fmts.OFF <<
+                Rcout << "fmts: "  << fmts.IDX << ", " << fmts.OFF <<
                   ", " << fmts.LEN << std::endl;
 
               fmt.push_back(fmts);
@@ -1279,7 +1279,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
               lbls.LEN = readbin(lbls.LEN, sas, swapit);
 
               if (debug)
-                Rcout << lbls.IDX << ", " << lbls.OFF <<
+                Rcout << "lbls: "  << lbls.IDX << ", " << lbls.OFF <<
                   ", " << lbls.LEN << std::endl;
 
               lbl.push_back(lbls);
