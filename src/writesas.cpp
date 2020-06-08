@@ -55,7 +55,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
     int8_t u64 = 0;
     int8_t zero8 = 0;
     int16_t zero16 = 0;
-    int16_t PAGE_TYPE = 512, BLOCK_COUNT = 8, SUBHEADER_COUNT = 8;
+    int16_t PAGE_TYPE = 512, BLOCK_COUNT = 200, SUBHEADER_COUNT = 8;
 
     // partially known: value is known meaning is unknown
     int8_t
@@ -273,9 +273,9 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       checkUserInterrupt();
 
       pageseqnum32++;
-      unk1 = 0;
-      unk2 = 0;
-      unk3 = 500;
+      // unk1 = 0;
+      // unk2 = 0;
+      // unk3 = 62000;
 
       // Page Offset Table
       if (u64 == 4) {
