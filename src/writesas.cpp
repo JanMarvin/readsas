@@ -55,7 +55,8 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
     int8_t u64 = 0;
     int8_t zero8 = 0;
     int16_t zero16 = 0;
-    int16_t PAGE_TYPE = 512, BLOCK_COUNT = 200, SUBHEADER_COUNT = (7 + k);
+    int16_t PAGE_TYPE = 512, SUBHEADER_COUNT = (7 + k);
+    int16_t BLOCK_COUNT = n + SUBHEADER_COUNT;
 
     // partially known: value is known meaning is unknown
     int8_t
