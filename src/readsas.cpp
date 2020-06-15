@@ -493,7 +493,7 @@ Rcpp::List readsas(const char * filePath,
       if (u64 == 4) {
         pageseqnum32 = readbin(pageseqnum32, sas, swapit);
         unk32 = readbin(unk32, sas, swapit);
-        unk1 = readbin(unk1, sas, swapit); // 2* pagesize - unk1 = beginning of subheaders
+        unk1 = readbin(unk1, sas, swapit);
         unk2 = readbin(unk2, sas, swapit);
         PAGE_DELETED_POINTER_LENGTH = readbin(PAGE_DELETED_POINTER_LENGTH, sas, swapit);
       } else {
@@ -728,11 +728,11 @@ Rcpp::List readsas(const char * filePath,
                 unk64 = readbin(unk64, sas, swapit);
                 if (debug) Rcout << unk64 << std::endl;
 
-                colf_p1 = readbin(colf_p1, sas, swapit);
+                colf_p1 = readbin(colf_p1, sas, swapit); // n
                 if (debug) Rcout << colf_p1 << std::endl;
-                colf_p2 = readbin(colf_p2, sas, swapit);
+                colf_p2 = readbin(colf_p2, sas, swapit); // 0
                 if (debug) Rcout << colf_p2 << std::endl;
-                unk64 = readbin(unk64, sas, swapit); // p3 and p4?
+                unk64 = readbin(unk64, sas, swapit); // p3 and p4? 0
                 if (debug) Rcout << unk64 << std::endl;
                 unk64 = readbin(unk64, sas, swapit);
                 if (debug) Rcout << unk64 << std::endl;
@@ -1176,9 +1176,9 @@ Rcpp::List readsas(const char * filePath,
 
               if (u64 == 4) {
                 off = readbin(off, sas, swapit);
-                // Rcout << off << std::endl;
+                if (debug) Rcout << off << std::endl;
                 unk64 = readbin(unk64, sas, swapit);
-                // Rcout << unk64 << std::endl;
+                if (debug) Rcout << unk64 << std::endl;
               } else {
                 off = readbin((int32_t)off, sas, swapit);
                 // Rcout << off << std::endl;
@@ -1188,7 +1188,7 @@ Rcpp::List readsas(const char * filePath,
 
               int16_t num_nonzero = 0;
               num_nonzero = readbin(num_nonzero, sas, swapit);
-              // Rcout << "numzeros " <<  num_nonzero << std::endl;
+              if (debug) Rcout << "numzeros " <<  num_nonzero << std::endl;
 
               int8_t unklen = 94; // should be 94
               if (u64 != 4) unklen = 50;
