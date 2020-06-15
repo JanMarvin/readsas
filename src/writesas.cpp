@@ -1242,7 +1242,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
 
         int64_t
           pkt64_01 = 1, ptk64_02 = 2, ptk64_03 = 1, ptk64_04 = 7, ptk64_05 = 1,
-          ptk64_06 = 9, ptk64_07 = 1, ptk64_08 = 9, ptk64_09 = 1, ptk64_10 = 7;
+          ptk64_06 = 9, ptk64_07 = 1, ptk64_08 = BLOCK_COUNT, ptk64_09 = 1, ptk64_10 = 7;
 
         writebin(unk32, sas, swapit); // padding
 
@@ -1351,11 +1351,13 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
         writebin(pkt32, sas, swapit); // 2
         writebin(unk16, sas, swapit); // 4
         writebin(unk16, sas, swapit); // 5
-        pkt32 = 65536; // pagesize?
-        writebin(pkt32, sas, swapit); // 6
         writebin(unk16, sas, swapit); // 8
+        // pkt32 = 1;
+        // writebin(pkt32, sas, swapit); // 10 // width?
+        // writebin(unk32, sas, swapit); // 10
+        writebin(n, sas, swapit); // 6
+        // writebin(unk32, sas, swapit); // 10
         writebin(unk16, sas, swapit); // 9
-        writebin(unk32, sas, swapit); // 10
         writebin(unk16, sas, swapit); // 12
         writebin(unk16, sas, swapit); // 13
         writebin(unk16, sas, swapit); // 14
