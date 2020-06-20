@@ -79,10 +79,10 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
 
     // varformats
     std::string varformat = as<std::string>(nformats[i]);
-    if (varformat.size() <= 8)
+    if (varformat.size() <= 4)
+      varformat.resize(4, '\0');
+    if (varformat.size()>4 & varformat.size() < 8)
       varformat.resize(8, '\0');
-    // if (varformat.size()>4 & varformat.size() < 8)
-    //   varformat.resize(8, '\0');
 
     varformats[i] = varformat;
     totalvarformatssize += varformat.size();
@@ -103,6 +103,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
     int8_t zero8 = 0;
     int16_t zero16 = 0;
     int16_t PAGE_TYPE = 512, SUBHEADER_COUNT = (7 + k);
+    if (k > 1) SUBHEADER_COUNT++;
     int16_t BLOCK_COUNT = n + SUBHEADER_COUNT;
 
     // partially known: value is known meaning is unknown
@@ -341,7 +342,8 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       pageseqnum32++;
       unk1 = 0;
       unk2 = 0;
-      unk3 = 62676; // 2* pagesize - sas.tellg();
+      unk3 = 62950; // 62676; // 2* pagesize - sas.tellg();
+      /* unk3 something like max number of something per page? */
 
       // Page Offset Table
       if (u64 == 4) {
@@ -604,9 +606,18 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
         24 +
         600 +
         68 +
-        36 +
-        44 +
-        64 * k;
+        28 + k * 8 +
+        28 + k * 16 +
+        64 * k
+        ;
+
+      auto addextra = 0;
+      if (((totalvarnamesize + totalvarformatssize) % 8) != 0) {
+        subheader_off += 4;
+        addextra = 1;
+      }
+
+      if (k > 1) subheader_off += 58; // 54 but something else is not yet correct
 
       auto pos_at_end_of_file = 2*pagesize - subheader_off;
 
@@ -662,6 +673,19 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
         pre_shlen = sas.tellg();
         potabs[shc].SH_OFF = pre_shlen - pagesize;
 
+        auto offsetpos = 32;
+
+        // write offsets in opposite order. calc offsets -1. Presumably SAS
+        //  writes the cases to a buffer internally.
+        //  Stacks them and writes the entire stack as one
+        for (auto z = 0; z < (k - i); ++z) {
+          std::string nams = as<std::string>(nvarnames[z]);
+          // TODO: Add labels
+          std::string fmts = as<std::string>(nformats[z]);
+          offsetpos += nams.size();
+          offsetpos += fmts.size();
+        }
+
 
         // calc length of len3
         auto len3 = 0;
@@ -712,7 +736,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
 
         idxofflen fmts, lbls, unks;
 
-        fmts.IDX = 0, fmts.OFF = 44, fmts.LEN = 4;
+        fmts.IDX = 0, fmts.OFF = offsetpos, fmts.LEN = 4;
 
         writebin(fmts.IDX, sas, swapit);
         writebin(fmts.OFF, sas, swapit);
@@ -757,68 +781,76 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
 
       /**** case 8 ************************************************************/
 
-      // // position is active, even though its not required in subheader count
-      // shc--;
-      // Rcout << shc << std::endl;
-      // pre_shlen = sas.tellg();
-      // // potabs[shc].SH_OFF = pre_shlen - pagesize;
-      //
-      // if (debug)
-      //   Rcout << "-------- case 8 "<< sas.tellg() << std::endl;
-      //
-      // uint32_t case81 = 4294967294;
-      // uint32_t case82 = 4294967295;
-      //
-      // writebin(case81, sas, 0);
-      // writebin(case82, sas, 0);
-      //
-      // int16_t cls = k + 2;
-      // int64_t lenremain = 14 +
-      //   cls * 2 + 8; // 14 below, (k+2) * 2 and double?
-      //
-      // writebin(unk32, sas, swapit); // unkown large number
-      // writebin(unk16, sas, swapit); // 0
-      // writebin(unk16, sas, swapit); // 0
-      //
-      // if (u64 == 4) {  // lenremain
-      //   writebin(lenremain, sas, swapit);
-      // } else {
-      //   writebin((int32_t)lenremain, sas, swapit);
-      // }
-      //
-      // if (debug)
-      //   Rcout << "lenremain "<< lenremain << std::endl;
-      //
-      // writebin((int16_t)k, sas, swapit);  // number of varnames?
-      // writebin(cls, sas, swapit);    // counter for unk loop below
-      // writebin(unk16, sas, swapit);  // 1
-      // writebin((int16_t)k, sas, swapit);  // number of varnames?
-      // writebin(unk16, sas, swapit);  // 3233
-      // writebin(unk16, sas, swapit);  // 3233
-      // writebin(unk16, sas, swapit);  // 3233
-      //
-      // lenremain -= 14;
-      //
-      // // Rcout << lenremain << " " << cls << std::endl;
-      //
-      // int16_t res = 0;
-      // for (auto cl = 0; cl < cls; ++cl) {
-      //   writebin(res, sas, swapit);
-      // }
-      //
-      // // to be on par with lenremain
-      // writebin(unkdub, sas, 0);
-      //
-      // // padding? Not in lenremain
-      // writebin((int8_t)unk16, sas, swapit); // 0
-      // writebin((int8_t)unk16, sas, swapit); // 0
-      // writebin((int8_t)unk16, sas, swapit); // 0
-      // writebin((int8_t)unk16, sas, swapit); // 0
-      //
-      //
-      // post_shlen = sas.tellg();
-      // potabs[shc].SH_LEN = post_shlen - pre_shlen;
-      // potabs[shc].SH_TYPE = 1;
+      // only with more than one variable. maybe related to index
+      if (k > 1) {
+        shc--;
+        Rcout << shc << std::endl;
+        pre_shlen = sas.tellg();
+        potabs[shc].SH_OFF = pre_shlen - pagesize;
+
+        if (debug)
+          Rcout << "-------- case 8 "<< sas.tellg() << std::endl;
+
+        uint32_t case81 = 4294967294;
+        uint32_t case82 = 4294967295;
+
+        writebin(case81, sas, 0);
+        writebin(case82, sas, 0);
+
+        int16_t cls = k;
+        int64_t lenremain = 14 +
+          cls * 2 + 8; // 14 below, (k+2) * 2 and double?
+
+        int32_t ptk32 = 2143813666;
+        writebin(ptk32, sas, swapit); // unkown large number
+        writebin(unk16, sas, swapit); // 0
+        writebin(unk16, sas, swapit); // 0
+
+        if (u64 == 4) {  // lenremain
+          writebin(lenremain, sas, swapit);
+        } else {
+          writebin((int32_t)lenremain, sas, swapit);
+        }
+
+        if (debug)
+          Rcout << "lenremain "<< lenremain << std::endl;
+
+        writebin((int16_t)k, sas, swapit);  // number of varnames?
+        writebin(cls, sas, swapit);    // counter for unk loop below
+        int16_t ptk16 = 1;
+        writebin(ptk16, sas, swapit);  // 1
+        writebin((int16_t)k, sas, swapit);  // number of varnames?
+        writebin(unk16, sas, swapit);  // 3233
+        writebin(unk16, sas, swapit);  // 3233
+        writebin(unk16, sas, swapit);  // 3233
+
+        lenremain -= 14;
+
+        // Rcout << lenremain << " " << cls << std::endl;
+
+        int16_t res = 0;
+        // for (auto cl = 0; cl < cls; ++cl) {
+          ptk16 = -1;
+          writebin(ptk16, sas, swapit);
+          writebin((int16_t)k, sas, swapit);
+          writebin(unk16, sas, swapit);
+          writebin(unk16, sas, swapit);
+        // }
+
+        // to be on par with lenremain
+        writebin(unkdub, sas, 0);
+
+        // // padding? Not in lenremain
+        // writebin((int8_t)unk16, sas, swapit); // 0
+        // writebin((int8_t)unk16, sas, swapit); // 0
+        // writebin((int8_t)unk16, sas, swapit); // 0
+        // writebin((int8_t)unk16, sas, swapit); // 0
+
+
+        // break;
+        post_shlen = sas.tellg();
+        potabs[shc].SH_LEN = post_shlen - pre_shlen;
+      }
 
       /************************************************************************/
 
@@ -991,6 +1023,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
         totalvarformatssize +
         2                    // int32 at end
       ;
+      if (k > 1) len += 4;
 
       auto c5first = 0;
       auto c5typ = 0;
@@ -1025,11 +1058,13 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
           writestr(varformats[i], varformats[i].size(), sas);
         }
 
+        // padding
+        // if(addextra == 1)
+          writebin(unk32, sas, 0); // presumably wrong?
+
         // handling of labels is similar, but labels may exceed size of 8
         // still must be dividable by 8 (maybe 4) if 14, add 2
 
-        // padding
-        // writebin(unk32, sas, 0);
         writebin(unk32, sas, 0);
         writebin(unk32, sas, 0);
 
@@ -1066,9 +1101,10 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       writebin(case21, sas, 0);
       writebin(case22, sas, 0);
 
-      int64_t off = 48; // offset with format
+      int64_t off = 36 + totalvarnamesize + totalvarformatssize; // offset with format
 
       int64_t ptk64 = 3;
+      if (k > 1) ptk64++;
 
       if (u64 == 4) {
         writebin(off, sas, swapit);
@@ -1212,7 +1248,9 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       /**** case 4 ************************************************************/
 
       /* Column Size */
-      // Rcout << "-------- case 4 "<< sas.tellg() << std::endl;
+
+      if (debug)
+        Rcout << "-------- case 4 "<< sas.tellg() << std::endl;
 
       shc--;
       Rcout << shc << std::endl;
@@ -1321,6 +1359,10 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
         int64_t
           ptk64_01 = 1, ptk64_02 = 2, ptk64_03 = 1, ptk64_04 = 7, ptk64_05 = 1,
             ptk64_06 = 9, ptk64_07 = 1, ptk64_08 = BLOCK_COUNT, ptk64_09 = 1, ptk64_10 = 7;
+
+        ptk64_04 = 9;
+        ptk64_06 = 11;
+        ptk64_10 = 8;
 
         writebin(unk32, sas, swapit); // padding
 
