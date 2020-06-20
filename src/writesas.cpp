@@ -43,6 +43,8 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
   CharacterVector nvarnames = dat.attr("names");
   CharacterVector nlabels = dat.attr("labels");
   CharacterVector nformats = dat.attr("formats");
+  IntegerVector width = dat.attr("width");
+  IntegerVector decim = dat.attr("decim");
   IntegerVector vartypes = dat.attr("vartypes");
   IntegerVector colwidth = dat.attr("colwidth");
 
@@ -611,11 +613,11 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
         64 * k
         ;
 
-      // auto addextra = 0;
-      // if (((totalvarnamesize + totalvarformatssize) % 8) != 0) {
-      //   subheader_off += 4;
-      //   addextra = 1;
-      // }
+      auto addextra = 0;
+      if (((totalvarnamesize + totalvarformatssize) % 8) != 0) {
+        subheader_off += 4;
+        addextra = 1;
+      }
 
       if (k > 1) subheader_off += 58; // 54 but something else is not yet correct
 
@@ -675,6 +677,9 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
 
         auto offsetpos = 32;
 
+        // everything is in reverse order - 1 for c index
+        auto idx = k-i -1;
+
         // write offsets in opposite order. calc offsets -1. Presumably SAS
         //  writes the cases to a buffer internally.
         //  Stacks them and writes the entire stack as one
@@ -691,11 +696,9 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
 
         // calc length of len3
         auto len3 = 0;
-        for (auto i = 0; i < k; ++i) {
+        for (auto ii = 0; ii < k; ++ii) {
           len3 += 64;
         }
-
-        bool hasattributes = 0; // TODO: set dynamically
 
         if (debug)
           Rcout << "-------- case 3 "<< sas.tellg() << std::endl;
@@ -715,9 +718,12 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
         writebin(fmt322, sas, swapit);          // 6
         writebin(ifmt32, sas, swapit);          // 7
         writebin(ifmt322, sas, swapit);         // 8
-        fmtkey = 12;
+        fmtkey = width[idx];
         writebin(fmtkey, sas, swapit);          // 9
         fmtkey2 = 1;
+        // character or integer
+        if (vartypes[idx] == 2 || decim[idx] == 1)
+          fmtkey2 = 0;
         writebin(fmtkey2, sas, swapit);         // 10
         writebin(unk16, sas, swapit);           // 11
         writebin(unk16, sas, swapit);           // 12
@@ -738,7 +744,10 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
 
         idxofflen fmts, lbls, unks;
 
-        fmts.IDX = 0, fmts.OFF = offsetpos, fmts.LEN = 4;
+
+        int16_t fmtslen = as<std::string>(nformats[idx]).size();
+
+        fmts.IDX = 0, fmts.OFF = offsetpos, fmts.LEN = fmtslen;
 
         writebin(fmts.IDX, sas, swapit);
         writebin(fmts.OFF, sas, swapit);
@@ -1037,7 +1046,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
 
       if ((PAGE_TYPE != 1024) & (c5first == 0)) {
         writebin(unk16, sas, swapit); // 0 |     0 | 27977
-        int16_t ptk16 = 5120;
+        int16_t ptk16 = 5120; // related to visual representation 0 = fills full space
         writebin(ptk16, sas, swapit); // 0 | 15872 | 30064
       }
 
@@ -1360,15 +1369,20 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
         }
 
         int64_t
-          ptk64_01 = 1, ptk64_02 = 2, ptk64_03 = 1,
+          ptk64_01 = 1,
+            ptk64_02 = 2,
+            ptk64_03 = 1,
             ptk64_04 = 7,
             ptk64_05 = 1,
-            ptk64_06 = BLOCK_COUNT, ptk64_07 = 1,
-            ptk64_08 = BLOCK_COUNT, ptk64_09 = 1,
+            ptk64_06 = 9,
+            ptk64_07 = 1,
+            ptk64_08 = BLOCK_COUNT,
+            ptk64_09 = 1,
             ptk64_10 = 7;
 
         if (k > 1) {
-          ptk64_04 = 9; // namestr
+          ptk64_04 = 7+k; // namestr
+          ptk64_06 += k;
           ptk64_10++;
         }
 
@@ -1483,6 +1497,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
         // pkt32 = 1;
         // writebin(pkt32, sas, swapit); // 10 // width?
         // writebin(unk32, sas, swapit); // 10
+        // ptk64 = -1;
         writebin(n, sas, swapit); // 6
         // writebin(unk32, sas, swapit); // 10
         writebin(unk16, sas, swapit); // 9

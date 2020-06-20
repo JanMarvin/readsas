@@ -14,18 +14,39 @@ write.sas <- function(dat, filepath, compress = 0, debug = FALSE) {
 
   filepath <- path.expand(filepath)
 
+  # convert to factor
+  ff <- sapply(dat, is.factor)
+  dat[ff] <- lapply(dat[ff], as.character)
+
   vartypes <- sapply(dat, is.character) + 1
   colwidth <- sapply(dat, function(x)max(nchar(x)))
   colwidth[vartypes == 1] <- 8
 
   labels <- "testlab";
 
+  vartypen <- sapply(dat, is.numeric)
+
+  formats <- NA
+  formats[vartypen] <- "BEST"
+  formats[!vartypen] <- "$"
+
+  width <- sapply(dat, function(x)(max(nchar(as.character(x)))))
+  width[vartypen] <- 32 # fix for now
+
+  decim <- sapply(dat, is.integer)
+  decim[!vartypen] <- TRUE
+
+  # print(vartypes)
+  # print(decim)
+
   # for numerics
-  formats <- rep("BEST", ncol(dat))
+  # formats <- rep("BEST", ncol(dat))
 
   attr(dat, "vartypes") <- as.integer(vartypes)
   attr(dat, "colwidth") <- as.integer(colwidth)
   attr(dat, "formats") <- formats
+  attr(dat, "width") <- width
+  attr(dat, "decim") <- decim
   attr(dat, "labels") <- labels
 
 
