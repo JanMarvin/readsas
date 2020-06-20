@@ -611,11 +611,11 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
         64 * k
         ;
 
-      auto addextra = 0;
-      if (((totalvarnamesize + totalvarformatssize) % 8) != 0) {
-        subheader_off += 4;
-        addextra = 1;
-      }
+      // auto addextra = 0;
+      // if (((totalvarnamesize + totalvarformatssize) % 8) != 0) {
+      //   subheader_off += 4;
+      //   addextra = 1;
+      // }
 
       if (k > 1) subheader_off += 58; // 54 but something else is not yet correct
 
@@ -679,9 +679,11 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
         //  writes the cases to a buffer internally.
         //  Stacks them and writes the entire stack as one
         for (auto z = 0; z < (k - i); ++z) {
-          std::string nams = as<std::string>(nvarnames[z]);
+          std::string nams = varnames[z];
+          std::string fmts = varformats[z];
           // TODO: Add labels
-          std::string fmts = as<std::string>(nformats[z]);
+
+          Rcout << nams << std::endl;
           offsetpos += nams.size();
           offsetpos += fmts.size();
         }
@@ -966,8 +968,8 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       for (auto cn = 0; cn < k; ++cn) {
         cnpoi[cn].CN_IDX = pg;
         cnpoi[cn].CN_OFF = prevlen;
-        cnpoi[cn].CN_LEN = varnames[cn].size();
-        prevlen += cnpoi[cn].CN_LEN;
+        cnpoi[cn].CN_LEN = as<std::string>(nvarnames[cn]).size();
+        prevlen += varnames[cn].size();
 
         prevlen += varformats[cn].size();
 
@@ -1168,10 +1170,10 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
         // SIG -2; FIRST 1; F_POS 7; LAST 1; L_POS 7
         if (i == 3) {
           scv[i].SIG = -2;
-          scv[i].FIRST = 0;
-          scv[i].F_POS = 0;
-          scv[i].LAST = 0;
-          scv[i].L_POS = 0;
+          scv[i].FIRST = 1;
+          scv[i].F_POS = 7;
+          scv[i].LAST = 1;
+          scv[i].L_POS = 7;
         }
 
         // SIG -5; FIRST 0; F_POS 0; LAST 0; L_POS 0
@@ -1311,14 +1313,15 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       rowlength = sum(colwidth);
       rowcount = n;
 
-      int64_t colf_p1 = n, colf_p2 = 0;
+      int64_t colf_p1 = k, colf_p2 = 0;
       int16_t dataoffset = 256;
 
 
       if (u64 == 4) {
 
         /* */
-        int64_t pkt64_1 = 240, pkt64_2 = 10, pkt64_3 = 0, pkt64_4 = 2240529;
+        // pkt64_2 is +2 with k * 2
+        int64_t pkt64_1 = 240, pkt64_2 = 12, pkt64_3 = 0, pkt64_4 = 2240529;
         writebin(pkt64_1, sas, swapit);
         writebin(pkt64_2, sas, swapit);
         writebin(pkt64_3, sas, swapit);
@@ -1329,10 +1332,10 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
         writebin(delobs, sas, swapit);
         writebin(unk64, sas, swapit);
 
-        writebin(colf_p1, sas, swapit);
+        writebin(colf_p1, sas, swapit); // k related
         writebin(colf_p2, sas, swapit);
         writebin(unk64, sas, swapit); // p3 and p4?
-        int64_t ptk64 = 8;
+        int64_t ptk64 = 8; // was 8 for k = 1
         writebin(ptk64, sas, swapit);
         writebin(pgsize, sas, swapit);
         writebin(unk64, sas, swapit);
@@ -1357,12 +1360,17 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
         }
 
         int64_t
-          ptk64_01 = 1, ptk64_02 = 2, ptk64_03 = 1, ptk64_04 = 7, ptk64_05 = 1,
-            ptk64_06 = 9, ptk64_07 = 1, ptk64_08 = BLOCK_COUNT, ptk64_09 = 1, ptk64_10 = 7;
+          ptk64_01 = 1, ptk64_02 = 2, ptk64_03 = 1,
+            ptk64_04 = 7,
+            ptk64_05 = 1,
+            ptk64_06 = BLOCK_COUNT, ptk64_07 = 1,
+            ptk64_08 = BLOCK_COUNT, ptk64_09 = 1,
+            ptk64_10 = 7;
 
-        ptk64_04 = 9;
-        ptk64_06 = 11;
-        ptk64_10 = 8;
+        if (k > 1) {
+          ptk64_04 = 9; // namestr
+          ptk64_10++;
+        }
 
         writebin(unk32, sas, swapit); // padding
 
