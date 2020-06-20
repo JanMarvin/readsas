@@ -700,6 +700,10 @@ Rcpp::List readsas(const char * filePath,
               int32_t pgidx = 0;
               int64_t pgsize = 0, pgc = 0, rcmix = 0, pgwsh = 0, pgwsh2 = 0;
 
+              int64_t ptk64_01 = 0, ptk64_02 = 0, ptk64_03 = 0, ptk64_04 = 0,
+                ptk64_05 = 0, ptk64_06 = 0, ptk64_07 = 0, ptk64_08 = 0,
+                ptk64_09 = 0, ptk64_10 = 0;
+
               if (debug)
                 Rcout << "-------- case 1 "<< sas.tellg() << std::endl;
 
@@ -760,42 +764,70 @@ Rcpp::List readsas(const char * filePath,
                   if (unk64 != 0)
                     warning("val0 is %d. expected a zero", unk64);
                 }
+
+
                 unk32 = readbin(unk32, sas, swapit);
 
-                unk64 = readbin(unk64, sas, swapit); // val 1?
-                unk16 = readbin(unk16, sas, swapit); // val 2?
+                ptk64_01 = readbin(ptk64_01, sas, swapit); // 1
+                ptk64_02 = readbin(ptk64_02, sas, swapit); // 2
+                ptk64_03 = readbin(ptk64_03, sas, swapit); // 1
+                ptk64_04 = readbin(ptk64_04, sas, swapit); // 7
+                ptk64_05 = readbin(ptk64_05, sas, swapit); // 1
+                ptk64_06 = readbin(ptk64_06, sas, swapit); // 9
+                ptk64_07 = readbin(ptk64_07, sas, swapit); // 1
+                ptk64_08 = readbin(ptk64_08, sas, swapit); // block_count
+                ptk64_09 = readbin(ptk64_09, sas, swapit); // 1
+                ptk64_10 = readbin(ptk64_10, sas, swapit); // 7
 
-                unk16 = readbin(unk16, sas, swapit); // padding
-                unk16 = readbin(unk16, sas, swapit); // padding
-                unk16 = readbin(unk16, sas, swapit); // padding
+                if (debug) {
+                  Rcout << "<beg case1 unks>" << std::endl;
+                  Rcout << ptk64_01 << std::endl;
+                  Rcout << ptk64_02 << std::endl;
+                  Rcout << ptk64_03 << std::endl;
+                  Rcout << ptk64_04 << std::endl;
+                  Rcout << ptk64_05 << std::endl;
+                  Rcout << ptk64_06 << std::endl;
+                  Rcout << ptk64_07 << std::endl;
+                  Rcout << ptk64_08 << std::endl;
+                  Rcout << ptk64_09 << std::endl;
+                  Rcout << ptk64_10 << std::endl;
+                  Rcout << "<end case1 unks>" << std::endl;
+                }
 
-                pgwsh = readbin(pgwsh, sas, swapit);
-                pgwpossh = readbin(pgwpossh, sas, swapit);
-
-                unk16 = readbin(unk16, sas, swapit); // padding
-                unk16 = readbin(unk16, sas, swapit); // padding
-                unk16 = readbin(unk16, sas, swapit); // padding
-
-                pgwsh2 = readbin(pgwsh2, sas, swapit);
-                pgwpossh2 = readbin(pgwpossh2, sas, swapit);
-
-                unk16 = readbin(unk16, sas, swapit); // padding
-                unk16 = readbin(unk16, sas, swapit); // padding
-                unk16 = readbin(unk16, sas, swapit); // padding
-
-                pgc = readbin(pgc, sas, swapit);
-
-                unk16 = readbin(unk16, sas, swapit); // val ?
-                unk16 = readbin(unk16, sas, swapit); // padding
-                unk16 = readbin(unk16, sas, swapit); // padding
-                unk16 = readbin(unk16, sas, swapit); // padding
-
-                unk64 = readbin(unk64, sas, swapit); // val 1?
-
-                addtextoff = readbin(addtextoff, sas, swapit); // val 7 | 8?
-                unk16 = readbin(unk16, sas, swapit); // padding
-                unk16 = readbin(unk16, sas, swapit); // padding
-                unk16 = readbin(unk16, sas, swapit); // padding
+                // unk64 = readbin(unk64, sas, swapit); // val 1?
+                // unk16 = readbin(unk16, sas, swapit); // val 2?
+                //
+                // unk16 = readbin(unk16, sas, swapit); // padding
+                // unk16 = readbin(unk16, sas, swapit); // padding
+                // unk16 = readbin(unk16, sas, swapit); // padding
+                //
+                // pgwsh = readbin(pgwsh, sas, swapit);
+                // pgwpossh = readbin(pgwpossh, sas, swapit);
+                //
+                // unk16 = readbin(unk16, sas, swapit); // padding
+                // unk16 = readbin(unk16, sas, swapit); // padding
+                // unk16 = readbin(unk16, sas, swapit); // padding
+                //
+                // pgwsh2 = readbin(pgwsh2, sas, swapit);
+                // pgwpossh2 = readbin(pgwpossh2, sas, swapit);
+                //
+                // unk16 = readbin(unk16, sas, swapit); // padding
+                // unk16 = readbin(unk16, sas, swapit); // padding
+                // unk16 = readbin(unk16, sas, swapit); // padding
+                //
+                // pgc = readbin(pgc, sas, swapit);
+                //
+                // unk16 = readbin(unk16, sas, swapit); // val ?
+                // unk16 = readbin(unk16, sas, swapit); // padding
+                // unk16 = readbin(unk16, sas, swapit); // padding
+                // unk16 = readbin(unk16, sas, swapit); // padding
+                //
+                // unk64 = readbin(unk64, sas, swapit); // val 1?
+                //
+                // addtextoff = readbin(addtextoff, sas, swapit); // val 7 | 8?
+                // unk16 = readbin(unk16, sas, swapit); // padding
+                // unk16 = readbin(unk16, sas, swapit); // padding
+                // unk16 = readbin(unk16, sas, swapit); // padding
 
                 for (int z = 0; z < 10; ++z) {
                   unk64 = readbin(unk64, sas, swapit); // 0

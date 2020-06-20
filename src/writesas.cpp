@@ -1241,12 +1241,12 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
         }
 
         int64_t
-          pkt64_01 = 1, ptk64_02 = 2, ptk64_03 = 1, ptk64_04 = 7, ptk64_05 = 1,
+          ptk64_01 = 1, ptk64_02 = 2, ptk64_03 = 1, ptk64_04 = 7, ptk64_05 = 1,
           ptk64_06 = 9, ptk64_07 = 1, ptk64_08 = BLOCK_COUNT, ptk64_09 = 1, ptk64_10 = 7;
 
         writebin(unk32, sas, swapit); // padding
 
-        writebin(pkt64_01, sas, swapit); // val 1?
+        writebin(ptk64_01, sas, swapit); // val 1?
         // writebin(unk32, sas, swapit); // padding
         writebin(ptk64_02, sas, swapit); // val 2?
         // writebin(unk32, sas, swapit); // padding
