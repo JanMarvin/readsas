@@ -21,7 +21,7 @@ write.sas <- function(dat, filepath, compress = 0, debug = FALSE) {
   labels <- "testlab";
 
   # for numerics
-  formats <- "BEST"
+  formats <- rep("BEST", ncol(dat))
 
   attr(dat, "vartypes") <- as.integer(vartypes)
   attr(dat, "colwidth") <- as.integer(colwidth)
