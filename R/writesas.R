@@ -18,8 +18,15 @@ write.sas <- function(dat, filepath, compress = 0, debug = FALSE) {
   colwidth <- sapply(dat, function(x)max(nchar(x)))
   colwidth[vartypes == 1] <- 8
 
+  labels <- "testlab";
+
+  # for numerics
+  formats <- "BEST"
+
   attr(dat, "vartypes") <- as.integer(vartypes)
   attr(dat, "colwidth") <- as.integer(colwidth)
+  attr(dat, "formats") <- formats
+  attr(dat, "labels") <- labels
 
 
   writesas(filepath, dat, compress = 0, debug = debug)
