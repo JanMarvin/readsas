@@ -19,7 +19,7 @@ readsas <- function(filePath, debug, kk) {
 #' @param compress the file
 #' @param debug print debug information
 #' @export
-writesas <- function(filePath, dat, compress, debug) {
-    invisible(.Call(`_readsas_writesas`, filePath, dat, compress, debug))
+writesas <- function(filePath, dat, compress, debug, bit32) {
+    invisible(.Call(`_readsas_writesas`, filePath, dat, compress, debug, bit32))
 }
 

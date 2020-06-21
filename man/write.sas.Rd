@@ -4,7 +4,7 @@
 \alias{write.sas}
 \title{write.sas}
 \usage{
-write.sas(dat, filepath, compress = 0, debug = FALSE)
+write.sas(dat, filepath, compress = 0, debug = FALSE, bit32 = FALSE)
 }
 \arguments{
 \item{dat}{data frame to save}
@@ -14,6 +14,8 @@ write.sas(dat, filepath, compress = 0, debug = FALSE)
 \item{compress}{option to compress file}
 
 \item{debug}{print debug information}
+
+\item{bit32}{write 32bit file}
 }
 \description{
 write.sas
