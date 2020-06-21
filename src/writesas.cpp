@@ -170,6 +170,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
     uint8_t PLATFORM = 49; // (1) 49 Unix (2) 50 Win
 
     pkt1 = 51, pkt3 = 2;
+    if (bit32 == 1) pkt1 = 50;
     writebin(pkt1, sas, 0); // 51
     writebin(ENDIANNESS, sas, 0);
     writebin(pkt3, sas, 0); // 2
@@ -217,6 +218,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
     // packet 8 --------------------------------------- //
 
     pkt1 = 51, pkt2 = 0, pkt3 = 2, pkt4 = 0;
+    if (bit32 == 1) pkt1 = 50;
     writebin(pkt1, sas, 0); // 51
     writebin(ENDIANNESS, sas, 0);
     writebin(pkt3, sas, 0); // 2
@@ -224,6 +226,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
 
     // packet 9 --------------------------------------- //
     pkt1 = 1, pkt2 = 51, pkt3 = 1, pkt4 = 35;
+    if (bit32 == 1) pkt2 = 50;
     writebin(pkt1, sas, 0); // 1 | 4
     writebin(pkt2, sas, 0);
     writebin(pkt3, sas, 0);
@@ -232,6 +235,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
     // packet 10 -------------------------------------- //
     int8_t encoding = 20; // utf8
     pkt1 = 51, pkt2 = 0, pkt3 = 0, pkt4 = 20;
+    if (bit32 == 1) pkt1 = 50;
     writebin(pkt1, sas, 0); // 51
     writebin(unk8, sas, 0); // 0
     writebin(encoding, sas, 0);
@@ -351,12 +355,60 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
 
     /*** write pages **********************************************************/
     for (auto pg = 0; pg < pagecount; ++pg) {
+
+
+      auto subheader_off =
+        // 100 +
+        792 + totalvarnamesize + totalvarformatssize + // case 1
+        24 +
+        600 +
+        68 +
+        28 + k * 8 +
+        28 + k * 16 +
+        64 * k
+      ;
+
+      auto addextra = 0;
+      if (((totalvarnamesize + totalvarformatssize) % 8) != 0) {
+        subheader_off += 4;
+        addextra = 1;
+      }
+
+      if (k > 1) subheader_off += 58; // case 8 // 54 but something else is not yet correct
+
+
+
+      if (bit32 == 1) {
+        subheader_off =
+          // 100 +
+          422 + totalvarnamesize + totalvarformatssize + // case 1 // kleiner
+          12 +          // case 4
+          304 +         // case 2
+          64 +          // case 5
+          24 + k * 8 +  // case 6            // 44 vielleicht kleiner
+          24 + k * 12 + // case 7            // 56 vielleicht kleiner
+          52 * k        // case 3
+        ;
+
+        if (k > 1) subheader_off += 54; // case 8 // 50 but something else is not yet correct
+      }
+
+      Rcout << subheader_off << std::endl;
+      Rcout << (headersize + pagecount*pagesize) << std::endl;
+
+
       checkUserInterrupt();
 
       pageseqnum32++;
       unk1 = 0;
       unk2 = 0;
       unk3 = 62950; // 62676; // 2* pagesize - sas.tellg();
+
+      Rcout << pagesize << " " << sas.tellg() << " " << std::endl;
+      // stop("haaalt");
+
+      if (bit32 == 1) unk3 = 7868;
+
       /* unk3 something like max number of something per page? */
 
       // Page Offset Table
@@ -613,45 +665,6 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       // writebin(uunkt1_1, sas, 0);
       // writebin(uunkt1_2, sas, 0);
 
-
-      auto subheader_off =
-        // 100 +
-        792 + totalvarnamesize + totalvarformatssize + // case 1
-        24 +
-        600 +
-        68 +
-        28 + k * 8 +
-        28 + k * 16 +
-        64 * k
-        ;
-
-      auto addextra = 0;
-      if (((totalvarnamesize + totalvarformatssize) % 8) != 0) {
-        subheader_off += 4;
-        addextra = 1;
-      }
-
-      if (k > 1) subheader_off += 58; // case 8 // 54 but something else is not yet correct
-
-
-
-      if (bit32 == 1) {
-        subheader_off =
-          // 100 +
-          422 + totalvarnamesize + totalvarformatssize + // case 1 // kleiner
-          12 +          // case 4
-          304 +         // case 2
-          64 +          // case 5
-          24 + k * 8 +  // case 6            // 44 vielleicht kleiner
-          24 + k * 12 + // case 7            // 56 vielleicht kleiner
-          52 * k        // case 3
-        ;
-
-        if (k > 1) subheader_off += 54; // case 8 // 50 but something else is not yet correct
-      }
-
-      Rcout << subheader_off << std::endl;
-      Rcout << (headersize + pagecount*pagesize) << std::endl;
       auto pos_at_end_of_file = (headersize + pagecount*pagesize) - subheader_off;
 
       // case1: 800 containing + k * 4 (varnames) + k * 4 (formats)
@@ -1626,25 +1639,28 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
             writebin((int32_t)unk64, sas, swapit); // 0
           }
 
-          writebin(unk16, sas, swapit); // val
-          writebin(unk16, sas, swapit); // val 0|8 ?
-          writebin(unk16, sas, swapit); // val 4
-          writebin(unk16, sas, swapit); // val 0
+          int16_t ptk16_1 = 0, ptk16_2 = 8, ptk16_3 = 4, ptk16_4 = 0;
+          writebin(ptk16_1, sas, swapit); // val
+          writebin(ptk16_2, sas, swapit); // val 0|8 ?
+          writebin(ptk16_3, sas, swapit); // val 4
+          writebin(ptk16_4, sas, swapit); // val 0
           writebin(todata, sas, swapit); // val 12,32|0? //
 
+          ptk16_1 = 0, ptk16_2 = 0, ptk16_3 = 20, ptk16_4 = 8;
           writebin(swlen, sas, swapit);
-          writebin(unk16, sas, swapit); // val 0?
-          writebin(unk16, sas, swapit); // val 20?
-          writebin(unk16, sas, swapit); //
+          writebin(ptk16_2, sas, swapit); // val 0?
+          writebin(ptk16_3, sas, swapit); // val 20?
+          writebin(ptk16_4, sas, swapit); //
 
           writebin(unk16, sas, swapit); // 0
           writebin(unk16, sas, swapit); // 12
           writebin(unk16, sas, swapit); // 8 compr. code length?
           writebin(unk16, sas, swapit); // 0
 
-          writebin(unk16, sas, swapit); // 12
-          writebin(unk16, sas, swapit); // 8
-          writebin(unk16, sas, swapit); // 0
+          ptk16_1 = 12, ptk16_2 = 8, ptk16_3 = 0, ptk16_4 = 0;
+          writebin(ptk16_1, sas, swapit); // 12
+          writebin(ptk16_2, sas, swapit); // 8
+          writebin(ptk16_3, sas, swapit); // 0
           writebin(textoff, sas, swapit); // 28
           writebin(proclen, sas, swapit);
 
@@ -1659,18 +1675,21 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
           writebin(unk16, sas, swapit); // 4
           writebin(unk16, sas, swapit); // 1
 
+          sh_num = 4, cn_maxlen = 1, l_maxlen = 1;
           writebin(sh_num, sas, swapit);
           writebin(cn_maxlen, sas, swapit);
           writebin(l_maxlen, sas, swapit);
 
-          for (int z = 0; z < 3; ++z) {
-            writebin(unk32, sas, swapit); // 0
-          }
+          writebin(sasvers, sas, swapit); // 1
+          writebin(unk32, sas, swapit); // 2
+          writebin(unk32, sas, swapit); // 3
 
           writebin(rowsonpg, sas, swapit);
 
           writebin(unk16, sas, swapit); // 1
-          writebin(unk32, sas, swapit); // 2
+
+          int32_t pkt32 = 7843;
+          writebin(pkt32, sas, swapit); // 2
           writebin(unk16, sas, swapit); // 4
           writebin(unk16, sas, swapit); // 5
           writebin(unk16, sas, swapit); // 6
