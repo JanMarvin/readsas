@@ -1166,9 +1166,13 @@ Rcpp::List readsas(const char * filePath,
                 l_maxlen = readbin(l_maxlen, sas, swapit);
                 if (debug) Rcout << l_maxlen << std::endl;
 
-                for (int z = 0; z < 3; ++z) {
-                  unk32 = readbin(unk32, sas, swapit); // 0
-                }
+                /* maybe SAS version information at o131018 ? */
+                unk32 = readbin(unk32, sas, swapit); // 1
+                Rcout << "1 " << unk32 << std::endl;
+                unk32 = readbin(unk32, sas, swapit); // 2
+                if (unk32 != 0) stop("unk32 1. expected 0 is %d", unk32);
+                unk32 = readbin(unk32, sas, swapit); // 3
+                if (unk32 != 0) stop("unk32 1. expected 0 is %d", unk32);
 
                 rowsonpg = readbin(rowsonpg, sas, swapit);
 
