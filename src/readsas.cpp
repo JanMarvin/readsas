@@ -489,6 +489,8 @@ Rcpp::List readsas(const char * filePath,
       int32_t c5typ = 0; /* check if variable name, format or label */
       int64_t PAGE_DELETED_POINTER_LENGTH = 0;
 
+      int64_t dpos = 0;
+
       // Page Offset Table
       if (u64 == 4) {
         pageseqnum32 = readbin(pageseqnum32, sas, swapit);
@@ -507,9 +509,9 @@ Rcpp::List readsas(const char * filePath,
 
       if (debug) {
         Rcout << "pageseqnum: " << pageseqnum32 << std::endl;
-        Rcout << unk1 << " " << unk2 << " " << unk3 << std::endl;
+        Rcout << unk1 << " " << unk2 << " " << PAGE_DELETED_POINTER_LENGTH << std::endl;
       }
-      
+
       PAGE_TYPE       = readbin(PAGE_TYPE, sas, swapit);
       BLOCK_COUNT     = readbin(BLOCK_COUNT, sas, swapit);
       SUBHEADER_COUNT = readbin(SUBHEADER_COUNT, sas, swapit);
@@ -552,7 +554,7 @@ Rcpp::List readsas(const char * filePath,
         for (auto i = 0; i < SUBHEADER_COUNT; ++i) {
 
           if (u64 == 4) {
-            Rcout << "pos is " << sas.tellg() << std::endl;
+            // Rcout << "pos is " << sas.tellg() << std::endl;
 
             potabs[i].SH_OFF = readbin(potabs[i].SH_OFF, sas, swapit);           // 8
             potabs[i].SH_LEN = readbin(potabs[i].SH_LEN, sas, swapit);           // 16
@@ -612,6 +614,7 @@ Rcpp::List readsas(const char * filePath,
 
           uint64_t pagepos = (headersize + (double)pg * pagesize) + potabs[sc].SH_OFF;
 
+          Rcout << "debug:::" <<  pagepos << std::endl;
           // 2 files, where this is a problem
           if(potabs[sc].SH_OFF == 0 || potabs[sc].SH_LEN == 0)
             break;
@@ -1001,54 +1004,78 @@ Rcpp::List readsas(const char * filePath,
                 pgidx = readbin(pgidx, sas, swapit);
 
 
-                for (int z = 0; z < 8; ++z) {
+                for (int z = 0; z < 10; ++z) {
                   unk64 = readbin((int32_t)unk64, sas, swapit);
-                  if (debug) Rcout << unk64 << std::endl;
+                  // if (debug) Rcout << unk64 << std::endl;
                 }
 
-                // padding?
-                unk32 = readbin(unk32, sas, swapit);
-                if (debug) Rcout << unk32 << std::endl;
-                unk32 = readbin(unk32, sas, swapit);
-                if (debug) Rcout << unk32 << std::endl;
+                ptk64_01 = readbin((int32_t)ptk64_01, sas, swapit); // 1
+                ptk64_02 = readbin((int32_t)ptk64_02, sas, swapit); // 2
+                ptk64_03 = readbin((int32_t)ptk64_03, sas, swapit); // 1   pgwsh ???
+                ptk64_04 = readbin((int32_t)ptk64_04, sas, swapit); // xx  len of uncompressed subheader count
+                ptk64_05 = readbin((int32_t)ptk64_05, sas, swapit); // 1   Numbers of data pages?
+                ptk64_06 = readbin((int32_t)ptk64_06, sas, swapit); // xx  2 larger than len of uncompr. with uncompr, else 1 larger
+                ptk64_07 = readbin((int32_t)ptk64_07, sas, swapit); // x   First data page?
+                ptk64_08 = readbin((int32_t)ptk64_08, sas, swapit); // xx  block_count
+                ptk64_09 = readbin((int32_t)ptk64_09, sas, swapit); // 1
+                ptk64_10 = readbin((int32_t)ptk64_10, sas, swapit); // 7|8 addtextoff (larg number if compressed)
 
-                unk32 = readbin(unk32, sas, swapit); // val 1?
-                if (debug) Rcout << unk32 << std::endl;
-                unk16 = readbin(unk16, sas, swapit); // val 2?
-                if (debug) Rcout << unk16 << std::endl;
+                // unk32 = readbin(unk32, sas, swapit);
+                // if (debug) Rcout << unk32 << std::endl;
 
-                unk16 = readbin(unk16, sas, swapit); // padding
-                if (debug) Rcout << unk16 << std::endl;
 
-                pgwsh = readbin((int32_t)pgwsh, sas, swapit);
-                if (debug) Rcout << "pgwsh " << pgwsh << std::endl;
-                pgwpossh = readbin(pgwpossh, sas, swapit);
-                if (debug) Rcout << "pgwpossh " << pgwpossh << std::endl;
+                // if (debug) {
+                Rcout << "<beg case1 unks>" << std::endl;
+                Rcout << ptk64_01 << std::endl;
+                Rcout << ptk64_02 << std::endl;
+                Rcout << ptk64_03 << std::endl;
+                Rcout << ptk64_04 << std::endl;
+                Rcout << ptk64_05 << std::endl;
+                Rcout << ptk64_06 << std::endl;
+                Rcout << ptk64_07 << std::endl;
+                Rcout << ptk64_08 << std::endl;
+                Rcout << ptk64_09 << std::endl;
+                Rcout << ptk64_10 << std::endl;
+                Rcout << "<end case1 unks>" << std::endl;
+                // }
 
-                unk16 = readbin(unk16, sas, swapit); // padding
-                if (debug) Rcout << unk16 << std::endl;
-
-                pgwsh2 = readbin((int32_t)pgwsh2, sas, swapit);
-                if (debug) Rcout << "pgwsh2 " << pgwsh2 << std::endl;
-                pgwpossh2 = readbin(pgwpossh2, sas, swapit);
-                if (debug) Rcout << "pgwpossh2 " << pgwpossh2 << std::endl;
-
-                unk16 = readbin(unk16, sas, swapit); // padding
-                if (debug) Rcout << unk16 << std::endl;
-
-                pgc = readbin((int32_t)pgc, sas, swapit);
-                if (debug) Rcout << "pgc " << pgc << std::endl;
-
-                unk16 = readbin(unk16, sas, swapit); // val ?
-                if (debug) Rcout << unk16 << std::endl;
-                unk16 = readbin(unk16, sas, swapit); // padding
-
-                unk64 = readbin((int32_t)unk64, sas, swapit); // val 1?
-                if (debug) Rcout << unk64 << std::endl;
-
-                addtextoff = readbin(addtextoff, sas, swapit); // val 7 | 8?
-                if (debug) Rcout << addtextoff << std::endl;
-                unk16 = readbin(unk16, sas, swapit); // padding
+                // unk32 = readbin(unk32, sas, swapit); // val 1?
+                // if (debug) Rcout << unk32 << std::endl;
+                // unk16 = readbin(unk16, sas, swapit); // val 2?
+                // if (debug) Rcout << unk16 << std::endl;
+                //
+                // unk16 = readbin(unk16, sas, swapit); // padding
+                // if (debug) Rcout << unk16 << std::endl;
+                //
+                // pgwsh = readbin((int32_t)pgwsh, sas, swapit);
+                // if (debug) Rcout << "pgwsh " << pgwsh << std::endl;
+                // pgwpossh = readbin(pgwpossh, sas, swapit);
+                // if (debug) Rcout << "pgwpossh " << pgwpossh << std::endl;
+                //
+                // unk16 = readbin(unk16, sas, swapit); // padding
+                // if (debug) Rcout << unk16 << std::endl;
+                //
+                // pgwsh2 = readbin((int32_t)pgwsh2, sas, swapit);
+                // if (debug) Rcout << "pgwsh2 " << pgwsh2 << std::endl;
+                // pgwpossh2 = readbin(pgwpossh2, sas, swapit);
+                // if (debug) Rcout << "pgwpossh2 " << pgwpossh2 << std::endl;
+                //
+                // unk16 = readbin(unk16, sas, swapit); // padding
+                // if (debug) Rcout << unk16 << std::endl;
+                //
+                // pgc = readbin((int32_t)pgc, sas, swapit);
+                // if (debug) Rcout << "pgc " << pgc << std::endl;
+                //
+                // unk16 = readbin(unk16, sas, swapit); // val ?
+                // if (debug) Rcout << unk16 << std::endl;
+                // unk16 = readbin(unk16, sas, swapit); // padding
+                //
+                // unk64 = readbin((int32_t)unk64, sas, swapit); // val 1?
+                // if (debug) Rcout << unk64 << std::endl;
+                //
+                // addtextoff = readbin(addtextoff, sas, swapit); // val 7 | 8?
+                // if (debug) Rcout << addtextoff << std::endl;
+                // unk16 = readbin(unk16, sas, swapit); // padding
 
                 for (int z = 0; z < 10; ++z) {
                   unk64 = readbin((int32_t)unk64, sas, swapit); // 0
@@ -1187,6 +1214,8 @@ Rcpp::List readsas(const char * filePath,
                 Rprintf("swlen = %d, todata %d, textoff %d\n",
                         swlen, todata, textoff);
 
+              if (debug)
+                Rcout << "dataoffset " << dataoffset << std::endl;
 
               if (!((dataoffset == 1) ||(dataoffset == 256) || (dataoffset == 1280)))
                 warning("debug: dataoffset is unexpectedly %d\n",
@@ -1213,9 +1242,9 @@ Rcpp::List readsas(const char * filePath,
                 if (debug) Rcout << unk64 << std::endl;
               } else {
                 off = readbin((int32_t)off, sas, swapit);
-                // Rcout << off << std::endl;
+                if (debug) Rcout << off << std::endl;
                 unk32 = readbin(unk32, sas, swapit);
-                // Rcout << unk32 << std::endl;
+                if (debug) Rcout << unk32 << std::endl;
               }
 
               int16_t num_nonzero = 0;

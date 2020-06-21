@@ -28,22 +28,23 @@ BEGIN_RCPP
 END_RCPP
 }
 // writesas
-void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress, bool debug);
-RcppExport SEXP _readsas_writesas(SEXP filePathSEXP, SEXP datSEXP, SEXP compressSEXP, SEXP debugSEXP) {
+void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress, bool debug, bool bit32);
+RcppExport SEXP _readsas_writesas(SEXP filePathSEXP, SEXP datSEXP, SEXP compressSEXP, SEXP debugSEXP, SEXP bit32SEXP) {
 BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const char * >::type filePath(filePathSEXP);
     Rcpp::traits::input_parameter< Rcpp::DataFrame >::type dat(datSEXP);
     Rcpp::traits::input_parameter< uint8_t >::type compress(compressSEXP);
     Rcpp::traits::input_parameter< bool >::type debug(debugSEXP);
-    writesas(filePath, dat, compress, debug);
+    Rcpp::traits::input_parameter< bool >::type bit32(bit32SEXP);
+    writesas(filePath, dat, compress, debug, bit32);
     return R_NilValue;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
     {"_readsas_readsas", (DL_FUNC) &_readsas_readsas, 7},
-    {"_readsas_writesas", (DL_FUNC) &_readsas_writesas, 4},
+    {"_readsas_writesas", (DL_FUNC) &_readsas_writesas, 5},
     {NULL, NULL, 0}
 };
 

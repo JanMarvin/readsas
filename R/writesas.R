@@ -6,11 +6,12 @@
 #'@param filepath path to save file to
 #'@param compress option to compress file
 #'@param debug print debug information
+#'@param bit32 write 32bit file
 #'
 #'@useDynLib readsas, .registration=TRUE
 #'
 #'@export
-write.sas <- function(dat, filepath, compress = 0, debug = FALSE) {
+write.sas <- function(dat, filepath, compress = 0, debug = FALSE, bit32 = FALSE) {
 
   filepath <- path.expand(filepath)
 
@@ -50,6 +51,6 @@ write.sas <- function(dat, filepath, compress = 0, debug = FALSE) {
   attr(dat, "labels") <- labels
 
 
-  writesas(filepath, dat, compress = 0, debug = debug)
+  writesas(filepath, dat, compress = 0, debug = debug, bit32 = bit32)
 
 }

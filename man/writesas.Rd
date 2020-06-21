@@ -4,7 +4,7 @@
 \alias{writesas}
 \title{Writes the binary SAS file}
 \usage{
-writesas(filePath, dat, compress, debug)
+writesas(filePath, dat, compress, debug, bit32)
 }
 \arguments{
 \item{filePath}{The full systempath to the sas7bdat file you want to export.}

@@ -36,7 +36,7 @@ using namespace Rcpp;
 //' @export
 // [[Rcpp::export]]
 void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
-              bool debug) {
+              bool debug, bool bit32) {
 
   uint32_t k = dat.size();
   uint64_t n = dat.nrows();
@@ -120,6 +120,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
     int64_t unk64 = 0;
     int64_t unk1 = 0, unk2 = 0, unk3 = 0;
     double unkdub = 0;
+    auto inioff = 0;
 
     double created = 0, created2 = 0;   // 8
     double modified = 0, modified2 = 0; // 16
@@ -127,7 +128,9 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
 
     // possibly make headersize and pagesize variable
     int32_t headersize = 65536;
+    if (bit32 == 1) headersize = 1024;
     int32_t pagesize = 65536;
+    if (bit32 == 1) pagesize = 8192;
     int64_t pagecount = 1;
     uint32_t pgidx = 2618406542;
     uint32_t pageseqnum32 = pgidx;
@@ -149,8 +152,10 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
 
     // packet 1 --------------------------------------- //
     int8_t ALIGN_1_CHECKER_VALUE = 51;
+    if (bit32 == 1) ALIGN_1_CHECKER_VALUE = 34;
     if (ALIGN_1_CHECKER_VALUE == 51) u64 = 4;
     int8_t U64_BYTE_CHECKER_VALUE = 51;
+    if (bit32 == 1) U64_BYTE_CHECKER_VALUE = 50;
     if (U64_BYTE_CHECKER_VALUE == 51) ALIGN_2_VALUE = 4;
 
     pkt2 = 34, pkt3 = 0;
@@ -200,6 +205,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
 
     // packet 7 --------------------------------------- //
     int8_t U64_BYTE_CHECKER_VALUE2 = 51;
+    if (bit32 == 1) U64_BYTE_CHECKER_VALUE2 = 50;
 
     pkt1 = 0, pkt2 = 34, pkt3 = 0, pkt4 = 0;
 
@@ -261,6 +267,12 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
 
     writebin(headersize, sas, 0);
     writebin(pagesize, sas, 0);
+
+    if (debug) {
+      Rcout << "headersize: "  << headersize <<
+        " pagesize: " << pagesize << std::endl;
+    }
+
     if (u64 == 4) {
       writebin(pagecount, sas, swapit);
     } else {
@@ -619,9 +631,28 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
         addextra = 1;
       }
 
-      if (k > 1) subheader_off += 58; // 54 but something else is not yet correct
+      if (k > 1) subheader_off += 58; // case 8 // 54 but something else is not yet correct
 
-      auto pos_at_end_of_file = 2*pagesize - subheader_off;
+
+
+      if (bit32 == 1) {
+        subheader_off =
+          // 100 +
+          422 + totalvarnamesize + totalvarformatssize + // case 1 // kleiner
+          12 +          // case 4
+          304 +         // case 2
+          64 +          // case 5
+          24 + k * 8 +  // case 6            // 44 vielleicht kleiner
+          24 + k * 12 + // case 7            // 56 vielleicht kleiner
+          52 * k        // case 3
+        ;
+
+        if (k > 1) subheader_off += 54; // case 8 // 50 but something else is not yet correct
+      }
+
+      Rcout << subheader_off << std::endl;
+      Rcout << (headersize + pagecount*pagesize) << std::endl;
+      auto pos_at_end_of_file = (headersize + pagecount*pagesize) - subheader_off;
 
       // case1: 800 containing + k * 4 (varnames) + k * 4 (formats)
       // case4: 24
@@ -658,7 +689,11 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       // final subheader indication where the data begins
       Rcout << shc << std::endl;
       pre_shlen = sas.tellg();
-      potabs[shc].SH_OFF = pre_shlen - pagesize;
+      potabs[shc].SH_OFF = pre_shlen - headersize - pg*pagesize; /* TODO: Check this */
+
+      Rcout << potabs[shc].SH_OFF << std::endl;
+
+
       post_shlen = sas.tellg();
       potabs[shc].SH_LEN = post_shlen - pre_shlen;
       // on the last subheader
@@ -673,7 +708,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
 
         Rcout << shc << std::endl;
         pre_shlen = sas.tellg();
-        potabs[shc].SH_OFF = pre_shlen - pagesize;
+        potabs[shc].SH_OFF = pre_shlen - headersize - pg*pagesize;
 
         auto offsetpos = 32;
 
@@ -708,7 +743,8 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
         // int64_t case3 = 4294966270;
 
         writebin(case31, sas, 0);
-        writebin(case32, sas, 0);
+        if (bit32 == 0)
+          writebin(case32, sas, 0);
 
         writebin(unk16, sas, swapit);           // 1
         writebin(unk16, sas, swapit);           // 2
@@ -797,7 +833,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
         shc--;
         Rcout << shc << std::endl;
         pre_shlen = sas.tellg();
-        potabs[shc].SH_OFF = pre_shlen - pagesize;
+        potabs[shc].SH_OFF = pre_shlen - headersize - pg*pagesize;
 
         if (debug)
           Rcout << "-------- case 8 "<< sas.tellg() << std::endl;
@@ -806,7 +842,8 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
         uint32_t case82 = 4294967295;
 
         writebin(case81, sas, 0);
-        writebin(case82, sas, 0);
+        if (bit32 == 0)
+          writebin(case82, sas, 0);
 
         int16_t cls = k;
         int64_t lenremain = 14 +
@@ -873,7 +910,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       shc--;
       Rcout << shc << std::endl;
       pre_shlen = sas.tellg();
-      potabs[shc].SH_OFF = pre_shlen - pagesize;
+      potabs[shc].SH_OFF = pre_shlen - headersize - pg*pagesize;
 
       if (debug)
         Rcout << "-------- case 7 "<< sas.tellg()  << std::endl;
@@ -882,7 +919,8 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       uint32_t case72 = 4294967295;
 
       writebin(case71, sas, 0);
-      writebin(case72, sas, 1);
+      if (bit32 == 0)
+        writebin(case72, sas, 0);
 
       int8_t divs = 16;
       if (u64 != 4) divs = 12;
@@ -945,7 +983,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       shc--;
       Rcout << shc << std::endl;
       pre_shlen = sas.tellg();
-      potabs[shc].SH_OFF = pre_shlen - pagesize;
+      potabs[shc].SH_OFF = pre_shlen - headersize - pg*pagesize;
 
       if (debug)
         Rcout << "-------- case 6 "<< sas.tellg() << std::endl;
@@ -954,7 +992,8 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       uint32_t case62 = 4294967295;
 
       writebin(case61, sas, 0);
-      writebin(case62, sas, 0);
+      if (bit32 == 0)
+        writebin(case62, sas, 0);
 
       lenremain16 = k * 8 + 8; // empty double at the end?
       if (debug) Rprintf("lenremain16 %d \n", lenremain16);
@@ -973,7 +1012,12 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       std::vector<CN_Poi> cnpoi(k);
 
 
-      auto prevlen = 0 + 36;
+
+      inioff = 36;
+      if (bit32 == 1) inioff = 32;
+
+      auto prevlen = 0 + inioff;
+
       for (auto cn = 0; cn < k; ++cn) {
         cnpoi[cn].CN_IDX = pg;
         cnpoi[cn].CN_OFF = prevlen;
@@ -1013,7 +1057,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       shc--;
       Rcout << shc << std::endl;
       pre_shlen = sas.tellg();
-      potabs[shc].SH_OFF = pre_shlen - pagesize;
+      potabs[shc].SH_OFF = pre_shlen - headersize - pg*pagesize;
 
       if (debug)
         Rcout << "-------- case 5 "<< sas.tellg() << std::endl;
@@ -1022,7 +1066,8 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       uint32_t case52 = 4294967295;
 
       writebin(case51, sas, 0);
-      writebin(case52, sas, 0);
+      if (bit32 == 0)
+        writebin(case52, sas, 0);
 
 
       int16_t len =
@@ -1101,7 +1146,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       shc--;
       Rcout << shc << std::endl;
       pre_shlen = sas.tellg();
-      potabs[shc].SH_OFF = pre_shlen - pagesize;
+      potabs[shc].SH_OFF = pre_shlen - headersize - pg*pagesize;
 
       if (debug)
         Rcout << "-------- case 2 "<< sas.tellg() << std::endl;
@@ -1110,9 +1155,13 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       uint32_t case22 = 4294967295;
 
       writebin(case21, sas, 0);
-      writebin(case22, sas, 0);
+      if (bit32 == 0)
+        writebin(case22, sas, 0);
 
-      int64_t off = 36 + totalvarnamesize + totalvarformatssize; // offset with format
+      inioff = 36;
+      if (bit32 == 1) inioff = 32;
+
+      int64_t off = inioff + totalvarnamesize + totalvarformatssize; // offset with format
 
       int64_t ptk64 = 3;
       if (k > 1) ptk64++;
@@ -1266,13 +1315,14 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       shc--;
       Rcout << shc << std::endl;
       pre_shlen = sas.tellg();
-      potabs[shc].SH_OFF = pre_shlen - pagesize;
+      potabs[shc].SH_OFF = pre_shlen - headersize - pg*pagesize;
 
       uint32_t case41 = 4143380214;
       uint32_t case42 = 0;
 
       writebin(case41, sas, 0);
-      writebin(case42, sas, 0);
+      if (bit32 == 0)
+        writebin(case42, sas, 0);
 
       uint64_t uunk64 = 0;
       int64_t colnum = k;
@@ -1298,13 +1348,14 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       shc--;
       Rcout << shc << std::endl;
       pre_shlen = sas.tellg();
-      potabs[shc].SH_OFF = pre_shlen - pagesize;
+      potabs[shc].SH_OFF = pre_shlen - headersize - pg*pagesize;
 
       uint32_t case11 = 4160223223;
       uint32_t case12 = 0; //4294967295;
 
       writebin(case11, sas, 0);
-      writebin(case12, sas, 0);
+      if (bit32 == 0)
+        writebin(case12, sas, 0);
 
       /* Row Size */
 
@@ -1325,6 +1376,23 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       int64_t colf_p1 = k, colf_p2 = 0;
       int16_t dataoffset = 256;
 
+      int64_t
+        ptk64_01 = 1,
+          ptk64_02 = 2,
+          ptk64_03 = 1,
+          ptk64_04 = 7,
+          ptk64_05 = 1,
+          ptk64_06 = 9,
+          ptk64_07 = 1,
+          ptk64_08 = BLOCK_COUNT,
+          ptk64_09 = 1,
+          ptk64_10 = 7;
+
+      if (k > 1) {
+        ptk64_04 = 7+k; // namestr
+        ptk64_06 += k;
+        ptk64_10++;
+      }
 
       if (u64 == 4) {
 
@@ -1368,46 +1436,18 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
           writebin(unk64, sas, swapit);
         }
 
-        int64_t
-          ptk64_01 = 1,
-            ptk64_02 = 2,
-            ptk64_03 = 1,
-            ptk64_04 = 7,
-            ptk64_05 = 1,
-            ptk64_06 = 9,
-            ptk64_07 = 1,
-            ptk64_08 = BLOCK_COUNT,
-            ptk64_09 = 1,
-            ptk64_10 = 7;
-
-        if (k > 1) {
-          ptk64_04 = 7+k; // namestr
-          ptk64_06 += k;
-          ptk64_10++;
-        }
-
         writebin(unk32, sas, swapit); // padding
 
         writebin(ptk64_01, sas, swapit); // val 1?
-        // writebin(unk32, sas, swapit); // padding
         writebin(ptk64_02, sas, swapit); // val 2?
-        // writebin(unk32, sas, swapit); // padding
         writebin(ptk64_03, sas, swapit); // val 1?
-        // writebin(unk32, sas, swapit); // padding
         writebin(ptk64_04, sas, swapit); // val 7?
-        // writebin(unk32, sas, swapit); // padding
         writebin(ptk64_05, sas, swapit); // val 7?
-        // writebin(unk32, sas, swapit); // padding
         writebin(ptk64_06, sas, swapit); // val 7?
-        // writebin(unk32, sas, swapit); // padding
         writebin(ptk64_07, sas, swapit); // val 7?
-        // writebin(unk32, sas, swapit); // padding
         writebin(ptk64_08, sas, swapit); // val 7?
-        // writebin(unk32, sas, swapit); // padding
         writebin(ptk64_09, sas, swapit); // val 7?
-        // writebin(unk32, sas, swapit); // padding
         writebin(ptk64_10, sas, swapit); // val 7?
-        // writebin(unk32, sas, swapit); // padding
 
         // writebin(pgwsh, sas, swapit);
         // writebin(pgwpossh, sas, swapit);
@@ -1514,126 +1554,138 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
         writebin(unk32, sas, swapit); // extra
         /* */
 
-        // } else {
-        //   writebin(unk32, sas, swapit);
-        //   writebin(unk32, sas, swapit);
-        //   writebin(unk32, sas, swapit);
-        //   writebin(unk32, sas, swapit);
-        //
-        //   writebin((int32_t)rowlength, sas, swapit);
-        //   writebin((int32_t)rowcount, sas, swapit);
-        //   writebin((int32_t)delobs, sas, swapit); // deleted obs?
-        //   writebin(unk32, sas, swapit);
-        //   writebin((int32_t)colf_p1, sas, swapit);
-        //   writebin((int32_t)colf_p2, sas, swapit);
-        //   writebin(unk32, sas, swapit);
-        //   writebin(unk32, sas, swapit);
-        //   writebin((int32_t)pgsize, sas, swapit);
-        //   writebin(unk32, sas, swapit);
-        //   writebin((int32_t)rcmix, sas, swapit);
-        //   writebin(uunk32, sas, swapit);
-        //   writebin(uunk32, sas, swapit);
-        //
-        //   for (int z = 0; z < numzeros; ++z) {
-        //     writebin((int32_t)unk64, sas, swapit);
-        //   }
-        //
-        //   writebin(pgidx, sas, swapit);
-        //
-        //   for (int z = 0; z < 8; ++z) {
-        //     writebin((int32_t)unk64, sas, swapit);;
-        //   }
-        //
-        //   // padding?
-        //   writebin(unk32, sas, swapit);
-        //   writebin(unk32, sas, swapit);
-        //
-        //   writebin(unk32, sas, swapit); // val 1?
-        //   writebin(unk16, sas, swapit); // val 2?
-        //
-        //   writebin(unk16, sas, swapit); // padding
-        //   writebin((int32_t)pgwsh, sas, swapit);
-        //   writebin(pgwpossh, sas, swapit);
-        //
-        //   writebin(unk16, sas, swapit); // padding
-        //
-        //   writebin((int32_t)pgwsh2, sas, swapit);
-        //   writebin(pgwpossh2, sas, swapit);
-        //   writebin(unk16, sas, swapit); // padding
-        //   writebin((int32_t)pgc, sas, swapit);
-        //
-        //   writebin(unk16, sas, swapit); // val ?
-        //   writebin(unk16, sas, swapit); // padding
-        //
-        //   writebin((int32_t)unk64, sas, swapit); // val 1?
-        //
-        //   writebin(addtextoff, sas, swapit); // val 7 | 8?
-        //   writebin(unk16, sas, swapit); // padding
-        //
-        //   for (int z = 0; z < 10; ++z) {
-        //     writebin((int32_t)unk64, sas, swapit); // 0
-        //   }
-        //
-        //   writebin(unk16, sas, swapit); // val
-        //   writebin(unk16, sas, swapit); // val 0|8 ?
-        //   writebin(unk16, sas, swapit); // val 4
-        //   writebin(unk16, sas, swapit); // val 0
-        //   writebin(todata, sas, swapit); // val 12,32|0? //
-        //
-        //   writebin(swlen, sas, swapit);
-        //   writebin(unk16, sas, swapit); // val 0?
-        //   writebin(unk16, sas, swapit); // val 20?
-        //   writebin(unk16, sas, swapit); //
-        //
-        //   writebin(unk16, sas, swapit); // 0
-        //   writebin(unk16, sas, swapit); // 12
-        //   writebin(unk16, sas, swapit); // 8 compr. code length?
-        //   writebin(unk16, sas, swapit); // 0
-        //
-        //   writebin(unk16, sas, swapit); // 12
-        //   writebin(unk16, sas, swapit); // 8
-        //   writebin(unk16, sas, swapit); // 0
-        //   writebin(textoff, sas, swapit); // 28
-        //   writebin(proclen, sas, swapit);
-        //
-        //   writebin(unk32, sas, swapit); // 1
-        //   writebin(unk32, sas, swapit); // 2
-        //   writebin(unk32, sas, swapit); // 3
-        //   writebin(unk32, sas, swapit); // 4
-        //   writebin(unk32, sas, swapit); // 5
-        //   writebin(unk32, sas, swapit); // 6
-        //   writebin(unk32, sas, swapit); // 7
-        //   writebin(unk32, sas, swapit); // 8
-        //   writebin(unk16, sas, swapit); // 4
-        //   writebin(unk16, sas, swapit); // 1
-        //
-        //   writebin(sh_num, sas, swapit);
-        //   writebin(cn_maxlen, sas, swapit);
-        //   writebin(l_maxlen, sas, swapit);
-        //
-        //   for (int z = 0; z < 3; ++z) {
-        //     writebin(unk32, sas, swapit); // 0
-        //   }
-        //
-        //   writebin(rowsonpg, sas, swapit);
-        //
-        //   writebin(unk16, sas, swapit); // 1
-        //   writebin(unk32, sas, swapit); // 2
-        //   writebin(unk16, sas, swapit); // 4
-        //   writebin(unk16, sas, swapit); // 5
-        //   writebin(unk16, sas, swapit); // 6
-        //   writebin(unk32, sas, swapit); // 7
-        //   writebin(unk16, sas, swapit); // 9
-        //   writebin(unk32, sas, swapit); // 10
-        //   writebin(unk16, sas, swapit); // 12
-        //   writebin(unk16, sas, swapit); // 13
-        //   writebin(unk16, sas, swapit); // 14
-        //   writebin(unk16, sas, swapit); // 15
-        //   writebin(dataoffset, sas, swapit); // 16
-        //   writebin(unk16, sas, swapit); // 17
-        //   writebin(unk16, sas, swapit);// 18
-        //   writebin(unk16, sas, swapit); // 19
-        //   writebin(unk16, sas, swapit); // 20
+        } else {
+
+          writebin(unk32, sas, swapit);
+          writebin(unk32, sas, swapit);
+          writebin(unk32, sas, swapit);
+          writebin(unk32, sas, swapit);
+
+          writebin((int32_t)rowlength, sas, swapit);
+          writebin((int32_t)rowcount, sas, swapit);
+          writebin((int32_t)delobs, sas, swapit); // deleted obs?
+          writebin(unk32, sas, swapit);
+          writebin((int32_t)colf_p1, sas, swapit);
+          writebin((int32_t)colf_p2, sas, swapit);
+          writebin(unk32, sas, swapit);
+          writebin(unk32, sas, swapit);
+          writebin((int32_t)pgsize, sas, swapit);
+          writebin(unk32, sas, swapit);
+          writebin((int32_t)rcmix, sas, swapit);
+          writebin(uunk32, sas, swapit);
+          writebin(uunk32, sas, swapit);
+
+          for (int z = 0; z < numzeros; ++z) {
+            writebin((int32_t)unk64, sas, swapit);
+          }
+
+          writebin(pgidx, sas, swapit);
+
+          for (int z = 0; z < 10; ++z) {
+            writebin((int32_t)unk64, sas, swapit);;
+          }
+
+          writebin((int32_t)ptk64_01, sas, swapit); // val 1?
+          writebin((int32_t)ptk64_02, sas, swapit); // val 2?
+          writebin((int32_t)ptk64_03, sas, swapit); // val 1?
+          writebin((int32_t)ptk64_04, sas, swapit); // val 7?
+          writebin((int32_t)ptk64_05, sas, swapit); // val 7?
+          writebin((int32_t)ptk64_06, sas, swapit); // val 7?
+          writebin((int32_t)ptk64_07, sas, swapit); // val 7?
+          writebin((int32_t)ptk64_08, sas, swapit); // val 7?
+          writebin((int32_t)ptk64_09, sas, swapit); // val 7?
+          writebin((int32_t)ptk64_10, sas, swapit); // val 7?
+
+          // // padding?
+          // writebin(unk32, sas, swapit);
+          // writebin(unk32, sas, swapit);
+          //
+          // writebin(unk32, sas, swapit); // val 1?
+          // writebin(unk16, sas, swapit); // val 2?
+          //
+          // writebin(unk16, sas, swapit); // padding
+          // writebin((int32_t)pgwsh, sas, swapit);
+          // writebin(pgwpossh, sas, swapit);
+          //
+          // writebin(unk16, sas, swapit); // padding
+          //
+          // writebin((int32_t)pgwsh2, sas, swapit);
+          // writebin(pgwpossh2, sas, swapit);
+          // writebin(unk16, sas, swapit); // padding
+          // writebin((int32_t)pgc, sas, swapit);
+          //
+          // writebin(unk16, sas, swapit); // val ?
+          // writebin(unk16, sas, swapit); // padding
+          //
+          // writebin((int32_t)unk64, sas, swapit); // val 1?
+          //
+          // writebin(addtextoff, sas, swapit); // val 7 | 8?
+          // writebin(unk16, sas, swapit); // padding
+
+          for (int z = 0; z < 10; ++z) {
+            writebin((int32_t)unk64, sas, swapit); // 0
+          }
+
+          writebin(unk16, sas, swapit); // val
+          writebin(unk16, sas, swapit); // val 0|8 ?
+          writebin(unk16, sas, swapit); // val 4
+          writebin(unk16, sas, swapit); // val 0
+          writebin(todata, sas, swapit); // val 12,32|0? //
+
+          writebin(swlen, sas, swapit);
+          writebin(unk16, sas, swapit); // val 0?
+          writebin(unk16, sas, swapit); // val 20?
+          writebin(unk16, sas, swapit); //
+
+          writebin(unk16, sas, swapit); // 0
+          writebin(unk16, sas, swapit); // 12
+          writebin(unk16, sas, swapit); // 8 compr. code length?
+          writebin(unk16, sas, swapit); // 0
+
+          writebin(unk16, sas, swapit); // 12
+          writebin(unk16, sas, swapit); // 8
+          writebin(unk16, sas, swapit); // 0
+          writebin(textoff, sas, swapit); // 28
+          writebin(proclen, sas, swapit);
+
+          writebin(unk32, sas, swapit); // 1
+          writebin(unk32, sas, swapit); // 2
+          writebin(unk32, sas, swapit); // 3
+          writebin(unk32, sas, swapit); // 4
+          writebin(unk32, sas, swapit); // 5
+          writebin(unk32, sas, swapit); // 6
+          writebin(unk32, sas, swapit); // 7
+          writebin(unk32, sas, swapit); // 8
+          writebin(unk16, sas, swapit); // 4
+          writebin(unk16, sas, swapit); // 1
+
+          writebin(sh_num, sas, swapit);
+          writebin(cn_maxlen, sas, swapit);
+          writebin(l_maxlen, sas, swapit);
+
+          for (int z = 0; z < 3; ++z) {
+            writebin(unk32, sas, swapit); // 0
+          }
+
+          writebin(rowsonpg, sas, swapit);
+
+          writebin(unk16, sas, swapit); // 1
+          writebin(unk32, sas, swapit); // 2
+          writebin(unk16, sas, swapit); // 4
+          writebin(unk16, sas, swapit); // 5
+          writebin(unk16, sas, swapit); // 6
+          writebin(unk32, sas, swapit); // 7
+          writebin(unk16, sas, swapit); // 9
+          writebin(unk32, sas, swapit); // 10
+          writebin(unk16, sas, swapit); // 12
+          writebin(unk16, sas, swapit); // 13
+          writebin(unk16, sas, swapit); // 14
+          writebin(unk16, sas, swapit); // 15
+          writebin(dataoffset, sas, swapit); // 16
+          writebin(unk16, sas, swapit); // 17
+          writebin(unk16, sas, swapit);// 18
+          writebin(unk16, sas, swapit); // 19
+          writebin(unk16, sas, swapit); // 20
       }
 
 
@@ -1651,8 +1703,13 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
 
       /************************************************************************/
 
+      auto exp_endpos = headersize + pagecount * pagesize;
+      auto got_endpos = sas.tellg();
 
-      Rcout << "END OF FILE REACHED " << sas.tellg() << std::endl;
+      Rcout << "END OF FILE REACHED " << got_endpos << std::endl;
+      if (got_endpos < exp_endpos)
+        warning("Unexpected position at end of file. %d and not %d",
+                got_endpos, exp_endpos);
 
 
       /*write correct offsets *************************************************/
