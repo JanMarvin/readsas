@@ -1,4 +1,5 @@
-# Readsas [![Build Status](https://travis-ci.org/JanMarvin/readsas.svg?branch=master)](https://travis-ci.org/JanMarvin/readsas) [![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/JanMarvin/readsas?branch=master&svg=true)](https://ci.appveyor.com/project/JanMarvin/readsas)
+# Readsas
+![R-CMD-check](https://github.com/JanMarvin/readspss/workflows/R-CMD-check/badge.svg)
 
 R package using Rcpp to parse a SAS file into a data.frame(). Currently 
 `read.sas` is the main function and feature of this package.
