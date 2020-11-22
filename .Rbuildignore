@@ -1,4 +1,5 @@
 ^appveyor.yml$
 ^\.travis\.yml$
+^\.github$
 ^.*\.Rproj$
 ^\.Rproj\.user$
