@@ -2014,17 +2014,16 @@ Rcpp::List readsas(const char * filePath,
           }
         }
 
-
         if (delobs > 0) {
 
           // for (auto pg = 0; pg < pagecount; ++pg) {
-            Rcout << deloffsets[page] << std::endl;
-            auto pos = deloffsets[page] + (page +1) * pagesize + 249;
-            Rcout << pos << std::endl;
-            sas.seekg(pos, sas.beg);
-            unkdub = readbin(unkdub, sas, swapit);
+          Rcout << deloffsets[page] + (page+1) * pagesize << std::endl;
+          auto pos = deloffsets[page] + (page+1) * pagesize + dataoffset;
+          Rcout << pos << std::endl;
+          sas.seekg(pos, sas.beg);
+          unk32 = readbin(unk32, sas, swapit);
 
-            Rcout << "unkdub: " << unkdub << std::endl;
+          Rcout << "unk32: " << unk32 << std::endl;
           // }
         }
 
