@@ -455,6 +455,10 @@ Rcpp::List readsas(const char * filePath,
       int64_t unk1 = 0, unk2 = 0, deloffset = 0;
       int32_t c5typ = 0; /* check if variable name, format or label */
 
+      Rcout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << std::endl;
+      Rcout << sas.tellg() << std::endl;
+      Rcout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << std::endl;
+
       // Page Offset Table
       if (u64 == 4) {
         pageseqnum32 = readbin(pageseqnum32, sas, swapit);
@@ -2017,8 +2021,8 @@ Rcpp::List readsas(const char * filePath,
         if (delobs > 0) {
 
           // for (auto pg = 0; pg < pagecount; ++pg) {
-          Rcout << deloffsets[page] + (page+1) * pagesize << std::endl;
-          auto pos = deloffsets[page] + (page+1) * pagesize + dataoffset;
+          Rcout << deloffsets[page] << std::endl;
+          auto pos = deloffsets[page] + headersize + page * pagesize + dataoffset;
           Rcout << pos << std::endl;
           sas.seekg(pos, sas.beg);
           unk32 = readbin(unk32, sas, swapit);
