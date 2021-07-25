@@ -438,6 +438,7 @@ Rcpp::List readsas(const char * filePath,
     std::vector<uint32_t> totalrowsvec(pagecount);
     std::vector<int32_t> pageseqnum(pagecount);
 
+    std::vector<int64_t> deloffsets(pagecount);
 
     // begin reading pages ---------------------------------------------------//
     for (auto pg = 0; pg < pagecount; ++pg) {
@@ -451,7 +452,7 @@ Rcpp::List readsas(const char * filePath,
       }
 
 
-      int64_t unk1 = 0, unk2 = 0, unk3 = 0;
+      int64_t unk1 = 0, unk2 = 0, deloffset = 0;
       int32_t c5typ = 0; /* check if variable name, format or label */
 
       // Page Offset Table
@@ -460,21 +461,21 @@ Rcpp::List readsas(const char * filePath,
         unk32 = readbin(unk32, sas, swapit);
         unk1 = readbin(unk1, sas, swapit);
         unk2 = readbin(unk2, sas, swapit);
-        unk3 = readbin(unk3, sas, swapit);
+        deloffsets[pg] = readbin(deloffset, sas, swapit);
       } else {
         pageseqnum32 = readbin(pageseqnum32, sas, swapit);
         unk1 = readbin((int32_t)unk1, sas, swapit);
         unk2 = readbin((int32_t)unk2, sas, swapit);
-        unk3 = readbin((int32_t)unk3, sas, swapit);
+        deloffsets[pg] = readbin((int32_t)deloffset, sas, swapit);
       }
 
-      if (debug) {
-        if (u64 == 4) Rcout << unk32 << std::endl;
+      // if (debug) {
+        if (u64 == 4) Rcout << "unk32 " << unk32 << std::endl;
 
-        Rcout << unk1<< std::endl;
-        Rcout << unk2<< std::endl;
-        Rcout << unk3<< std::endl;
-      }
+        Rcout << "unk1 " << unk1<< std::endl;
+        Rcout << "unk2 " << unk2<< std::endl;
+        Rcout << "deloffset " << deloffset<< std::endl;
+      // }
 
       pageseqnum[pg] = pageseqnum32;
 
@@ -494,7 +495,7 @@ Rcpp::List readsas(const char * filePath,
       totalrows += rowsperpage[pg];
       totalrowsvec[pg] = totalrows;
 
-      if (debug)
+      // if (debug)
         Rprintf("PAGE_TYPE: %d ; BC: %d ; SC: %d ; unk16: %d ---- \n",
                 PAGE_TYPE, BLOCK_COUNT, SUBHEADER_COUNT, unk16);
 
@@ -538,7 +539,7 @@ Rcpp::List readsas(const char * filePath,
             // if (zero != 0) stop("zero not 0, but %d", zero);
           }
 
-          if (debug)
+          // if (debug)
             Rprintf("SH_OFF: %d ; SH_LEN: %d ; COMPR.: %d ; SH_TYPE: %d \n",
                     potabs[i].SH_OFF, potabs[i].SH_LEN,
                     potabs[i].COMPRESSION, potabs[i].SH_TYPE);
@@ -2013,6 +2014,20 @@ Rcpp::List readsas(const char * filePath,
           }
         }
 
+
+        if (delobs > 0) {
+
+          // for (auto pg = 0; pg < pagecount; ++pg) {
+            Rcout << deloffsets[page] << std::endl;
+            auto pos = deloffsets[page] + (page +1) * pagesize + 249;
+            Rcout << pos << std::endl;
+            sas.seekg(pos, sas.beg);
+            unkdub = readbin(unkdub, sas, swapit);
+
+            Rcout << "unkdub: " << unkdub << std::endl;
+          // }
+        }
+
         auto pp = data_pos[page];
         auto pos = pp + rowlength * ii;
 
@@ -2219,6 +2234,7 @@ Rcpp::List readsas(const char * filePath,
       sas.close();
 
     }
+
 
     if (!debug) {
       if ( remove(tempstr.c_str()) != 0 )
