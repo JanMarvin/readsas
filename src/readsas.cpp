@@ -469,13 +469,13 @@ Rcpp::List readsas(const char * filePath,
         deloffsets[pg] = readbin((int32_t)deloffset, sas, swapit);
       }
 
-      // if (debug) {
+      if (debug) {
         if (u64 == 4) Rcout << "unk32 " << unk32 << std::endl;
 
         Rcout << "unk1 " << unk1<< std::endl;
         Rcout << "unk2 " << unk2<< std::endl;
         Rcout << "deloffset " << deloffset<< std::endl;
-      // }
+      }
 
       pageseqnum[pg] = pageseqnum32;
 
@@ -495,7 +495,7 @@ Rcpp::List readsas(const char * filePath,
       totalrows += rowsperpage[pg];
       totalrowsvec[pg] = totalrows;
 
-      // if (debug)
+      if (debug)
         Rprintf("PAGE_TYPE: %d ; BC: %d ; SC: %d ; unk16: %d ---- \n",
                 PAGE_TYPE, BLOCK_COUNT, SUBHEADER_COUNT, unk16);
 
@@ -539,7 +539,7 @@ Rcpp::List readsas(const char * filePath,
             // if (zero != 0) stop("zero not 0, but %d", zero);
           }
 
-          // if (debug)
+          if (debug)
             Rprintf("SH_OFF: %d ; SH_LEN: %d ; COMPR.: %d ; SH_TYPE: %d \n",
                     potabs[i].SH_OFF, potabs[i].SH_LEN,
                     potabs[i].COMPRESSION, potabs[i].SH_TYPE);
