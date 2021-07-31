@@ -452,7 +452,7 @@ Rcpp::List readsas(const char * filePath,
       }
 
 
-      int64_t unk1 = 0, unk2 = 0, deloffset = 0;
+      int64_t unk1 = 0, unk2 = 0, unk3 = 0, deloffset = 0;
       int32_t c5typ = 0; /* check if variable name, format or label */
 
       Rcout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << std::endl;
@@ -478,7 +478,7 @@ Rcpp::List readsas(const char * filePath,
 
         Rcout << "unk1 " << unk1<< std::endl;
         Rcout << "unk2 " << unk2<< std::endl;
-        Rcout << "deloffset " << deloffset<< std::endl;
+        Rcout << "deloffset " << deloffsets[pg] << std::endl;
       }
 
       pageseqnum[pg] = pageseqnum32;
@@ -2301,6 +2301,7 @@ Rcpp::List readsas(const char * filePath,
 
     df.attr("headersize") = headersize;
     df.attr("pagesize") = pagesize;
+    df.attr("deloffsets") = deloffsets;
 
     if (debug) {
       df.attr("cnidx") = cnidx;
