@@ -3,7 +3,6 @@
 .Rhistory
 .RData
 .Rbuildignore
-.github/
 src/*.o
 src/*.so
 src/*.dll
