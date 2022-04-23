@@ -4,8 +4,13 @@
 \alias{read.sas}
 \title{read.sas}
 \usage{
-read.sas(file, debug = FALSE, convert.dates = TRUE, recode = TRUE,
-  rowcount = -1)
+read.sas(
+  file,
+  debug = FALSE,
+  convert.dates = TRUE,
+  recode = TRUE,
+  rowcount = -1
+)
 }
 \arguments{
 \item{file}{file to read}
