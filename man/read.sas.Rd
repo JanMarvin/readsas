@@ -9,7 +9,8 @@ read.sas(
   debug = FALSE,
   convert.dates = TRUE,
   recode = TRUE,
-  rowcount = -1
+  rowcount = -1,
+  remove_deleted = TRUE
 )
 }
 \arguments{
@@ -23,6 +24,8 @@ read.sas(
 
 \item{rowcount}{number of rows to import (from start). negative values are
 ignored}
+
+\item{remove_deleted}{logical if deleted rows should be removed from data}
 }
 \description{
 read.sas

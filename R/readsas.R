@@ -8,13 +8,14 @@
 #'@param recode default is TRUE
 #'@param rowcount number of rows to import (from start). negative values are
 #' ignored
+#'@param remove_deleted logical if deleted rows should be removed from data
 #'
 #'@useDynLib readsas, .registration=TRUE
 #'@importFrom utils download.file
 #'
 #'@export
 read.sas <- function(file, debug = FALSE, convert.dates = TRUE, recode = TRUE,
-                     rowcount = -1) {
+                     rowcount = -1, remove_deleted = TRUE) {
 
   # Check if path is a url
   if (length(grep("^(http|ftp|https)://", file))) {
@@ -94,6 +95,10 @@ read.sas <- function(file, debug = FALSE, convert.dates = TRUE, recode = TRUE,
   attr(data, "created2")  <- NULL
   attr(data, "modified2") <- NULL
 
+  if (remove_deleted) {
+    sel <- attr(data, "deleted")
+    data <- data[!sel, , drop = FALSE]
+  }
 
   return(data)
 }
