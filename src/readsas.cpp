@@ -549,51 +549,6 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
           SUBHEADER_POINTER_LENGTH = 12;
         }
 
-        if (PAGE_TYPE == 384 || PAGE_TYPE == 640 || PAGE_TYPE == 1024) {
-
-          auto start_pos = sas.tellg();
-
-
-          int alignCorrection = (
-            (PAGE_BIT_OFFSET + 8) +
-              SUBHEADER_POINTERS_OFFSET +
-              SUBHEADER_COUNT * SUBHEADER_POINTER_LENGTH
-          ) % 8;
-
-          Rcout << "alignCorrection: " << alignCorrection << std::endl;
-
-          int deletedMapOffset = (PAGE_BIT_OFFSET + 8) +
-            PAGE_DELETED_POINTER_LENGTH +
-            alignCorrection + // align?
-            (SUBHEADER_COUNT * SUBHEADER_POINTER_LENGTH) +
-            ((BLOCK_COUNT - SUBHEADER_COUNT) * rowlength);
-
-          Rcout << "SUBHEADER_COUNT " << SUBHEADER_COUNT << std::endl;
-          Rcout << "rowlength " << rowlength << std::endl;
-          Rcout << "dMO " << deletedMapOffset << std::endl;
-
-          auto dmo_pos = (headersize + pg * pagesize) + deletedMapOffset;
-          Rcout << "read from: " << dmo_pos << std::endl;
-
-          sas.seekg(dmo_pos, sas.beg);
-
-          int32_t dm_len = std::ceil(rowsperpage[pg] / 8);
-
-          std::string delmarker = "";
-          for (auto dm = 0; dm < dm_len; ++dm) {
-            unk8 = readbin(unk8, sas, swapit);
-            // Rcout << dm << ": " << unk8 << std::endl;
-            Rprintf("unk8: %d\n", unk8);
-
-            delmarker += std::bitset<8>(unk8).to_string(); //to binary
-          }
-
-          pagedelmarker[pg] = delmarker;
-
-          sas.seekg(start_pos, sas.beg);
-
-        }
-
         for (auto i = 0; i < SUBHEADER_COUNT; ++i) {
           if (u64 == 4) {
 
@@ -1786,6 +1741,53 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
             }
 
           }
+        }
+
+        // check for deleted rows
+        if (PAGE_TYPE == 384 || PAGE_TYPE == 640 || PAGE_TYPE == 1024) {
+
+          auto start_pos = sas.tellg();
+
+
+          int alignCorrection = (
+            (PAGE_BIT_OFFSET + 8) +
+              SUBHEADER_POINTERS_OFFSET +
+              SUBHEADER_COUNT * SUBHEADER_POINTER_LENGTH
+          ) % 8;
+
+          Rcout << "alignCorrection: " << alignCorrection << std::endl;
+
+          int deletedMapOffset = (PAGE_BIT_OFFSET + 8) +
+            PAGE_DELETED_POINTER_LENGTH +
+            alignCorrection + // align?
+            (SUBHEADER_COUNT * SUBHEADER_POINTER_LENGTH) +
+            ((BLOCK_COUNT - SUBHEADER_COUNT) * rowlength);
+
+          Rcout << "SUBHEADER_COUNT " << SUBHEADER_COUNT << std::endl;
+          Rcout << "rowlength " << rowlength << std::endl;
+          Rcout << "dMO " << deletedMapOffset << std::endl;
+
+          auto dmo_pos = (headersize + pg * pagesize) + deletedMapOffset;
+          Rcout << "read from: " << dmo_pos << std::endl;
+
+          sas.seekg(dmo_pos, sas.beg);
+
+          int32_t dm_len = std::ceil(rowsperpage[pg] / 8);
+          Rcout << "dm_len: " << dm_len << std::endl;
+
+          std::string delmarker = "";
+          for (auto dm = 0; dm < dm_len; ++dm) {
+            unk8 = readbin(unk8, sas, swapit);
+            // Rcout << dm << ": " << unk8 << std::endl;
+            Rprintf("unk8: %d\n", unk8);
+
+            delmarker += std::bitset<8>(unk8).to_string(); //to binary
+          }
+
+          pagedelmarker[pg] = delmarker;
+
+          sas.seekg(start_pos, sas.beg);
+
         }
 
       }
