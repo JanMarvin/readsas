@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Jan Marvin Garbuszus
+ * Copyright (C) 2019, 2022 Jan Marvin Garbuszus
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -22,6 +22,7 @@
 #include <fstream>
 #include <streambuf>
 #include <regex>
+#include <bitset>
 
 #include "sas.h"
 #include "uncompress.h"
@@ -275,7 +276,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
     /* begin block of 4 ----------------------------------------------------- */
     unk8 = readbin(unk8, sas, swapit); // 0
     if (debug) Rprintf("%d\n", unk8);
-    unk8 = readbin(unk8, sas, swapit); // 16 | 32
+    unk8 = readbin(unk8, sas, swapit); // 16 | 32: PAGE_BIT_OFFSET?
     if (debug) Rprintf("%d\n", unk8);
     unk8 = readbin(unk8, sas, swapit); // 3
     if (debug) Rprintf("%d\n", unk8);
@@ -434,10 +435,28 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
     std::vector<int32_t> totalrowsvec(pagecount);
     std::vector<int32_t> pageseqnum(pagecount);
 
+    std::vector<std::string> pagedelmarker(pagecount);
+
+    int8_t PAGE_BIT_OFFSET = 0;
+    int8_t PAGE_DELETED_POINTER_OFFSET = 0;
+    int8_t SUBHEADER_POINTER_LENGTH = 0;
+    int8_t SUBHEADER_POINTERS_OFFSET = 8;
+
+    if (u64 == 4) {
+      PAGE_BIT_OFFSET = 32;
+      PAGE_DELETED_POINTER_OFFSET = 24;
+      SUBHEADER_POINTER_LENGTH = 24;
+    } else {
+      PAGE_BIT_OFFSET = 16;
+      PAGE_DELETED_POINTER_OFFSET = 12;
+      SUBHEADER_POINTER_LENGTH = 12;
+    }
 
     // begin reading pages ---------------------------------------------------//
     for (auto pg = 0; pg < pagecount; ++pg) {
       checkUserInterrupt();
+
+      // Rcout << "--- new page ------------------------------------" << std::endl;
 
       /* should already be at this position for pg == 1 */
       if (pagecount > 0) {
@@ -446,9 +465,9 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
         // Rcout << pagenumx << std::endl;
       }
 
-
-      int64_t unk1 = 0, unk2 = 0, unk3 = 0;
+      int64_t unk1 = 0, unk2 = 0;
       int32_t c5typ = 0; /* check if variable name, format or label */
+      int64_t PAGE_DELETED_POINTER_LENGTH = 0;
 
       // Page Offset Table
       if (u64 == 4) {
@@ -456,24 +475,29 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
         unk32 = readbin(unk32, sas, swapit);
         unk1 = readbin(unk1, sas, swapit);
         unk2 = readbin(unk2, sas, swapit);
-        unk3 = readbin(unk3, sas, swapit);
+        PAGE_DELETED_POINTER_LENGTH = readbin(PAGE_DELETED_POINTER_LENGTH, sas, swapit);
       } else {
         pageseqnum32 = readbin(pageseqnum32, sas, swapit);
         unk1 = readbin((int32_t)unk1, sas, swapit);
         unk2 = readbin((int32_t)unk2, sas, swapit);
-        unk3 = readbin((int32_t)unk3, sas, swapit);
+        PAGE_DELETED_POINTER_LENGTH = readbin((int32_t)PAGE_DELETED_POINTER_LENGTH, sas, swapit);
       }
+      // Rcout << "Unk1: "  << unk1 << std::endl;
+      // Rcout << "Unk2: " << unk2 << std::endl;
+      // Rcout << "PAGE_DELETED_POINTER_LENGTH: " << PAGE_DELETED_POINTER_LENGTH << std::endl;
 
       pageseqnum[pg] = pageseqnum32;
 
       // Rcout << "pageseqnum: " << pageseqnum32 << std::endl;
-      // Rcout << unk1 << " " << unk2 << " " << unk3 << std::endl;
+      // Rcout << unk1 << " " << unk2 << " " << std::endl;
+
+      // Rcout << sas.tellg() << std::endl;
 
       PAGE_TYPE       = readbin(PAGE_TYPE, sas, swapit);
       BLOCK_COUNT     = readbin(BLOCK_COUNT, sas, swapit);
       SUBHEADER_COUNT = readbin(SUBHEADER_COUNT, sas, swapit);
       unk16           = readbin(unk16, sas, swapit);
-      Rcout << unk16 << std::endl;
+      // Rcout << unk16 << std::endl;
 
       // Rcout << sas.tellg() << std::endl;
 
@@ -483,30 +507,9 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
       totalrows += rowsperpage[pg];
       totalrowsvec[pg] = totalrows;
 
-      // if (debug)
-      Rprintf("PAGE_TYPE: %d ; BC: %d ; SC: %d ; unk16: %d ---- \n",
-              PAGE_TYPE, BLOCK_COUNT, SUBHEADER_COUNT, unk16);
-
-      // if (PAGE_TYPE == 384) {
-      //
-      //   unk32 = readbin(unk32, sas, swapit);
-      //   Rcout << unk32 << std::endl;
-      //
-      //   unk32 = readbin(unk32, sas, swapit);
-      //   Rcout << unk32 << std::endl;
-      //
-      //   unk32 = readbin(unk32, sas, swapit);
-      //   Rcout << unk32 << std::endl;
-      //
-      //   unk32 = readbin(unk32, sas, swapit);
-      //   Rcout << unk32 << std::endl;
-      //
-      //   unk32 = readbin(unk32, sas, swapit);
-      //   Rcout << unk32 << std::endl;
-      //
-      // }
-
-
+      if (debug)
+        Rprintf("PAGE_TYPE: %d ; BC: %d ; SC: %d ; unk16: %d ---- \n",
+                PAGE_TYPE, BLOCK_COUNT, SUBHEADER_COUNT, unk16);
 
       int16_t zero = 0;
       int64_t sh_tot_len = 0;
@@ -523,31 +526,13 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
             PAGE_TYPE == 0))                        // PAGE_META_TYPE_1
       {
 
-        auto PAGE_BIT_OFFSET_X64 = 32;
-        auto PAGE_BIT_OFFSET_X32 = 16;
-        int currentPageDeletedPointer = 16;
-
-        if (PAGE_TYPE == 384) {
-
-          int deletedMapOffset = (PAGE_BIT_OFFSET_X32 + 8) +
-            currentPageDeletedPointer +
-            0 +
-            (SUBHEADER_COUNT * 12) +
-            ((BLOCK_COUNT - SUBHEADER_COUNT) * 21);
-
-          Rcout << "SUBHEADER_COUNT " << SUBHEADER_COUNT << std::endl;
-          Rcout << "rowlength " << rowlength << std::endl;
-          Rcout << "dMO " << deletedMapOffset << std::endl;
-
-        }
-
         for (auto i = 0; i < SUBHEADER_COUNT; ++i) {
           if (u64 == 4) {
 
-            potabs[i].SH_OFF = readbin(potabs[i].SH_OFF, sas, swapit); // 8
-            potabs[i].SH_LEN = readbin(potabs[i].SH_LEN, sas, swapit); // 16
+            potabs[i].SH_OFF = readbin(potabs[i].SH_OFF, sas, swapit);           // 8
+            potabs[i].SH_LEN = readbin(potabs[i].SH_LEN, sas, swapit);           // 16
             potabs[i].COMPRESSION = readbin(potabs[i].COMPRESSION, sas, swapit); // 20
-            potabs[i].SH_TYPE = readbin(potabs[i].SH_TYPE, sas, swapit); // 24
+            potabs[i].SH_TYPE = readbin(potabs[i].SH_TYPE, sas, swapit);         // 24
 
             zero = readbin(zero, sas, swapit);
             // Rcout << zero << std::endl;
@@ -555,16 +540,13 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
             // Rcout << zero << std::endl;
             zero = readbin(zero, sas, swapit);
             // Rcout << zero << std::endl;
-
-            // unk32 = readbin(unk32, sas, swapit);
-            // Rcout << "unk32: " << unk32 << std::endl;
 
           } else {
 
-            potabs[i].SH_OFF = readbin((uint32_t)potabs[i].SH_OFF, sas, swapit);
-            potabs[i].SH_LEN = readbin((uint32_t)potabs[i].SH_LEN, sas, swapit);
-            potabs[i].COMPRESSION = readbin(potabs[i].COMPRESSION, sas, swapit);
-            potabs[i].SH_TYPE = readbin(potabs[i].SH_TYPE, sas, swapit);
+            potabs[i].SH_OFF = readbin((uint32_t)potabs[i].SH_OFF, sas, swapit); // 4
+            potabs[i].SH_LEN = readbin((uint32_t)potabs[i].SH_LEN, sas, swapit); // 8
+            potabs[i].COMPRESSION = readbin(potabs[i].COMPRESSION, sas, swapit); // 10
+            potabs[i].SH_TYPE = readbin(potabs[i].SH_TYPE, sas, swapit);         // 12
 
             zero = readbin(zero, sas, swapit);
             // Rcout << zero << std::endl;
@@ -861,7 +843,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
 
                 /* maybe SAS version information at o131018 ? */
                 unk32 = readbin(unk32, sas, swapit); // 1
-                Rcout << "1 " << unk32 << std::endl;
+                // Rcout << "1 " << unk32 << std::endl;
                 unk32 = readbin(unk32, sas, swapit); // 2
                 if (unk32 != 0) stop("unk32 1. expected 0 is %d", unk32);
                 unk32 = readbin(unk32, sas, swapit); // 3
@@ -873,7 +855,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
                 unk16 = readbin(unk16, sas, swapit); // 1
                 if (unk16 != 0) stop("unk16 01. expected 0 is %d", unk16);
                 unk32 = readbin(unk32, sas, swapit); // 2
-                Rcout << "2 " << unk32 << std::endl;
+                // Rcout << "2 " << unk32 << std::endl;
                 unk16 = readbin(unk16, sas, swapit); // 4
                 if (unk16 != 0) stop("unk16 04. expected 0 is %d", unk16);
                 unk16 = readbin(unk16, sas, swapit); // 5
@@ -885,7 +867,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
                 unk16 = readbin(unk16, sas, swapit); // 9
                 if (unk16 != 0) stop("unk16 09. expected 0 is %d", unk16);
                 unk32 = readbin(unk32, sas, swapit); // 10
-                Rcout << "10 "<< unk32 << std::endl; // delobs
+                // Rcout << "10 "<< unk32 << std::endl; // delobs
                 // if (unk16 != 0) stop("unk16 11. expected 0 is %d", unk16);
                 unk16 = readbin(unk16, sas, swapit); // 12
                 if (unk16 != 0) stop("unk16 12. expected 0 is %d", unk16);
@@ -1065,7 +1047,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
 
 
                 unk32 = readbin(unk32, sas, swapit); // 1
-                Rcout << "1 " << unk32 << std::endl;
+                // Rcout << "1 " << unk32 << std::endl;
                 unk32 = readbin(unk32, sas, swapit); // 2
                 // Rcout << "2 " << unk32 << std::endl;
                 unk32 = readbin(unk32, sas, swapit); // 3
@@ -1103,7 +1085,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
                 unk16 = readbin(unk16, sas, swapit); // 1
                 if (unk16 != 0) stop("unk16 01. expected 0 is %d", unk16);
                 unk32 = readbin(unk32, sas, swapit); // 2
-                Rcout << "2 " << unk32 << std::endl;
+                // Rcout << "2 " << unk32 << std::endl;
                 unk16 = readbin(unk16, sas, swapit); // 4
                 if (unk16 != 0) stop("unk16 04. expected 0 is %d", unk16);
                 unk16 = readbin(unk16, sas, swapit); // 5
@@ -1114,8 +1096,8 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
                 // Rcout << "7 " << unk32 << std::endl; // nrows
                 unk16 = readbin(unk16, sas, swapit); // 9
                 if (unk16 != 0) stop("unk16 09. expected 0 is %d", unk16);
-                unk32 = readbin(unk32, sas, swapit); // 10
-                Rcout << "10 "<< unk32 << std::endl; // delobs
+                delobs = readbin((int32_t)delobs, sas, swapit); // 10
+                // Rcout << "10 "<< unk32 << std::endl; // delobs
                 // if (unk16 != 0) stop("unk16 11. expected 0 is %d", unk16);
                 unk16 = readbin(unk16, sas, swapit); // 12
                 if (unk16 != 0) stop("unk16 12. expected 0 is %d", unk16);
@@ -1735,6 +1717,66 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
           }
         }
 
+
+
+        /*
+         * The code to detect removed rows is based on the parso library
+         * Licensed under the Apache License, Version 2.0. Copyright 2015 EPAM
+         *
+         */
+
+        // check for deleted rows
+        if (PAGE_TYPE == 384 || PAGE_TYPE == 640 || PAGE_TYPE == 1024) {
+
+          auto start_pos = sas.tellg();
+
+          // TODO this calculation should be replaced with alignval assignment
+          int alignCorrection = (
+            (PAGE_BIT_OFFSET + 8) +
+              SUBHEADER_POINTERS_OFFSET +
+              SUBHEADER_COUNT * SUBHEADER_POINTER_LENGTH
+          ) % 8;
+
+          if (debug)
+            Rcout << "alignCorrection: " << alignCorrection << std::endl;
+
+          int deletedMapOffset = (PAGE_BIT_OFFSET + 8) +
+            PAGE_DELETED_POINTER_LENGTH +
+            alignCorrection + // alignval?
+            (SUBHEADER_COUNT * SUBHEADER_POINTER_LENGTH) +
+            (rowsperpage[pg] * rowlength);
+
+          auto dmo_pos = (headersize + pg * pagesize) + deletedMapOffset;
+
+          if (debug) {
+            Rcout << "SUBHEADER_COUNT " << SUBHEADER_COUNT << std::endl;
+            Rcout << "rowlength " << rowlength << std::endl;
+            Rcout << "dMO " << deletedMapOffset << std::endl;
+            Rcout << "read from: " << dmo_pos << std::endl;
+          }
+
+          sas.seekg(dmo_pos, sas.beg);
+
+
+          // every byte contains information for 8 rows
+          int32_t dm_len = (int32_t)std::ceil((double)rowsperpage[pg] / 8);
+          if (debug) Rcout << "dm_len: " << dm_len << std::endl;
+
+          std::string delmarker = "";
+          for (auto dm = 0; dm < dm_len; ++dm) {
+            unk8 = readbin(unk8, sas, swapit);
+            if (debug) Rprintf("unk8: %d\n", unk8);
+
+            delmarker += std::bitset<8>(unk8).to_string(); //to binary
+            if (debug) Rcout << delmarker << std::endl;
+          }
+
+          pagedelmarker[pg] = delmarker;
+
+          sas.seekg(start_pos, sas.beg);
+
+        }
+
       }
       else
       {
@@ -1824,7 +1866,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
 
     // 1. Create Rcpp::List
     Rcpp::List df(colnum);
-    for (auto i=0; i<colnum; ++i)
+    for (auto i = 0; i < colnum; ++i)
     {
       int32_t const type = vartyps[i];
 
@@ -1844,12 +1886,14 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
 
     if (debug)
     {
-      Rcout << "vartyps " << vartyps << std::endl;
+      Rcout << "vartyps "   << vartyps   << std::endl;
       Rcout << "coloffset " << coloffset << std::endl;
-      Rcout << "ordered " << ordered << std::endl;
+      Rcout << "ordered "   << ordered   << std::endl;
     }
 
     // new offset ----------------------------------------------------------- //
+
+    std::vector<bool> deleted(rowcount);
 
     bool firstpage = 0;
     if (compr == 0) {
@@ -1870,6 +1914,22 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
               break;
           }
 
+          // beg handle delmarker
+          std::string page_pagedelmarker = pagedelmarker[page];
+
+          // Rcout << page_pagedelmarker << std::endl;
+
+          std::string delmarked = "";
+          if (page_pagedelmarker.size() > 0 && ii < page_pagedelmarker.size()) {
+            delmarked = page_pagedelmarker[ii];
+            // Rcout << page_pagedelmarker[ii] << std::endl;
+          }
+          if (delmarked == "1")
+            deleted[i] = true;
+          else
+            deleted[i] = false;
+          // end handle delmarker
+
           if (totalrowsvec[page] == i) {
             ++page;
             ii = 0;
@@ -1887,8 +1947,10 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
 
 
         // check if position is equal to expected position
-        if (pos != (uint64_t)sas.tellg())
+        if (pos != (uint64_t)sas.tellg()) {
+          // Rcout << "shift" << std::endl;
           sas.seekg(pos, sas.beg);
+        }
 
         pos = 0;
 
@@ -2093,6 +2155,13 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
 
     df.attr("headersize") = headersize;
     df.attr("pagesize") = pagesize;
+
+    if (kk >= 0 && kk == rowcount) {
+      // deleted needs to be reduced if we ever skip the first row
+      deleted.resize(rowcount);
+    }
+
+    df.attr("deleted") = deleted;
 
     if (debug) {
       df.attr("cnidx") = cnidx;
