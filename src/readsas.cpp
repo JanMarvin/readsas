@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Jan Marvin Garbuszus
+ * Copyright (C) 2019, 2022 Jan Marvin Garbuszus
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -276,7 +276,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
     /* begin block of 4 ----------------------------------------------------- */
     unk8 = readbin(unk8, sas, swapit); // 0
     if (debug) Rprintf("%d\n", unk8);
-    unk8 = readbin(unk8, sas, swapit); // 16 | 32
+    unk8 = readbin(unk8, sas, swapit); // 16 | 32: PAGE_BIT_OFFSET?
     if (debug) Rprintf("%d\n", unk8);
     unk8 = readbin(unk8, sas, swapit); // 3
     if (debug) Rprintf("%d\n", unk8);
@@ -437,6 +437,20 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
 
     std::vector<std::string> pagedelmarker(pagecount);
 
+    int8_t PAGE_BIT_OFFSET = 0;
+    int8_t PAGE_DELETED_POINTER_OFFSET = 0;
+    int8_t SUBHEADER_POINTER_LENGTH = 0;
+    int8_t SUBHEADER_POINTERS_OFFSET = 8;
+
+    if (u64 == 4) {
+      PAGE_BIT_OFFSET = 32;
+      PAGE_DELETED_POINTER_OFFSET = 24;
+      SUBHEADER_POINTER_LENGTH = 24;
+    } else {
+      PAGE_BIT_OFFSET = 16;
+      PAGE_DELETED_POINTER_OFFSET = 12;
+      SUBHEADER_POINTER_LENGTH = 12;
+    }
 
     // begin reading pages ---------------------------------------------------//
     for (auto pg = 0; pg < pagecount; ++pg) {
@@ -451,8 +465,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
         // Rcout << pagenumx << std::endl;
       }
 
-
-      int64_t unk1 = 0, unk2 = 0, unk3 = 0;
+      int64_t unk1 = 0, unk2 = 0;
       int32_t c5typ = 0; /* check if variable name, format or label */
       int64_t PAGE_DELETED_POINTER_LENGTH = 0;
 
@@ -476,7 +489,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
       pageseqnum[pg] = pageseqnum32;
 
       // Rcout << "pageseqnum: " << pageseqnum32 << std::endl;
-      // Rcout << unk1 << " " << unk2 << " " << unk3 << std::endl;
+      // Rcout << unk1 << " " << unk2 << " " << std::endl;
 
       // Rcout << sas.tellg() << std::endl;
 
@@ -513,28 +526,13 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
             PAGE_TYPE == 0))                        // PAGE_META_TYPE_1
       {
 
-        int8_t PAGE_BIT_OFFSET = 0;
-        int8_t PAGE_DELETED_POINTER_OFFSET = 0;
-        int8_t SUBHEADER_POINTER_LENGTH = 0;
-        int8_t SUBHEADER_POINTERS_OFFSET = 8;
-
-        if (u64 == 4) {
-          PAGE_DELETED_POINTER_OFFSET = 24;
-          PAGE_BIT_OFFSET = 32;
-          SUBHEADER_POINTER_LENGTH = 24;
-        } else {
-          PAGE_DELETED_POINTER_OFFSET = 12;
-          PAGE_BIT_OFFSET = 16;
-          SUBHEADER_POINTER_LENGTH = 12;
-        }
-
         for (auto i = 0; i < SUBHEADER_COUNT; ++i) {
           if (u64 == 4) {
 
-            potabs[i].SH_OFF = readbin(potabs[i].SH_OFF, sas, swapit); // 8
-            potabs[i].SH_LEN = readbin(potabs[i].SH_LEN, sas, swapit); // 16
+            potabs[i].SH_OFF = readbin(potabs[i].SH_OFF, sas, swapit);           // 8
+            potabs[i].SH_LEN = readbin(potabs[i].SH_LEN, sas, swapit);           // 16
             potabs[i].COMPRESSION = readbin(potabs[i].COMPRESSION, sas, swapit); // 20
-            potabs[i].SH_TYPE = readbin(potabs[i].SH_TYPE, sas, swapit); // 24
+            potabs[i].SH_TYPE = readbin(potabs[i].SH_TYPE, sas, swapit);         // 24
 
             zero = readbin(zero, sas, swapit);
             // Rcout << zero << std::endl;
@@ -545,10 +543,10 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
 
           } else {
 
-            potabs[i].SH_OFF = readbin((uint32_t)potabs[i].SH_OFF, sas, swapit);
-            potabs[i].SH_LEN = readbin((uint32_t)potabs[i].SH_LEN, sas, swapit);
-            potabs[i].COMPRESSION = readbin(potabs[i].COMPRESSION, sas, swapit);
-            potabs[i].SH_TYPE = readbin(potabs[i].SH_TYPE, sas, swapit);
+            potabs[i].SH_OFF = readbin((uint32_t)potabs[i].SH_OFF, sas, swapit); // 4
+            potabs[i].SH_LEN = readbin((uint32_t)potabs[i].SH_LEN, sas, swapit); // 8
+            potabs[i].COMPRESSION = readbin(potabs[i].COMPRESSION, sas, swapit); // 10
+            potabs[i].SH_TYPE = readbin(potabs[i].SH_TYPE, sas, swapit);         // 12
 
             zero = readbin(zero, sas, swapit);
             // Rcout << zero << std::endl;
@@ -1718,6 +1716,14 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
 
           }
         }
+
+
+
+        /*
+         * The code to detect removed rows is based on the parso library
+         * Licensed under the Apache License, Version 2.0. Copyright 2015 EPAM
+         *
+         */
 
         // check for deleted rows
         if (PAGE_TYPE == 384 || PAGE_TYPE == 640 || PAGE_TYPE == 1024) {
