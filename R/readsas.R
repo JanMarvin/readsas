@@ -97,6 +97,14 @@ read.sas <- function(file, debug = FALSE, convert.dates = TRUE, recode = TRUE,
 
   if (remove_deleted) {
     sel <- attr(data, "deleted")
+    attr(data, "deleted") <- NULL
+
+    if (attr(data, "deleted_rows") > 0 && all(isFALSE(sel)))
+      warning("file indicated deleted rows, but none was found")
+
+    if (attr(data, "deleted_rows") == 0 && any(sel))
+      warning("file indicated no deleted rows, but some were found")
+
     data <- data[!sel, , drop = FALSE]
   }
 

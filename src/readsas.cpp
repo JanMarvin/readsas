@@ -466,12 +466,12 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
       } else {
         pageseqnum32 = readbin(pageseqnum32, sas, swapit);
         unk1 = readbin((int32_t)unk1, sas, swapit);
-        // Rcout << "Unk1: "  << unk1 << std::endl;
         unk2 = readbin((int32_t)unk2, sas, swapit);
-        // Rcout << "Unk2: " << unk2 << std::endl;
         PAGE_DELETED_POINTER_LENGTH = readbin((int32_t)PAGE_DELETED_POINTER_LENGTH, sas, swapit);
-        // Rcout << "PAGE_DELETED_POINTER_LENGTH: " << PAGE_DELETED_POINTER_LENGTH << std::endl;
       }
+      // Rcout << "Unk1: "  << unk1 << std::endl;
+      // Rcout << "Unk2: " << unk2 << std::endl;
+      // Rcout << "PAGE_DELETED_POINTER_LENGTH: " << PAGE_DELETED_POINTER_LENGTH << std::endl;
 
       pageseqnum[pg] = pageseqnum32;
 
@@ -497,27 +497,6 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
       if (debug)
         Rprintf("PAGE_TYPE: %d ; BC: %d ; SC: %d ; unk16: %d ---- \n",
                 PAGE_TYPE, BLOCK_COUNT, SUBHEADER_COUNT, unk16);
-
-      // if (PAGE_TYPE == 384) {
-      //
-      //   unk32 = readbin(unk32, sas, swapit);
-      //   Rcout << unk32 << std::endl;
-      //
-      //   unk32 = readbin(unk32, sas, swapit);
-      //   Rcout << unk32 << std::endl;
-      //
-      //   unk32 = readbin(unk32, sas, swapit);
-      //   Rcout << unk32 << std::endl;
-      //
-      //   unk32 = readbin(unk32, sas, swapit);
-      //   Rcout << unk32 << std::endl;
-      //
-      //   unk32 = readbin(unk32, sas, swapit);
-      //   Rcout << unk32 << std::endl;
-      //
-      // }
-
-
 
       int16_t zero = 0;
       int64_t sh_tot_len = 0;
@@ -563,9 +542,6 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
             // Rcout << zero << std::endl;
             zero = readbin(zero, sas, swapit);
             // Rcout << zero << std::endl;
-
-            // unk32 = readbin(unk32, sas, swapit);
-            // Rcout << "unk32: " << unk32 << std::endl;
 
           } else {
 
@@ -1122,7 +1098,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
                 // Rcout << "7 " << unk32 << std::endl; // nrows
                 unk16 = readbin(unk16, sas, swapit); // 9
                 if (unk16 != 0) stop("unk16 09. expected 0 is %d", unk16);
-                unk32 = readbin(unk32, sas, swapit); // 10
+                delobs = readbin((int32_t)delobs, sas, swapit); // 10
                 // Rcout << "10 "<< unk32 << std::endl; // delobs
                 // if (unk16 != 0) stop("unk16 11. expected 0 is %d", unk16);
                 unk16 = readbin(unk16, sas, swapit); // 12
@@ -1748,33 +1724,36 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
 
           auto start_pos = sas.tellg();
 
-          // how to check this?
+          // TODO this calculation should be replaced with alignval assignment
           int alignCorrection = (
             (PAGE_BIT_OFFSET + 8) +
               SUBHEADER_POINTERS_OFFSET +
               SUBHEADER_COUNT * SUBHEADER_POINTER_LENGTH
           ) % 8;
 
-          // Rcout << "alignCorrection: " << alignCorrection << std::endl;
+          if (debug)
+            Rcout << "alignCorrection: " << alignCorrection << std::endl;
 
           int deletedMapOffset = (PAGE_BIT_OFFSET + 8) +
             PAGE_DELETED_POINTER_LENGTH +
-            alignCorrection + // align?
+            alignCorrection + // alignval?
             (SUBHEADER_COUNT * SUBHEADER_POINTER_LENGTH) +
-            ((BLOCK_COUNT - SUBHEADER_COUNT) * rowlength);
-
-          // Rcout << "SUBHEADER_COUNT " << SUBHEADER_COUNT << std::endl;
-          // Rcout << "rowlength " << rowlength << std::endl;
-          // Rcout << "dMO " << deletedMapOffset << std::endl;
+            (rowsperpage[pg] * rowlength);
 
           auto dmo_pos = (headersize + pg * pagesize) + deletedMapOffset;
-          // Rcout << "read from: " << dmo_pos << std::endl;
+
+          if (debug) {
+            Rcout << "SUBHEADER_COUNT " << SUBHEADER_COUNT << std::endl;
+            Rcout << "rowlength " << rowlength << std::endl;
+            Rcout << "dMO " << deletedMapOffset << std::endl;
+            Rcout << "read from: " << dmo_pos << std::endl;
+          }
 
           sas.seekg(dmo_pos, sas.beg);
 
 
+          // every byte contains information for 8 rows
           int32_t dm_len = (int32_t)std::ceil((double)rowsperpage[pg] / 8);
-
           if (debug) Rcout << "dm_len: " << dm_len << std::endl;
 
           std::string delmarker = "";
@@ -1881,7 +1860,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
 
     // 1. Create Rcpp::List
     Rcpp::List df(colnum);
-    for (auto i=0; i<colnum; ++i)
+    for (auto i = 0; i < colnum; ++i)
     {
       int32_t const type = vartyps[i];
 
@@ -1901,14 +1880,14 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
 
     if (debug)
     {
-      Rcout << "vartyps " << vartyps << std::endl;
+      Rcout << "vartyps "   << vartyps   << std::endl;
       Rcout << "coloffset " << coloffset << std::endl;
-      Rcout << "ordered " << ordered << std::endl;
+      Rcout << "ordered "   << ordered   << std::endl;
     }
 
     // new offset ----------------------------------------------------------- //
 
-    Rcpp::LogicalVector deleted(no_init(rowcount));
+    std::vector<bool> deleted(rowcount);
 
     bool firstpage = 0;
     if (compr == 0) {
@@ -1918,9 +1897,6 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
 
       auto ii = 0;
       for (uint64_t i = 0; i < rowcount; ++i) {
-
-
-
 
         if (pagecount>0) {
 
@@ -1943,9 +1919,9 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
             // Rcout << page_pagedelmarker[ii] << std::endl;
           }
           if (delmarked == "1")
-            deleted[i] = 1;
+            deleted[i] = true;
           else
-            deleted[i] = 0;
+            deleted[i] = false;
           // end handle delmarker
 
           if (totalrowsvec[page] == i) {
@@ -2173,6 +2149,12 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
 
     df.attr("headersize") = headersize;
     df.attr("pagesize") = pagesize;
+
+    if (kk >= 0 && kk == rowcount) {
+      // deleted needs to be reduced if we ever skip the first row
+      deleted.resize(rowcount);
+    }
+
     df.attr("deleted") = deleted;
 
     if (debug) {
