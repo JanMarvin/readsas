@@ -5,7 +5,7 @@
 #' @author Sebastian Jeworutzki \email{sebastian.jeworutzki@@ruhr-uni-bochum.de}
 #' @keywords internal
 #' @noRd
-get_filepath <- function(path = "") {
+get.filepath <- function(path = "") {
   if (substring(path, 1, 1) == "~") {
     filepath <- path.expand(path)
   } else {
