@@ -45,7 +45,18 @@ read.sas <- function(file, debug = FALSE, convert.dates = TRUE, recode = TRUE,
 
   if (convert.dates) {
 
-    vars <- which(formats == "MMDDYY" | formats == "DATE")
+    dates <- c(
+      "b8601da", "e8601da", "date", "day", "ddmmyy", "ddmmyyb", "ddmmyyc",
+      "ddmmyyd", "ddmmyyn", "ddmmyyp", "ddmmyys", "weekdate", "weekdatx",
+      "weekday", "downame", "worddate", "worddatx", "yymm", "yymmc",
+      "yymmd", "yymmn", "yymmp", "yymms", "yymmdd", "yymmddb", "yymmddc",
+      "yymmddd", "yymmddn", "yymmddp", "yymmdds", "yymon", "year",
+      "julday", "julian", "mmddyy", "mmddyyc", "mmddyyd", "mmddyyn", "mmddyyp",
+      "mmddyys", "mmyy", "mmyyc", "mmyyd", "mmyyn", "mmyyp", "mmyys",
+      "monname", "month", "monyy"
+    )
+
+    vars <- which(toupper(formats) %in% toupper(dates))
 
     for (var in vars) {
       data[[var]] <- as.Date(
@@ -54,7 +65,13 @@ read.sas <- function(file, debug = FALSE, convert.dates = TRUE, recode = TRUE,
         )
     }
 
-    vars <- which(formats == "DATETIME")
+    datetime <- c(
+      "e8601dn", "e8601dt", "e8601dx", "e8601dz", "e8601lx", "b8601dn",
+      "b8601dt", "b8601dx", "b8601dz", "b8601lx", "dateampm", "datetime",
+      "dtdate", "dtmonyy", "dtwkdatx", "dtyear", "tod", "mdyampm"
+    )
+
+    vars <- which(toupper(formats) %in% toupper(datetime))
 
     for (var in vars) {
       data[[var]] <- as.POSIXct( data[[var]],
