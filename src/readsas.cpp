@@ -328,7 +328,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
     if (debug) Rprintf("headersize: %d \n", headersize);
     if (headersize <= 0) stop("headersize <= 0");
 
-    int32_t pagesize = 0;
+    uint32_t pagesize = 0;
     pagesize = readbin(pagesize, sas, swapit);
     if (debug) Rprintf("pagesize: %d \n", pagesize);
     if (pagesize <= 0) stop("pagesize <= 0");
@@ -423,7 +423,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
     // end of Header ---------------------------------------------------------//
 
 
-    int8_t alignval = 8;
+    uint8_t alignval = 8;
     if (u64 != 4) alignval = 4;
 
     uint64_t rowlength = 0, rowcount = 0, delobs = 0;
@@ -432,23 +432,20 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
     std::vector<std::string> stringvec(pagecount) ;
 
     auto totalrows = 0;
-    std::vector<int32_t> totalrowsvec(pagecount);
-    std::vector<int32_t> pageseqnum(pagecount);
+    std::vector<uint32_t> totalrowsvec(pagecount);
+    std::vector<uint32_t> pageseqnum(pagecount);
 
     std::vector<std::string> pagedelmarker(pagecount);
 
     int8_t PAGE_BIT_OFFSET = 0;
-    int8_t PAGE_DELETED_POINTER_OFFSET = 0;
     int8_t SUBHEADER_POINTER_LENGTH = 0;
     int8_t SUBHEADER_POINTERS_OFFSET = 8;
 
     if (u64 == 4) {
       PAGE_BIT_OFFSET = 32;
-      PAGE_DELETED_POINTER_OFFSET = 24;
       SUBHEADER_POINTER_LENGTH = 24;
     } else {
       PAGE_BIT_OFFSET = 16;
-      PAGE_DELETED_POINTER_OFFSET = 12;
       SUBHEADER_POINTER_LENGTH = 12;
     }
 
@@ -706,7 +703,6 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
                 unk64 = readbin(unk64, sas, swapit);
                 rcmix =  readbin(rcmix, sas, swapit);
 
-                uint64_t uunk64 = 0;
                 /* next two indicate the end of the initial header ? */
                 unk64 = readbin(unk64, sas, swapit);
                 if (debug) Rcout << unk64 << std::endl; // -1
@@ -1543,7 +1539,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
 
                 if ((capois[i].CN_TYP >= 1) & (capois[i].CN_TYP <= 2) &
                     (capois[i].CN_WID >= 0) & // just > ?
-                    (capois[i].CN_WID <= pagesize)) {
+                    ((uint32_t)capois[i].CN_WID <= pagesize)) {
                   if (debug)
                     Rprintf("OFF %d; WID: %d; FLAG %d; TYP %d; UNK8 %d\n",
                             capois[i].CN_OFF, capois[i].CN_WID,
@@ -1858,7 +1854,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
 
     // ---------------------------------------------------------------------- //
 
-    if ((kk >= 0) &  (kk < rowcount)) {
+    if ((kk >= 0) &  ((uint64_t)kk < rowcount)) {
       warning("User requested to read %d of %d rows", kk, rowcount);
       rowcount = kk;
     }
@@ -1901,7 +1897,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
       auto page = 0;
       sas.seekg(data_pos[0], sas.beg);
 
-      auto ii = 0;
+      uint64_t ii = 0;
       for (uint64_t i = 0; i < rowcount; ++i) {
 
         if (pagecount>0) {
@@ -2156,7 +2152,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
     df.attr("headersize") = headersize;
     df.attr("pagesize") = pagesize;
 
-    if (kk >= 0 && kk == rowcount) {
+    if (kk >= 0 && (uint64_t)kk == rowcount) {
       // deleted needs to be reduced if we ever skip the first row
       deleted.resize(rowcount);
     }
