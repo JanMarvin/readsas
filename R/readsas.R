@@ -47,13 +47,17 @@ read.sas <- function(file, debug = FALSE, convert_dates = TRUE, recode = TRUE,
 
     dates <- c(
       "b8601da", "e8601da", "date", "day", "ddmmyy", "ddmmyyb", "ddmmyyc",
-      "ddmmyyd", "ddmmyyn", "ddmmyyp", "ddmmyys", "weekdate", "weekdatx",
-      "weekday", "downame", "worddate", "worddatx", "yymm", "yymmc",
-      "yymmd", "yymmn", "yymmp", "yymms", "yymmdd", "yymmddb", "yymmddc",
-      "yymmddd", "yymmddn", "yymmddp", "yymmdds", "yymon", "year",
+      "ddmmyyd", "ddmmyyn", "ddmmyyp", "ddmmyys", "eurdfde", "eurdfdn", "eurdfdwn",
+      "eurdfmy", "eurdfwdx", "eurdfmn", "eurdfwkx", "eurdfmn", "eurdfwkx",
+      "weekdate", "weekdatx", "weekday", "downame", "worddate", "worddatx",
+      "yymm", "yymmc", "yymmd", "yymmn", "yymmp", "yymms", "yymmdd",
+      "yymmddb", "yymmddc", "yymmddd", "yymmddn", "yymmddp", "yymmdds",
+      "yymon", "yyq", "yyqc", "yyqd", "yyqp", "yyqs", "yyqn", "yyqr",
+      "yyqrc", "yyqrd", "yyqrp", "yyqrs", "yyqrn", "year",
       "julday", "julian", "mmddyy", "mmddyyc", "mmddyyd", "mmddyyn", "mmddyyp",
       "mmddyys", "mmyy", "mmyyc", "mmyyd", "mmyyn", "mmyyp", "mmyys",
-      "monname", "month", "monyy"
+      "monname", "month", "monyy", "qtr", "qtrr",
+      "nengo", "pdjulg", "pdjuli"
     )
 
     vars <- which(toupper(formats) %in% toupper(dates))
