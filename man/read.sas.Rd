@@ -7,7 +7,7 @@
 read.sas(
   file,
   debug = FALSE,
-  convert.dates = TRUE,
+  convert_dates = TRUE,
   recode = TRUE,
   rowcount = -1,
   remove_deleted = TRUE
@@ -18,7 +18,7 @@ read.sas(
 
 \item{debug}{print debug information}
 
-\item{convert.dates}{default is TRUE}
+\item{convert_dates}{default is TRUE}
 
 \item{recode}{default is TRUE}
 

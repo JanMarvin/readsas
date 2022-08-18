@@ -4,7 +4,7 @@
 #'
 #'@param file file to read
 #'@param debug print debug information
-#'@param convert.dates default is TRUE
+#'@param convert_dates default is TRUE
 #'@param recode default is TRUE
 #'@param rowcount number of rows to import (from start). negative values are
 #' ignored
@@ -14,7 +14,7 @@
 #'@importFrom utils download.file
 #'
 #'@export
-read.sas <- function(file, debug = FALSE, convert.dates = TRUE, recode = TRUE,
+read.sas <- function(file, debug = FALSE, convert_dates = TRUE, recode = TRUE,
                      rowcount = -1, remove_deleted = TRUE) {
 
   # Check if path is a url
@@ -40,25 +40,48 @@ read.sas <- function(file, debug = FALSE, convert.dates = TRUE, recode = TRUE,
 
   # override encoding argument if file contains no valid information
   if (encoding == "")
-    recode = FALSE
+    recode <- FALSE
 
 
-  if (convert.dates) {
+  if (convert_dates) {
 
-    vars <- which(formats == "MMDDYY" | formats == "DATE")
+    # TODO formula to create possible date formats?
+    dates <- c(
+      "b8601da", "e8601da", "date", "day", "ddmmyy", "ddmmyyb", "ddmmyyc",
+      "ddmmyyd", "ddmmyyn", "ddmmyyp", "ddmmyys", "eurdfdd", "eurdfde", 
+      "eurdfdn", "eurdfdwn", "eurdfmy", "eurdfwdx", "eurdfmn", "eurdfwkx",
+      "eurdfmn", "eurdfwkx", "weekdate", "weekdatx", "weekday", "downame",
+      "worddate", "worddatx", "julday", "julian", "nengo", "pdjulg", "pdjuli",
+      "yymm", "yymmc", "yymmd", "yymmn", "yymmp", "yymms", "yymmdd",
+      "yymmddb", "yymmddc", "yymmddd", "yymmddn", "yymmddp", "yymmdds",
+      "yymon", "yyq", "yyqc", "yyqd", "yyqp", "yyqs", "yyqn", "yyqr",
+      "yyqrc", "yyqrd", "yyqrp", "yyqrs", "yyqrn", "year",
+      "mmddyy", "mmddyyc", "mmddyyd", "mmddyyn", "mmddyyp",
+      "mmddyys", "mmyy", "mmyyc", "mmyyd", "mmyyn", "mmyyp", "mmyys",
+      "monname", "month", "monyy", "qtr", "qtrr"
+    )
+
+    vars <- which(toupper(formats) %in% toupper(dates))
 
     for (var in vars) {
       data[[var]] <- as.Date(
-        as.POSIXct( data[[var]] * 24 * 60 * 60, origin = "1960-01-01")
-        )
+        as.POSIXct(data[[var]] * 24 * 60 * 60,
+                   origin = "1960-01-01"),
+      )
     }
 
-    vars <- which(formats == "DATETIME")
+    datetime <- c(
+      "e8601dn", "e8601dt", "e8601dx", "e8601dz", "e8601lx", "b8601dn",
+      "b8601dt", "b8601dx", "b8601dz", "b8601lx", "dateampm", "datetime",
+      "dtdate", "dtmonyy", "dtwkdatx", "dtyear", "tod", "mdyampm"
+    )
+
+    vars <- which(toupper(formats) %in% toupper(datetime))
 
     for (var in vars) {
-      data[[var]] <- as.Date(
-        as.POSIXct( data[[var]], origin = "1960-01-01")
-      )
+      data[[var]] <- as.POSIXct(data[[var]],
+                                origin = "1960-01-01",
+                                tz = "UTC")
     }
 
 
@@ -68,7 +91,7 @@ read.sas <- function(file, debug = FALSE, convert.dates = TRUE, recode = TRUE,
 
     vars <- which(sapply(data, is.character))
 
-    data[vars] <- mapply(iconv, data[vars], MoreArgs=list(from = encoding),
+    data[vars] <- mapply(iconv, data[vars], MoreArgs = list(from = encoding),
                          SIMPLIFY = FALSE)
 
     labels <- iconv(labels, from = encoding)
@@ -84,9 +107,12 @@ read.sas <- function(file, debug = FALSE, convert.dates = TRUE, recode = TRUE,
   modified2  <- attr(data, "modified2")
   thrdts     <- attr(data, "thrdts")
 
-  created  <- as.POSIXct( created-created2,  origin = "1960-01-01")
-  modified <- as.POSIXct( modified-modified2, origin = "1960-01-01")
-  thrdts   <- as.POSIXct( thrdts,   origin = "1960-01-01", "GMT")
+  created  <- as.POSIXct(created - created2,
+                         origin = "1960-01-01", tz = "UTC")
+  modified <- as.POSIXct(modified - modified2,
+                         origin = "1960-01-01", tz = "UTC")
+  thrdts   <- as.POSIXct(thrdts,
+                         origin = "1960-01-01", tz = "UTC")
 
   attr(data, "created")  <- created
   attr(data, "modified") <- modified
