@@ -12,6 +12,7 @@
 #'
 #'@useDynLib readsas, .registration=TRUE
 #'@importFrom utils download.file
+#'@importFrom stringi stri_encode
 #'
 #'@export
 read.sas <- function(file, debug = FALSE, convert_dates = TRUE, recode = TRUE,
@@ -91,13 +92,13 @@ read.sas <- function(file, debug = FALSE, convert_dates = TRUE, recode = TRUE,
 
     vars <- which(sapply(data, is.character))
 
-    data[vars] <- mapply(iconv, data[vars], MoreArgs = list(from = encoding),
+    data[vars] <- mapply(stringi::stri_encode, data[vars], MoreArgs = list(from = encoding),
                          SIMPLIFY = FALSE)
 
-    labels <- iconv(labels, from = encoding)
+    labels <- stringi::stri_encode(labels, from = encoding)
     attr(data, "labels") <- labels
 
-    names(data) <- iconv(names(data), from = encoding)
+    names(data) <- stringi::stri_encode(names(data), from = encoding)
 
   }
 

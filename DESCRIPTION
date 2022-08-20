@@ -12,6 +12,7 @@ License: GPL (>= 2) | file LICENSE
 URL: https://github.com/JanMarvin/readsas
 BugReports: https://github.com/JanMarvin/readsas/issues
 Imports: Rcpp (>= 1.0.2)
+Depends: stringi
 LinkingTo: Rcpp
 SystemRequirements: C++11
 Suggests: testthat, foreign, datasets
