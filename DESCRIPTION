@@ -9,7 +9,8 @@ Authors@R: c(
 Maintainer: Jan Marvin Garbuszus <jan.garbuszus@ruhr-uni-bochum.de>
 Description: Package to read the SAS file format.
 License: GPL (>= 2) | file LICENSE
-LazyData: TRUE
+URL: https://github.com/JanMarvin/readsas
+BugReports: https://github.com/JanMarvin/readsas/issues
 Imports: Rcpp (>= 1.0.2)
 LinkingTo: Rcpp
 SystemRequirements: C++11
