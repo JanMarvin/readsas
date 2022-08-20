@@ -23,7 +23,6 @@ test_that("parso external tests", {
     csv      <- sprintf("https://github.com/epam/parso/raw/master/src/test/resources/csv/%s.csv", fl)
 
     got <- read.sas(sas7bdat)
-    # hv <- haven::read_sas(sas7bdat)
     exp <- read.csv(csv)
 
     expect_true(all.equal(got, exp, check.attributes = FALSE))
