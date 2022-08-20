@@ -1093,8 +1093,8 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
                 // Rcout << "7 " << unk32 << std::endl; // nrows
                 unk16 = readbin(unk16, sas, swapit); // 9
                 if (unk16 != 0) stop("unk16 09. expected 0 is %d", unk16);
-                delobs = readbin((int32_t)delobs, sas, swapit); // 10
-                // Rcout << "10 "<< unk32 << std::endl; // delobs
+                unk64 = readbin((int32_t)unk64, sas, swapit); // 10
+                if (debug) Rcout << "delobs "<< unk64 << std::endl; // delobs?
                 // if (unk16 != 0) stop("unk16 11. expected 0 is %d", unk16);
                 unk16 = readbin(unk16, sas, swapit); // 12
                 if (unk16 != 0) stop("unk16 12. expected 0 is %d", unk16);
@@ -1891,6 +1891,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
     // new offset ----------------------------------------------------------- //
 
     std::vector<bool> deleted(rowcount);
+    std::vector<bool> valid(rowcount);
 
     bool firstpage = 0;
     if (compr == 0) {
@@ -1925,6 +1926,8 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
             deleted[i] = true;
           else
             deleted[i] = false;
+
+          valid[i] = true;
           // end handle delmarker
 
           if (totalrowsvec[page] == i) {
@@ -2015,18 +2018,28 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
     // close file. compressed data is imported from a different file
     sas.close();
 
+
     if ((compr == 1) || (compr == 2)) {
 
-      std::ifstream sas(tempstr,
-                        std::ios::in | std::ios::binary);
+      std::ifstream sas(tempstr, std::ios::in | std::ios::binary | std::ios::ate);
+      auto sas_size = sas.tellg();
+
+      sas.seekg(0, std::ios_base::beg);
 
       auto ii = 0;
       for (uint64_t i = 0; i < rowcount; ++i) {
+
+        if (debug) Rcout << "row: " << i << " --------------------" <<std::endl;
+
+        valid[i] = true;
+
         for (auto j = 0; j < colnum; ++j) {
 
           auto ord = ordered[j];
           auto wid = colwidth[ord];
           auto typ = vartyps[ord];
+
+          if (debug) Rcout << "col: " << j << std::endl;
 
 
           if (debug)
@@ -2077,7 +2090,12 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
             as<CharacterVector>(df[ord])[i] = val_s;
 
           }
+        }
 
+        // check if eof is reached sas.eof() did not work
+        if ((sas_size - sas.tellg()) == 0) {
+          // Rcout << "eof reached" << std::endl;
+          break;
         }
 
         ++ii;
@@ -2159,6 +2177,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
     }
 
     df.attr("deleted") = deleted;
+    df.attr("valid") = valid;
 
     if (debug) {
       df.attr("cnidx") = cnidx;

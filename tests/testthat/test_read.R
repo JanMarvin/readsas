@@ -14,7 +14,7 @@ test_that("parso external tests", {
 
   parso_files <- c("all_rand_normal", "all_rand_normal_with_deleted", "all_rand_normal_with_deleted2",
                    "all_rand_uniform", "almost_rand",
-                   # "comp_deleted",                                   # deleted row at end of file
+                   "comp_deleted",                                     # deleted row at end of file
                    "data_page_with_deleted",
                    "doubles", "doubles2", "extend_no",
                    # "extend_yes",                                     # varnames applied incorrectly
