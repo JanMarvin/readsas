@@ -515,11 +515,12 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
       std::vector<PO_Tab> potabs(SUBHEADER_COUNT);
 
       if ((
-          PAGE_TYPE == -28672 ||                    // ???
+            PAGE_TYPE == -28672 ||                  // compressed data?
             PAGE_TYPE == 16384 ||                   // PAGE_META_TYPE_2
             PAGE_TYPE == 1024 ||                    // PAGE_AMD_TYPE
             PAGE_TYPE == 640 || PAGE_TYPE == 512 || // PAGE_MIX_TYPE_2   PAGE_MIX_TYPE_1
             PAGE_TYPE == 384 || PAGE_TYPE == 256 || // PAGE_DATA_TYPE_2  PAGE_DATA_TYPE
+            PAGE_TYPE == 128 ||                     // PAGE_CMETA_TYPE
             PAGE_TYPE == 0))                        // PAGE_META_TYPE_1
       {
 

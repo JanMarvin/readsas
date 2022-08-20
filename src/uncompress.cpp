@@ -152,9 +152,10 @@ std::string SASYZCRL(uint64_t rowlen, uint64_t reslen, std::string rowstr,
 
   }
 
+  // comp_deleted throws warning
   if (res.size() != reslen)
-    Rcpp::stop("comp1: string size %d != %d\n",
-               res.size(), reslen);
+    Rcpp::warning("comp1: string size %d != %d\n",
+                  res.size(), reslen);
 
   return res;
 }
