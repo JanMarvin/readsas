@@ -7,3 +7,4 @@ src/*.o
 src/*.so
 src/*.dll
 inst/extdata/readsas_test.R
+inst/extdata/readsas_test2.R

@@ -12,6 +12,7 @@
 #'
 #'@useDynLib readsas, .registration=TRUE
 #'@importFrom utils download.file
+#'@importFrom stringi stri_encode
 #'
 #'@export
 read.sas <- function(file, debug = FALSE, convert_dates = TRUE, recode = TRUE,
@@ -48,7 +49,7 @@ read.sas <- function(file, debug = FALSE, convert_dates = TRUE, recode = TRUE,
     # TODO formula to create possible date formats?
     dates <- c(
       "b8601da", "e8601da", "date", "day", "ddmmyy", "ddmmyyb", "ddmmyyc",
-      "ddmmyyd", "ddmmyyn", "ddmmyyp", "ddmmyys", "eurdfdd", "eurdfde", 
+      "ddmmyyd", "ddmmyyn", "ddmmyyp", "ddmmyys", "eurdfdd", "eurdfde",
       "eurdfdn", "eurdfdwn", "eurdfmy", "eurdfwdx", "eurdfmn", "eurdfwkx",
       "eurdfmn", "eurdfwkx", "weekdate", "weekdatx", "weekday", "downame",
       "worddate", "worddatx", "julday", "julian", "nengo", "pdjulg", "pdjuli",
@@ -91,13 +92,13 @@ read.sas <- function(file, debug = FALSE, convert_dates = TRUE, recode = TRUE,
 
     vars <- which(sapply(data, is.character))
 
-    data[vars] <- mapply(iconv, data[vars], MoreArgs = list(from = encoding),
+    data[vars] <- mapply(stringi::stri_encode, data[vars], MoreArgs = list(from = encoding),
                          SIMPLIFY = FALSE)
 
-    labels <- iconv(labels, from = encoding)
+    labels <- stringi::stri_encode(labels, from = encoding)
     attr(data, "labels") <- labels
 
-    names(data) <- iconv(names(data), from = encoding)
+    names(data) <- stringi::stri_encode(names(data), from = encoding)
 
   }
 
@@ -122,16 +123,40 @@ read.sas <- function(file, debug = FALSE, convert_dates = TRUE, recode = TRUE,
   attr(data, "modified2") <- NULL
 
   if (remove_deleted) {
-    sel <- attr(data, "deleted")
-    attr(data, "deleted") <- NULL
 
-    if (attr(data, "deleted_rows") > 0 && all(isFALSE(sel)))
+    del_rows <- attr(data, "deleted_rows")
+
+    val <- attr(data, "valid")
+    del <- attr(data, "deleted")
+    attr(data, "deleted") <- NULL
+    attr(data, "valid") <- NULL
+
+    if (del_rows > 0) {
+
+      # deleted row in compressed data
+      if (!all(val)) {
+
+        if (del_rows != length(val[val == FALSE]))
+          warning("number of deleted rows does not match the indicated number of deleted rows")
+
+        data <- data[val, , drop = FALSE]
+
+      } else {
+
+        if (del_rows != length(del[del == TRUE]))
+          warning("number of deleted rows does not match the indicated number of deleted rows")
+
+        data <- data[!del, , drop = FALSE]
+      }
+
+    }
+
+    # better save than sorry
+    if (del_rows > 0 && (all(isFALSE(del)) || all(isTRUE(val))))
       warning("file indicated deleted rows, but none was found")
 
-    if (attr(data, "deleted_rows") == 0 && any(sel))
+    if (del_rows == 0 && (any(del) || !all(val)))
       warning("file indicated no deleted rows, but some were found")
-
-    data <- data[!sel, , drop = FALSE]
   }
 
   return(data)

@@ -3,5 +3,6 @@
 export(read.sas)
 export(readsas)
 import(Rcpp)
+importFrom(stringi,stri_encode)
 importFrom(utils,download.file)
 useDynLib(readsas, .registration=TRUE)
