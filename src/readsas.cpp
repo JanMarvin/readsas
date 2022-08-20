@@ -509,7 +509,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
                 PAGE_TYPE, BLOCK_COUNT, SUBHEADER_COUNT, unk16);
 
       int16_t zero = 0;
-      int64_t sh_tot_len = 0;
+      // int64_t sh_tot_len = 0;
       uint64_t dataoff = 0;
 
       std::vector<PO_Tab> potabs(SUBHEADER_COUNT);
@@ -554,7 +554,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
                     potabs[i].SH_OFF, potabs[i].SH_LEN,
                     potabs[i].COMPRESSION, potabs[i].SH_TYPE);
 
-          sh_tot_len += potabs[i].SH_LEN;
+          // sh_tot_len += potabs[i].SH_LEN;
           dataoff = potabs[i].SH_OFF - (rowsperpage[pg] * rowlength);
         }
 
