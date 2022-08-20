@@ -40,12 +40,15 @@ using namespace Rcpp;
 // [[Rcpp::export]]
 Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
 {
-  std::ifstream sas(filePath, std::ios::in | std::ios::binary);
+  std::ifstream sas(filePath, std::ios::in | std::ios::binary | std::ios::ate);
+  auto sas_size = sas.tellg();
   if (sas) {
 
+    sas.seekg(0, std::ios_base::beg);
 
     const std::string tempstr = ".readsas_unc_tmp_file";
     std::fstream out (tempstr, std::ios::out | std::ios::binary);
+
 
     int compr = 0;
 
@@ -1121,7 +1124,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
                         swlen, todata, textoff);
 
 
-              if (!((dataoffset == 256) | (dataoffset == 1280)) && debug)
+              if (!((dataoffset == 1) ||(dataoffset == 256) || (dataoffset == 1280)))
                 warning("debug: dataoffset is unexpectedly %d\n",
                         dataoffset);
 
@@ -1941,7 +1944,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
         auto pos = pp + rowlength * ii;
 
         /* unknown */
-        if (!(dataoffset == 256) & (firstpage == 0)) {
+        if (!(dataoffset == 1 || dataoffset == 256) & (firstpage == 0)) {
           pos += alignval;
         }
 
@@ -1960,6 +1963,9 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
           auto wid = colwidth[ord];
           auto typ = vartyps[ord];
 
+          if (debug && i == 0)
+            Rcout << ord << std::endl;
+
           // if (totalrowsvec[page] == i)
           //   Rcout << "yes" << std::endl;
 
@@ -1969,7 +1975,8 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
 
             val_d = readbinlen(val_d, sas, 0, wid);
 
-            // Rcout << val_d << std::endl;
+            if (debug && i == 0)
+              Rcout << val_d << std::endl;
 
             if (std::isnan(val_d))
               REAL(VECTOR_ELT(df,ord))[i] = NA_REAL;
@@ -1984,7 +1991,8 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
 
             val_d = readbin(val_d, sas, swapit);
 
-            // Rcout << val_d << std::endl;
+            if (debug && i == 0)
+              Rcout << val_d << std::endl;
 
             if (std::isnan(val_d))
               REAL(VECTOR_ELT(df,ord))[i] = NA_REAL;
@@ -2002,14 +2010,20 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
             val_s = std::regex_replace(val_s,
                                        std::regex(" +$"), "$1");
 
-            // Rcout << val_s << std::endl;
+            if (debug && i == 0)
+              Rcout << val_s << std::endl;
 
             as<CharacterVector>(df[ord])[i] = val_s;
 
           }
 
         }
-        // Rcpp::stop("stop");
+
+        // check if eof is reached sas.eof() did not work
+        if ((sas_size - sas.tellg()) == 0) {
+          // Rcout << "eof reached" << std::endl;
+          break;
+        }
 
         ++ii;
       }
@@ -2022,7 +2036,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
     if ((compr == 1) || (compr == 2)) {
 
       std::ifstream sas(tempstr, std::ios::in | std::ios::binary | std::ios::ate);
-      auto sas_size = sas.tellg();
+      sas_size = sas.tellg();
 
       sas.seekg(0, std::ios_base::beg);
 
