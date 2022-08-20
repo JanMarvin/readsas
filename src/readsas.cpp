@@ -326,7 +326,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
     modified2 = readbin(modified2, sas, swapit);
     if (debug) Rcout << modified2 << std::endl;
 
-    int32_t headersize = 0;
+    uint32_t headersize = 0;
     headersize = readbin(headersize, sas, swapit);
     if (debug) Rprintf("headersize: %d \n", headersize);
     if (headersize <= 0) stop("headersize <= 0");
@@ -350,7 +350,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
      * might contain both or only varnames.
      */
 
-    std::vector<int64_t>  data_pos(pagecount, 0);
+    std::vector<uint64_t>  data_pos(pagecount, 0);
     std::vector<uint64_t> varname_pos;
     std::vector<uint64_t> label_pos;
     std::vector<int64_t>  rowsperpage(pagecount, 0);
@@ -459,8 +459,13 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
       // Rcout << "--- new page ------------------------------------" << std::endl;
 
       /* should already be at this position for pg == 1 */
-      if (pagecount > 0) {
-        auto pagenumx = headersize + pg * pagesize;
+      if (pg > 0) {
+        uint64_t pagenumx = 0;
+        // if (pg == 0)
+        //   pagenumx = headersize;
+        // else
+          pagenumx = headersize + (pg+1) * pagesize;
+
         sas.seekg(pagenumx, sas.beg);
         // Rcout << pagenumx << std::endl;
       }
@@ -493,6 +498,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
 
       // Rcout << sas.tellg() << std::endl;
 
+      uint64_t page_type_pos = sas.tellg();
       PAGE_TYPE       = readbin(PAGE_TYPE, sas, swapit);
       BLOCK_COUNT     = readbin(BLOCK_COUNT, sas, swapit);
       SUBHEADER_COUNT = readbin(SUBHEADER_COUNT, sas, swapit);
@@ -511,15 +517,26 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
         Rprintf("PAGE_TYPE: %d ; BC: %d ; SC: %d ; unk16: %d ---- \n",
                 PAGE_TYPE, BLOCK_COUNT, SUBHEADER_COUNT, unk16);
 
+      // if (PAGE_TYPE == 8755) {
+        Rcout << "page_type_pos:" << page_type_pos << std::endl;
+        Rcout << pagesize << std::endl;
+
+        Rprintf("PAGE_TYPE: %d ; BC: %d ; SC: %d ; unk16: %d ---- \n",
+                PAGE_TYPE, BLOCK_COUNT, SUBHEADER_COUNT, unk16);
+        // stop("stop");
+      // }
+
       int16_t zero = 0;
       // int64_t sh_tot_len = 0;
       uint64_t dataoff = 0;
 
       std::vector<PO_Tab> potabs(SUBHEADER_COUNT);
 
+
       if ((
             PAGE_TYPE == -28672 ||                  // compressed data?
             PAGE_TYPE == 16384 ||                   // PAGE_META_TYPE_2
+            PAGE_TYPE == 8755 ||                    // ???
             PAGE_TYPE == 1024 ||                    // PAGE_AMD_TYPE
             PAGE_TYPE == 640 || PAGE_TYPE == 512 || // PAGE_MIX_TYPE_2   PAGE_MIX_TYPE_1
             PAGE_TYPE == 384 || PAGE_TYPE == 256 || // PAGE_DATA_TYPE_2  PAGE_DATA_TYPE
@@ -553,13 +570,15 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
             // Rcout << zero << std::endl;
           }
 
-          if (debug)
+          // if (debug)
             Rprintf("SH_OFF: %d ; SH_LEN: %d ; COMPR.: %d ; SH_TYPE: %d \n",
                     potabs[i].SH_OFF, potabs[i].SH_LEN,
                     potabs[i].COMPRESSION, potabs[i].SH_TYPE);
 
           // sh_tot_len += potabs[i].SH_LEN;
           dataoff = potabs[i].SH_OFF - (rowsperpage[pg] * rowlength);
+
+          // if (PAGE_TYPE == 8755 && i == 1) stop("stop");
         }
 
         if (debug) {
@@ -567,14 +586,15 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
           Rcout << "data offset ------------------------------- " << std::endl;
         }
 
-        auto sh_end_pos = 0;
+        uint64_t sh_end_pos = 0;
 
         if (PAGE_TYPE != 0) sh_end_pos = sas.tellg();
 
         data_pos[pg] = sh_end_pos;
 
         if (debug)
-          Rprintf("sh_end_pos: %d\n", sh_end_pos);
+          // Rprintf("sh_end_pos: %d\n", sh_end_pos);
+          Rcout << "sh_end_pos: " << sh_end_pos << std::endl;
 
 
         // from now on, we will seek to every position inside the sas file
@@ -584,13 +604,23 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
           if (debug)
             Rcout << "Subheader Count: " << sc << std::endl;
 
-          auto pagepos = (headersize + pg * pagesize) + potabs[sc].SH_OFF;
+          uint64_t pagepos = 0;
+          if (pg > 0)
+            pagepos = (headersize + (pg+1) * pagesize) + potabs[sc].SH_OFF;
+          else
+            pagepos = (headersize) + potabs[sc].SH_OFF;
 
 
           // 2 files, where this is a problem
           if(potabs[sc].SH_OFF == 0 || potabs[sc].SH_LEN == 0)
             break;
 
+          // if (PAGE_TYPE == 8755 & pg == 0)
+          //   pagepos += alignval;
+
+          Rcout << "pagepos: " << pagepos << ". sas: " << sas.tellg() << std::endl;
+
+          // if (pagepos < 0 )
           sas.seekg(pagepos, sas.beg);
 
           // not sure yet, whats the right thing to do here
@@ -610,8 +640,14 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
 
           std::string sas_hex = int_to_hex(sas_offset);
 
-          if (debug)
+          // if (debug)
             Rcout << "SAS Hex: " << sas_hex << std::endl;
+
+          if (sas_hex.compare("0") == 0) {
+            Rcout << sc << std::endl;
+            Rcout << sas.tellg() <<std::endl;
+            // stop("stop");
+          }
 
 
           auto sas_offset_table = 0;
@@ -845,9 +881,9 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
                 unk32 = readbin(unk32, sas, swapit); // 1
                 // Rcout << "1 " << unk32 << std::endl;
                 unk32 = readbin(unk32, sas, swapit); // 2
-                if (unk32 != 0) stop("unk32 1. expected 0 is %d", unk32);
+                // if (unk32 != 0) stop("unk32 1. expected 0 is %d", unk32);
                 unk32 = readbin(unk32, sas, swapit); // 3
-                if (unk32 != 0) stop("unk32 1. expected 0 is %d", unk32);
+                // if (unk32 != 0) stop("unk32 1. expected 0 is %d", unk32);
 
                 rowsonpg = readbin(rowsonpg, sas, swapit);
 
@@ -1380,6 +1416,8 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
 
                 uint64_t txtpos = varname_pos[0] + 12;
 
+                Rcout << "txtpos: " << txtpos << ". sas: " << sas.tellg() << std::endl;
+
                 sas.seekg(txtpos, sas.beg);
 
                 // compression
@@ -1634,12 +1672,14 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
               if (debug)
                 Rcout << "-------- case 9 "<< sas.tellg()  << std::endl;
 
-              /* not sure about the purpose. appears in a few SAS 9 files */
-              uint64_t unklen = potabs[sc].SH_LEN - alignval;
-              for (uint64_t ul = 0; ul < unklen; ++ul) {
-                unk8 = readbin(unk8, sas, 0);
-                if (debug) Rprintf("%d\n", unk8);
-              }
+              // /* not sure about the purpose. appears in a few SAS 9 files */
+              // uint64_t unklen = potabs[sc].SH_LEN - alignval;
+              // for (uint64_t ul = 0; ul < unklen; ++ul) {
+              //   checkUserInterrupt();
+              //
+              //   // unk8 = readbin(unk8, sas, 0);
+              //   // if (debug) Rprintf("c9: %d\n", unk8);
+              // }
 
               break;
             }
@@ -1728,10 +1768,10 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
         // check for deleted rows
         if (PAGE_TYPE == 384 || PAGE_TYPE == 640 || PAGE_TYPE == 1024) {
 
-          auto start_pos = sas.tellg();
+          uint64_t start_pos = sas.tellg();
 
           // TODO this calculation should be replaced with alignval assignment
-          int alignCorrection = (
+          auto alignCorrection = (
             (PAGE_BIT_OFFSET + 8) +
               SUBHEADER_POINTERS_OFFSET +
               SUBHEADER_COUNT * SUBHEADER_POINTER_LENGTH
@@ -1740,13 +1780,18 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
           if (debug)
             Rcout << "alignCorrection: " << alignCorrection << std::endl;
 
-          int deletedMapOffset = (PAGE_BIT_OFFSET + 8) +
+          uint64_t deletedMapOffset = (PAGE_BIT_OFFSET + 8) +
             PAGE_DELETED_POINTER_LENGTH +
             alignCorrection + // alignval?
             (SUBHEADER_COUNT * SUBHEADER_POINTER_LENGTH) +
             (rowsperpage[pg] * rowlength);
 
-          auto dmo_pos = (headersize + pg * pagesize) + deletedMapOffset;
+          uint64_t dmo_pos = 0;
+
+          if (pg > 0)
+            dmo_pos = (headersize + (pg+1) * pagesize) + deletedMapOffset;
+          else
+            dmo_pos = (headersize) + deletedMapOffset;
 
           if (debug) {
             Rcout << "SUBHEADER_COUNT " << SUBHEADER_COUNT << std::endl;
@@ -1797,7 +1842,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
                 cnpois[i].CN_IDX, cnpois[i].CN_OFF,
                 cnpois[i].CN_LEN, cnpois[i].zeros);
 
-      int64_t vpos = (varname_pos[cnpois[i].CN_IDX] + cnpois[i].CN_OFF);
+      uint64_t vpos = (varname_pos[cnpois[i].CN_IDX] + cnpois[i].CN_OFF);
       sas.seekg(vpos, sas.beg);
 
       std::string varname(cnpois[i].CN_LEN, '\0');
@@ -1832,19 +1877,19 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
           format = readstring(format, sas);
         }
 
-        std:: string label = "";
-        if (lbl[i].LEN > 0) {
-          uint64_t lpos = (varname_pos[lbl[i].IDX] + lbl[i].OFF);
-          sas.seekg(lpos, sas.beg);
-          label.resize(lbl[i].LEN, '\0');
-          label = readstring(label, sas);
-        }
+        // std:: string label = "";
+        // if (lbl[i].LEN > 0) {
+        //   uint64_t lpos = (varname_pos[lbl[i].IDX] + lbl[i].OFF);
+        //   sas.seekg(lpos, sas.beg);
+        //   label.resize(lbl[i].LEN, '\0');
+        //   label = readstring(label, sas);
+        // }
 
-        if (debug)
-          Rcout << format << " : " << label << std::endl;
+        // if (debug)
+        //   Rcout << format << " : " << label << std::endl;
 
         formats.push_back( format );
-        labels.push_back( label );
+        // labels.push_back( label );
       }
     }
 
@@ -2150,6 +2195,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
 
     if (varnames.size() > colnum)
       df.attr("varnames") = varnames;
+
     df.attr("labels") = labels;
     df.attr("formats") = formats;
     df.attr("created") = created;
