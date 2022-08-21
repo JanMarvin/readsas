@@ -1945,7 +1945,8 @@ Rcpp::List readsas(const char * filePath,
     // available in compressed data. BUT THIS IS A GUESS.
     if (compr == 0) {
 
-      Rcout << "no compression" << std::endl;
+      if (debug)
+        Rcout << "no compression" << std::endl;
 
       auto page = 0;
       sas.seekg(data_pos[0], sas.beg);
@@ -2003,7 +2004,7 @@ Rcpp::List readsas(const char * filePath,
           // end handle delmarker
 
 
-          if (totalrowsvec[page] == ii) {
+          if (totalrowsvec[page] == iii) {
             ++page;
             ii = 0;
             firstpage = 1;
@@ -2132,7 +2133,8 @@ Rcpp::List readsas(const char * filePath,
 
     if ((compr == 1) || (compr == 2)) {
 
-      Rcout << "compression" << std::endl;
+      if (debug)
+        Rcout << "compression" << std::endl;
 
       std::ifstream sas(tempstr, std::ios::in | std::ios::binary | std::ios::ate);
 
