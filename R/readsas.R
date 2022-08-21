@@ -53,8 +53,23 @@ read.sas <- function(file, debug = FALSE, convert_dates = TRUE, recode = TRUE,
     recode = FALSE
 
   if (convert_dates) {
+    # TODO formula to create possible date formats?
+    dates <- c(
+      "b8601da", "e8601da", "date", "day", "ddmmyy", "ddmmyyb", "ddmmyyc",
+      "ddmmyyd", "ddmmyyn", "ddmmyyp", "ddmmyys", "eurdfdd", "eurdfde",
+      "eurdfdn", "eurdfdwn", "eurdfmy", "eurdfwdx", "eurdfmn", "eurdfwkx",
+      "eurdfmn", "eurdfwkx", "weekdate", "weekdatx", "weekday", "downame",
+      "worddate", "worddatx", "julday", "julian", "nengo", "pdjulg", "pdjuli",
+      "yymm", "yymmc", "yymmd", "yymmn", "yymmp", "yymms", "yymmdd",
+      "yymmddb", "yymmddc", "yymmddd", "yymmddn", "yymmddp", "yymmdds",
+      "yymon", "yyq", "yyqc", "yyqd", "yyqp", "yyqs", "yyqn", "yyqr",
+      "yyqrc", "yyqrd", "yyqrp", "yyqrs", "yyqrn", "year",
+      "mmddyy", "mmddyyc", "mmddyyd", "mmddyyn", "mmddyyp",
+      "mmddyys", "mmyy", "mmyyc", "mmyyd", "mmyyn", "mmyyp", "mmyys",
+      "monname", "month", "monyy", "qtr", "qtrr"
+    )
 
-    vars <- which(formats == "MMDDYY" | formats == "DATE")
+    vars <- which(toupper(formats) %in% toupper(dates))
 
     for (var in vars) {
       data[[var]] <- as.Date(
