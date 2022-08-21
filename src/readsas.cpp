@@ -1848,13 +1848,15 @@ Rcpp::List readsas(const char * filePath,
     if (n < nmin)
       nmin = n;
 
-    if (debug)
-      Rcout << "reading nmin/nmax: " << nmin << " / " << nmax << std::endl;
 
     // sequences of column and row
     IntegerVector cvec = seq(0, (k-1));
     IntegerVector rvec = seq(nmin, nmax);
-    nn = rvec.size();
+    // otherwise if n == 0 nn would be 1
+    if (nmax > 0) nn = rvec.size();
+
+    if (debug)
+      Rcout << "reading n/nn/nmin/nmax: " << n << "/" << nn << "/" << nmin << "/" << nmax << std::endl;
 
 
     /* this is dangerous, the length is correct, but the position in the file
@@ -2144,22 +2146,26 @@ Rcpp::List readsas(const char * filePath,
         sas.seekg(0, std::ios_base::beg);
 
         auto i = -1;
-        auto ii = 0;
         for (uint64_t iii = 0; iii < n; ++iii) {
 
           if (debug && i == 0)
             Rcout << "row: " << i << " --------------------" <<std::endl;
 
-          valid[iii] = true;
 
           /* nmin is not a c vector starting at 0. i is initialized at -1 so will
            * be 0 once its bigger than nmin. This allows to import only the
            * selected rows. Once nmax is reached, import will stop.
            */
-          if (iii >= (nmin-1) ) {
+          if (iii >= (nmin-1)) {
             keepr = 1;
             ++i;
           }
+
+          if (iii >= nmax) break;
+
+          // for completeness
+          valid[iii] = true;
+          deleted[iii] = false;
 
           for (auto j = 0; j < k; ++j) {
 
@@ -2170,9 +2176,12 @@ Rcpp::List readsas(const char * filePath,
 
             bool keepc = col >= 0;
 
-            if (debug && i == 0)
-              Rcout << ord << " : " << wid << " : " << typ << std::endl;
+            if (debug && i == 0) {
+              Rcout << col << " : " << wid << " : " << typ << std::endl;
+              Rcout << "row i / iii / keepr: " << i << " " << iii <<" " << keepr << std::endl;
+            }
 
+            // stop("stop");
 
             if ((wid > 0) & (wid < 8) & (typ == 1)) {
 
@@ -2234,14 +2243,13 @@ Rcpp::List readsas(const char * filePath,
             break;
           }
 
-          ++ii;
         }
+
+        sas.close();
 
       } else {
         warning("could not read from compressed pages");
       }
-
-      sas.close();
 
     }
 
@@ -2264,7 +2272,8 @@ Rcpp::List readsas(const char * filePath,
       cvec = seq(1, kk);
 
     // 3. Create a data.frame
-    df.attr("row.names") = rvec;
+    if (nn > 0)
+      df.attr("row.names") = rvec;
 
     if (varnames_kk.size() == kk)
       df.attr("names") = varnames_kk;

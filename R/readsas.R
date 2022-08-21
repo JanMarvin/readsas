@@ -39,6 +39,9 @@ read.sas <- function(file, debug = FALSE, convert_dates = TRUE, recode = TRUE,
 
   data <- readsas(filepath, debug, select.rows, select.cols)
 
+
+  # rowcount <- attr(data, "rowcount")
+
   if (rownames) {
     rownames(data) <- data[[1]]
     data[[1]] <- NULL
