@@ -34,11 +34,15 @@ using namespace Rcpp;
 //'
 //' @param filePath The full systempath to the sas7bdat file you want to import.
 //' @param debug print debug information
-//' @param kk kk
+//' @param selectrows_ integer vector of selected rows
+//' @param selectcols_ character vector of selected rows
 //' @import Rcpp
 //' @export
 // [[Rcpp::export]]
-Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
+Rcpp::List readsas(const char * filePath,
+                   const bool debug,
+                   Nullable<IntegerVector> selectrows_,
+                   Nullable<CharacterVector> selectcols_)
 {
   std::ifstream sas(filePath, std::ios::in | std::ios::binary | std::ios::ate);
   auto sas_size = sas.tellg();
@@ -109,7 +113,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
 
     Rcpp::CharacterVector labels;
     Rcpp::CharacterVector formats;
-    Rcpp::CharacterVector varnames; // (colnum)
+    Rcpp::CharacterVector varnames; // (k)
 
     // read 2* 4*4 = 32
     // 0 - 31: Magic Number
@@ -429,9 +433,9 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
     uint8_t alignval = 8;
     if (u64 != 4) alignval = 4;
 
-    uint64_t rowlength = 0, rowcount = 0, delobs = 0;
+    uint64_t rowlength = 0, n = 0, delobs = 0;
     int64_t colf_p1 = 0, colf_p2 = 0;
-    int64_t colnum = 0;
+    int64_t k = 0;
     std::vector<std::string> stringvec(pagecount) ;
 
     auto totalrows = 0;
@@ -554,7 +558,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
                     potabs[i].SH_OFF, potabs[i].SH_LEN,
                     potabs[i].COMPRESSION, potabs[i].SH_TYPE);
 
-          dataoff = potabs[i].SH_OFF - (rowsperpage[pg] * rowlength);
+          dataoff = potabs[i].SH_OFF - ((double)rowsperpage[pg] * rowlength);
 
         }
 
@@ -680,8 +684,8 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
 
                 rowlength = readbin(rowlength, sas, swapit);
                 if (debug) Rcout << "rowlength " << rowlength << std::endl;
-                rowcount = readbin(rowcount, sas, swapit);
-                if (debug) Rcout << "rowcount " << rowcount << std::endl;
+                n = readbin(n, sas, swapit);
+                if (debug) Rcout << "n " << n << std::endl;
                 delobs = readbin(delobs, sas, swapit);
                 if (debug) Rcout << "delobs " << delobs << std::endl;
                 unk64 = readbin(unk64, sas, swapit);
@@ -894,8 +898,8 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
 
                 rowlength = readbin((int32_t)rowlength, sas, swapit);
                 if (debug) Rcout << "rowlength " << rowlength << std::endl;
-                rowcount = readbin((int32_t)rowcount, sas, swapit);
-                if (debug) Rcout << "rowcount " << rowcount << std::endl;
+                n = readbin((int32_t)n, sas, swapit);
+                if (debug) Rcout << "rowcount " << n << std::endl;
                 delobs = readbin((int32_t)delobs, sas, swapit); // deleted obs?
                 if (debug) Rcout << "delobs " << delobs << std::endl;
                 unk32 = readbin(unk32, sas, swapit);
@@ -1315,16 +1319,16 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
               uint64_t uunk64 = 0;
 
               if (u64 == 4) {
-                colnum = readbin(colnum, sas, swapit);
+                k = readbin(k, sas, swapit);
                 uunk64 = readbin(uunk64, sas, swapit);
               } else {
-                colnum = readbin((int32_t)colnum, sas, swapit);
+                k = readbin((int32_t)k, sas, swapit);
                 uunk64 = readbin((int32_t)uunk64, sas, swapit);
               }
 
               if (debug)
-                Rprintf("colnum %d; uunk64 %d\n",
-                        colnum, uunk64);
+                Rprintf("k %d; uunk64 %d\n",
+                        k, uunk64);
 
               break;
             }
@@ -1709,7 +1713,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
           auto alignCorrection = (
             (PAGE_BIT_OFFSET + 8) +
               SUBHEADER_POINTERS_OFFSET +
-              SUBHEADER_COUNT * SUBHEADER_POINTER_LENGTH
+              (int64_t)((double)SUBHEADER_COUNT * SUBHEADER_POINTER_LENGTH)
           ) % 8;
 
           if (debug)
@@ -1718,8 +1722,8 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
           uint64_t deletedMapOffset = (PAGE_BIT_OFFSET + 8) +
             PAGE_DELETED_POINTER_LENGTH +
             alignCorrection + // alignval?
-            (SUBHEADER_COUNT * SUBHEADER_POINTER_LENGTH) +
-            (rowsperpage[pg] * rowlength);
+            ((double)SUBHEADER_COUNT * SUBHEADER_POINTER_LENGTH) +
+            ((double)rowsperpage[pg] * rowlength);
 
           uint64_t dmo_pos = (headersize + (double)pg * pagesize) + deletedMapOffset;
 
@@ -1787,7 +1791,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
 
     if (hasattributes) {
 
-      for (auto i = 0; i < colnum; ++i) {
+      for (auto i = 0; i < k; ++i) {
 
         /* read formats and labels */
         std::string format = "";
@@ -1824,54 +1828,152 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
 
     // ---------------------------------------------------------------------- //
 
-    if ((kk >= 0) &  ((uint64_t)kk < rowcount)) {
-      warning("User requested to read %d of %d rows", kk, rowcount);
-      rowcount = kk;
+    uint64_t nmin = 0, nmax = 0;
+    uint64_t nn   = 0;
+
+    // if  selectrows is c(0,0) use full data
+    if (selectrows_.isNull()) {
+      nmin = 1;
+      nmax = n;
+    } else {
+      IntegerVector selectrows(selectrows_);
+      if (selectrows.size() != 2) stop("selected rows must be vector of two.");
+      nmin = selectrows(0);
+      nmax = selectrows(1);
     }
 
+    // make sure that n is not greater than nmax or nmin
+    if (n < nmax)
+      nmax = n;
+    if (n < nmin)
+      nmin = n;
+
+
+    // sequences of column and row
+    IntegerVector cvec = seq(0, (k-1));
+    IntegerVector rvec = seq(nmin, nmax);
+    // otherwise if n == 0 nn would be 1
+    if (nmax > 0) nn = rvec.size();
+
+    if (debug)
+      Rcout << "reading n/nn/nmin/nmax: " << n << "/" << nn << "/" << nmin << "/" << nmax << std::endl;
+
+
+    /* this is dangerous, the length is correct, but the position in the file
+     * differs. right now it is not always exactly this. To make this working
+     * modifications to the import process are required.
+     */
+    // rowlength
+    IntegerVector rlen = rowlength;
+
+    // check if vars are selected
+    bool selectvars = selectcols_.isNotNull();
+
+    // select vars: either select every var or only matched cases. This will
+    // return index positions of the selected variables. If non are selected the
+    // index position is cvec
+    IntegerVector select = cvec, nselect;
+    if (selectvars) {
+      CharacterVector selectcols(selectcols_);
+      select = choose(selectcols, varnames);
+    }
+
+    IntegerVector sels = select;
+
+    // separate the selected from the not selected cases
+    LogicalVector ll = is_na(select);
+    nselect = cvec[ll == 1];
+    select = cvec[ll == 0];
+
+    // get new cvec_
+    cvec = cvec_(ll);
+
+    uint32_t kk = select.size();
+
+    // shrink variables to selected size
+    CharacterVector varnames_kk = clone(varnames)[select];
+    IntegerVector vartyps_kk = clone(vartyps)[select];
+
+
+    // 2. fill it with data
 
     // 1. Create Rcpp::List
-    Rcpp::List df(colnum);
-    for (auto i = 0; i < colnum; ++i)
+    Rcpp::List df(kk);
+    for (uint32_t i = 0; i < kk; ++i)
     {
-      int32_t const type = vartyps[i];
+      int32_t const type = vartyps_kk[i];
 
       switch(type)
       {
       case 1:
-        SET_VECTOR_ELT(df, i, NumericVector(no_init(rowcount)));
+        SET_VECTOR_ELT(df, i, NumericVector(no_init(nn)));
         break;
 
       default:
-        SET_VECTOR_ELT(df, i, CharacterVector(no_init(rowcount)));
+        SET_VECTOR_ELT(df, i, CharacterVector(no_init(nn)));
       break;
       }
     }
 
-    Rcpp::IntegerVector ordered = order(coloffset);
+    // IntegerVector coloffset_kk = clone(coloffset);
+    // coloffset_kk[ll == 1] = -1;
+    //
+    // Rf_PrintValue(coloffset_kk);
+    Rcpp::IntegerVector ordered = order_(coloffset);
 
     if (debug)
     {
-      Rcout << "vartyps "   << vartyps   << std::endl;
-      Rcout << "coloffset " << coloffset << std::endl;
-      Rcout << "ordered "   << ordered   << std::endl;
+      Rcout << "ll "        << ll           << std::endl;
+      Rcout << "vartyps "   << vartyps      << std::endl;
+      Rcout << "vartyps "   << vartyps_kk   << std::endl;
+      Rcout << "coloffset " << coloffset    << std::endl;
+      // Rcout << "coloffset " << coloffset_kk << std::endl;
+      Rcout << "ordered "   << ordered      << std::endl;
     }
 
     // new offset ----------------------------------------------------------- //
 
-    std::vector<bool> deleted(rowcount);
-    std::vector<bool> valid(rowcount);
+    std::vector<bool> deleted(n);
+    std::vector<bool> valid(n);
 
     bool firstpage = 0;
+    bool keepr = 0;
+
+    // sas provides two modes, compressed and uncompressed data. compressed
+    // data has to be uncompressed and consists of always single rows. un-
+    // compressed data is unordered aka might have gaps. So we have to be more
+    // careful and handle certain offsets.
+    // uncompressed data might contain deleted rows. most likely these are not
+    // available in compressed data. BUT THIS IS A GUESS.
     if (compr == 0) {
+
+      if (debug)
+        Rcout << "no compression" << std::endl;
 
       auto page = 0;
       sas.seekg(data_pos[0], sas.beg);
 
-      uint64_t ii = 0;
-      for (uint64_t i = 0; i < rowcount; ++i) {
+      auto i = -1;  // counter output data frame
+      uint64_t ii = 0;  // row on the selected page
+      for (uint64_t iii = 0; iii < n; ++iii) {
 
-        if (pagecount>0) {
+        /* nmin is not a c vector starting at 0. i is initialized at -1 so will
+         * be 0 once its bigger than nmin. This allows to import only the
+         * selected rows. Once nmax is reached, import will stop.
+         */
+        if (iii >= (nmin-1) ) {
+          keepr = 1;
+          ++i;
+        }
+
+        // Rcout << "---------------------" << std::endl;
+        // Rcout << iii << " " << nmin << std::endl;
+        if (debug && i == 0)
+          Rcout << "row i / ii / iii / keepr: " << i << " " << ii << " " << iii <<" " << keepr << std::endl;
+
+        if (iii >= nmax) break;
+
+        if (pagecount > 0) {
 
           while (totalrowsvec[page] == 0) {
             ++page;
@@ -1881,33 +1983,38 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
               break;
           }
 
+          if (debug && i == 0)
+            Rcout << "page: " << page << std::endl;
+
           // beg handle delmarker
           std::string page_pagedelmarker = pagedelmarker[page];
 
-          // Rcout << page_pagedelmarker << std::endl;
+          // Rcout << page_pagedelmarker << " : " << ii << std::endl;
+
 
           std::string delmarked = "";
-          if (page_pagedelmarker.size() > 0 && ii < page_pagedelmarker.size()) {
+          if (!page_pagedelmarker.empty() && (uint64_t)page_pagedelmarker.size() > 0 && ii < page_pagedelmarker.size()) {
             delmarked = page_pagedelmarker[ii];
             // Rcout << page_pagedelmarker[ii] << std::endl;
           }
           if (delmarked == "1")
-            deleted[i] = true;
+            deleted[iii] = true;
           else
-            deleted[i] = false;
+            deleted[iii] = false;
 
-          valid[i] = true;
+          valid[iii] = true;
           // end handle delmarker
 
-          if (totalrowsvec[page] == i) {
+
+          if (totalrowsvec[page] == iii) {
             ++page;
             ii = 0;
             firstpage = 1;
           }
         }
 
-        auto pp = data_pos[page];
-        auto pos = pp + rowlength * ii;
+        uint64_t pp = data_pos[page];
+        uint64_t pos = pp + (double)rowlength * ii;
 
         /* unknown */
         if (!(dataoffset == 1 || dataoffset == 256) & (firstpage == 0)) {
@@ -1923,11 +2030,21 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
 
         pos = 0;
 
-        for (auto j = 0; j < colnum; ++j) {
+        for (auto j = 0; j < k; ++j) {
 
           auto ord = ordered[j];
           auto wid = colwidth[ord];
           auto typ = vartyps[ord];
+          auto col = cvec[ord];
+
+          if (debug && i == 0)
+            Rcout << "ord/wid/typ: " << ord << " : " << wid << " : " << typ << std::endl;
+
+          bool keepc = col >= 0;
+
+          // Rcout << "---------------------" << std::endl;
+          if (debug && i == 0)
+            Rcout << "  --col j / ord / keepc: " << j << " " << ord << " "<< keepc << std::endl;
 
           if (debug && i == 0)
             Rcout << ord << std::endl;
@@ -1941,10 +2058,17 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
             if (debug && i == 0)
               Rcout << val_d << std::endl;
 
-            if (std::isnan(val_d))
-              REAL(VECTOR_ELT(df,ord))[i] = NA_REAL;
-            else
-              REAL(VECTOR_ELT(df,ord))[i] = val_d;
+            if (debug && i == 0)
+              Rcout << "writing: " << i << "/" << col << std::endl;
+
+            if (keepr) {
+              if (keepc) {
+                if (std::isnan(val_d))
+                  REAL(VECTOR_ELT(df,col))[i] = NA_REAL;
+                else
+                  REAL(VECTOR_ELT(df,col))[i] = val_d;
+              }
+            }
 
           }
 
@@ -1957,10 +2081,17 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
             if (debug && i == 0)
               Rcout << val_d << std::endl;
 
-            if (std::isnan(val_d))
-              REAL(VECTOR_ELT(df,ord))[i] = NA_REAL;
-            else
-              REAL(VECTOR_ELT(df,ord))[i] = val_d;
+            if (debug && i == 0)
+              Rcout << "writing: " << i << "/" << col << std::endl;
+
+            if (keepr) {
+              if (keepc) {
+                if (std::isnan(val_d))
+                  REAL(VECTOR_ELT(df,col))[i] = NA_REAL;
+                else
+                  REAL(VECTOR_ELT(df,col))[i] = val_d;
+              }
+            }
 
           }
 
@@ -1976,7 +2107,13 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
             if (debug && i == 0)
               Rcout << val_s << std::endl;
 
-            as<CharacterVector>(df[ord])[i] = val_s;
+            if (debug && i == 0)
+              Rcout << "writing: " << i << "/" << col << std::endl;
+
+            if (keepr)
+              if (keepc) {
+                as<CharacterVector>(df[col])[i] = val_s;
+              }
 
           }
 
@@ -1998,89 +2135,125 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
 
     if ((compr == 1) || (compr == 2)) {
 
+      if (debug)
+        Rcout << "compression" << std::endl;
+
       std::ifstream sas(tempstr, std::ios::in | std::ios::binary | std::ios::ate);
-      sas_size = sas.tellg();
 
-      sas.seekg(0, std::ios_base::beg);
+      if (sas) {
 
-      auto ii = 0;
-      for (uint64_t i = 0; i < rowcount; ++i) {
+        sas_size = sas.tellg();
+        sas.seekg(0, std::ios_base::beg);
 
-        if (debug) Rcout << "row: " << i << " --------------------" <<std::endl;
+        auto i = -1;
+        for (uint64_t iii = 0; iii < n; ++iii) {
 
-        valid[i] = true;
-
-        for (auto j = 0; j < colnum; ++j) {
-
-          auto ord = ordered[j];
-          auto wid = colwidth[ord];
-          auto typ = vartyps[ord];
-
-          if (debug) Rcout << "col: " << j << std::endl;
+          if (debug && i == 0)
+            Rcout << "row: " << i << " --------------------" <<std::endl;
 
 
-          if (debug)
-            Rcout << ord << " : " << wid << " : " << typ << std::endl;
-
-
-          if ((wid > 0) & (wid < 8) & (typ == 1)) {
-
-            double val_d = 0.0;
-
-            val_d = readbinlen(val_d, sas, 0, wid);
-
-            // Rcout << val_d << std::endl;
-
-            if (std::isnan(val_d))
-              REAL(VECTOR_ELT(df,ord))[i] = NA_REAL;
-            else
-              REAL(VECTOR_ELT(df,ord))[i] = val_d;
-
+          /* nmin is not a c vector starting at 0. i is initialized at -1 so will
+           * be 0 once its bigger than nmin. This allows to import only the
+           * selected rows. Once nmax is reached, import will stop.
+           */
+          if (iii >= (nmin-1)) {
+            keepr = 1;
+            ++i;
           }
 
-          if ((wid == 8) & (typ == 1)) {
+          if (iii >= nmax) break;
 
-            double val_d = 0.0;
+          // for completeness
+          valid[iii] = true;
+          deleted[iii] = false;
 
-            val_d = readbin(val_d, sas, swapit);
+          for (auto j = 0; j < k; ++j) {
 
-            // Rcout << val_d << std::endl;
+            auto ord = ordered[j];
+            auto wid = colwidth[ord];
+            auto typ = vartyps[ord];
+            auto col = cvec[ord];
 
-            if (std::isnan(val_d))
-              REAL(VECTOR_ELT(df,ord))[i] = NA_REAL;
-            else
-              REAL(VECTOR_ELT(df,ord))[i] = val_d;
+            bool keepc = col >= 0;
 
+            if (debug && i == 0) {
+              Rcout << col << " : " << wid << " : " << typ << std::endl;
+              Rcout << "row i / iii / keepr: " << i << " " << iii <<" " << keepr << std::endl;
+            }
+
+            // stop("stop");
+
+            if ((wid > 0) & (wid < 8) & (typ == 1)) {
+
+              double val_d = 0.0;
+
+              val_d = readbinlen(val_d, sas, 0, wid);
+
+              if (debug && i == 0)
+                Rcout << val_d << std::endl;
+
+              if (keepc) {
+                if (std::isnan(val_d))
+                  REAL(VECTOR_ELT(df,col))[i] = NA_REAL;
+                else
+                  REAL(VECTOR_ELT(df,col))[i] = val_d;
+              }
+
+            }
+
+            if ((wid == 8) & (typ == 1)) {
+
+              double val_d = 0.0;
+
+              val_d = readbin(val_d, sas, swapit);
+
+              if (debug && i == 0)
+                Rcout << val_d << std::endl;
+
+              if (keepc) {
+                if (std::isnan(val_d))
+                  REAL(VECTOR_ELT(df,col))[i] = NA_REAL;
+                else
+                  REAL(VECTOR_ELT(df,col))[i] = val_d;
+              }
+
+            }
+
+            if ((wid > 0) & (typ == 2)) {
+
+              std::string val_s(wid, ' ');
+
+              val_s = readstring(val_s, sas);
+
+              val_s = std::regex_replace(val_s,
+                                         std::regex(" +$"), "$1");
+
+              if (debug && i == 0)
+                Rcout << val_s << std::endl;
+
+              if (keepc)
+                as<CharacterVector>(df[col])[i] = val_s;
+
+            }
           }
 
-          if ((wid > 0) & (typ == 2)) {
-
-            std::string val_s(wid, ' ');
-
-            val_s = readstring(val_s, sas);
-
-            val_s = std::regex_replace(val_s,
-                                       std::regex(" +$"), "$1");
-
-            // Rcout << val_s << std::endl;
-
-            as<CharacterVector>(df[ord])[i] = val_s;
-
+          // check if eof is reached sas.eof() did not work
+          if ((sas_size - sas.tellg()) == 0) {
+            // Rcout << "eof reached" << std::endl;
+            break;
           }
+
         }
 
-        // check if eof is reached sas.eof() did not work
-        if ((sas_size - sas.tellg()) == 0) {
-          // Rcout << "eof reached" << std::endl;
-          break;
-        }
+        sas.close();
 
-        ++ii;
+      } else {
+        warning("could not read from compressed pages");
       }
 
-      sas.close();
-
     }
+
+    // Rf_PrintValue(df);
 
     if (!debug) {
       if ( remove(tempstr.c_str()) != 0 )
@@ -2089,29 +2262,23 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
     }
 
     if (debug) {
-      Rprintf("%d %d \n", rowcount, colnum);
+      Rprintf("%d %d \n", nn, kk);
     }
 
-    Rcpp::IntegerVector rvec(rowcount);
-
-    if (rowcount > 0)
-      rvec = seq(1, rowcount);
-
-
-    Rcpp::IntegerVector cvec;
-    if (varnames.size() > colnum)
-      cvec = seq(1, colnum);
+    // if (varnames.size() > kk)
+    //   cvec = seq(1, kk);
 
     // 3. Create a data.frame
-    df.attr("row.names") = rvec;
+    if (nn > 0)
+      df.attr("row.names") = seq(1, nn);
 
-    if (varnames.size() == colnum)
-      df.attr("names") = varnames;
+    if (varnames_kk.size() == kk)
+      df.attr("names") = varnames_kk;
     else
       df.attr("names") = cvec;
     df.attr("class") = "data.frame";
 
-    if (varnames.size() > colnum)
+    if (varnames.size() > kk)
       df.attr("varnames") = varnames;
 
     df.attr("labels") = labels;
@@ -2138,7 +2305,7 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
     df.attr("fmt32") = fmt32s;
     df.attr("ifmt32") = ifmt32s;
 
-    df.attr("rowcount") = rowcount;
+    df.attr("rowcount") = nn;
     df.attr("rowlength") = rowlength;
     df.attr("deleted_rows") = delobs;
     df.attr("colwidth") = colwidth;
@@ -2149,11 +2316,13 @@ Rcpp::List readsas(const char * filePath, const bool debug, const int64_t kk)
     df.attr("headersize") = headersize;
     df.attr("pagesize") = pagesize;
 
-    if (kk >= 0 && (uint64_t)kk == rowcount) {
-      // deleted needs to be reduced if we ever skip the first row
-      deleted.resize(rowcount);
-    }
+    // if (kk >= 0 && (uint64_t)kk == nn) {
+    //   // deleted needs to be reduced if we ever skip the first row
+    //   deleted.resize(nn);
+    // }
 
+    df.attr("cvec") = cvec;
+    df.attr("rvec") = rvec;
     df.attr("deleted") = deleted;
     df.attr("valid") = valid;
 

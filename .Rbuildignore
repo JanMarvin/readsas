@@ -1,5 +1,5 @@
-^appveyor.yml$
-^\.travis\.yml$
+^README.Rmd$
 ^\.github$
 ^.*\.Rproj$
 ^\.Rproj\.user$
+^.lintr$

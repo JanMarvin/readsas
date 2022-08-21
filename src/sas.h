@@ -8,18 +8,40 @@
 
 #include "swap_endian.h"
 
-inline void writestr(std::string val_s, int32_t len, std::fstream& sav)
+inline void writestr(std::string val_s, int32_t len, std::fstream& sas)
 {
 
   std::stringstream val_stream;
   val_stream << std::left << std::setw(len) << std::setfill(' ') << val_s;
   std::string val_strl = val_stream.str();
 
-  sav.write(val_strl.c_str(),val_strl.length());
+  sas.write(val_strl.c_str(), val_strl.length());
 
 }
 
+// return only the matched positions. Either Rcpps in() can't handle Character-
+// Vectors or I could not make it work. Wanted to select the selected varname
+// position from the varnames vector.
+inline Rcpp::IntegerVector choose(Rcpp::CharacterVector x,
+                                  Rcpp::CharacterVector y)
+{
+  Rcpp::IntegerVector mm = Rcpp::match(x, y);
 
+  if (Rcpp::any(Rcpp::is_na(mm))) {
+    Rcpp::LogicalVector ll = !Rcpp::is_na(mm);
+
+    Rcpp::CharacterVector ms = x[ll==0];
+
+    // does not work if ms contains multiple names: Rcpp::as<std::string>(ms)
+    Rcpp::Rcout << "Variable " << ms <<
+      " was not found in sas-file." << std::endl;
+  }
+
+  // report position for found cases
+  mm = Rcpp::match(y, x);
+
+  return(mm);
+}
 
 inline Rcpp::IntegerVector order(Rcpp::IntegerVector x) {
   Rcpp::IntegerVector sorted = Rcpp::clone(x).sort();
@@ -464,6 +486,33 @@ inline std::string SASEncoding(uint8_t encval) {
   return enc;
 }
 
+// order only the valid options
+Rcpp::IntegerVector order_(Rcpp::IntegerVector v) {
+  Rcpp::IntegerVector z = clone(v);
+  if (any(Rcpp::is_na(z))) {
+    return z[z >= 0] = order(z[z >= 0]);
+  } else{
+    // Rcpp::Rcout << "no missings" << order(z) << std::endl;
+    return order(z);
+  }
+}
+
+// create new column vector. has the expected length, but counts new
+Rcpp::IntegerVector cvec_(Rcpp::LogicalVector &l) {
+
+  Rcpp::IntegerVector out(l.size());
+
+  auto idx = 0;
+  for (auto i = 0; i < l.size(); ++i) {
+    if (l[i] == 0) {
+      out[i] = idx;
+      ++idx;
+    } else
+      out[i] = -1;
+  }
+
+  return out;
+}
 
 
 #endif

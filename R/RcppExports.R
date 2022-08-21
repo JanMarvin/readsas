@@ -5,10 +5,11 @@
 #'
 #' @param filePath The full systempath to the sas7bdat file you want to import.
 #' @param debug print debug information
-#' @param kk kk
+#' @param selectrows_ integer vector of selected rows
+#' @param selectcols_ character vector of selected rows
 #' @import Rcpp
 #' @export
-readsas <- function(filePath, debug, kk) {
-    .Call(`_readsas_readsas`, filePath, debug, kk)
+readsas <- function(filePath, debug, selectrows_, selectcols_) {
+    .Call(`_readsas_readsas`, filePath, debug, selectrows_, selectcols_)
 }
 

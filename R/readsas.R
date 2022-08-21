@@ -6,9 +6,12 @@
 #'@param debug print debug information
 #'@param convert_dates default is TRUE
 #'@param recode default is TRUE
-#'@param rowcount number of rows to import (from start). negative values are
-#' ignored
+#'@param select.rows \emph{integer.} Vector of one or two numbers. If single
+#' value rows from 1:val are selected. If two values of a range are selected
+#' the rows in range will be selected.
+#'@param select.cols \emph{character:} Vector of variables to select.
 #'@param remove_deleted logical if deleted rows should be removed from data
+#'@param rownames first column will be used as rowname and removed from data
 #'
 #'@useDynLib readsas, .registration=TRUE
 #'@importFrom utils download.file
@@ -16,7 +19,8 @@
 #'
 #'@export
 read.sas <- function(file, debug = FALSE, convert_dates = TRUE, recode = TRUE,
-                     rowcount = -1, remove_deleted = TRUE) {
+                     select.rows = NULL, select.cols = NULL, remove_deleted = TRUE,
+                     rownames = FALSE) {
 
   # Check if path is a url
   if (length(grep("^(http|ftp|https)://", file))) {
@@ -32,20 +36,72 @@ read.sas <- function(file, debug = FALSE, convert_dates = TRUE, recode = TRUE,
     return(message("File not found."))
 
 
+  # some select.row checks
+  if (!is.null(select.rows)) {
 
-  data <- readsas(filepath, debug, rowcount)
+    # check that it is a numeric
+    if (!is.numeric(select.rows)) {
+      return(message("select.rows must be of type numeric"))
+    } else {
+      # guard against negative values
+      if (any(select.rows < 0))
+        select.rows <- abs(select.rows)
 
-  labels  <- attr(data, "labels")
-  formats <- attr(data, "formats")
-  encoding <- attr(data, "encoding")
+      # check that length is not > 2
+      if (length(select.rows) > 2)
+        return(message("select.rows must be of length 1 or 2."))
+
+      # if length 1 start at row 1
+      if (length(select.rows) == 1)
+        select.rows <- c(1, select.rows)
+
+      # reorder if 2 is bigger than 1
+      if (select.rows[2] < select.rows[1])
+        select.rows <- c(select.rows[2], select.rows[1])
+
+      # make sure to start at index position 1 if select.rows[2] > 0
+      if (select.rows[2] > 0 && select.rows[1] == 0)
+        select.rows[1] <- 1
+    }
+
+  }
+
+  if (!is.null(select.cols) && !is.character(select.cols)) {
+    return(message("select.cols must be of type character"))
+  }
+
+  data <- readsas(filepath, debug, select.rows, select.cols)
+
+
+  # rowcount <- attr(data, "rowcount")
+  # if rownames, remove the rowname variable from attributes
+  cvec <- attr(data, "cvec") <- which(attr(data, "cvec") >= 0)[ifelse(rownames, -1, substitute())]
+
+  if (rownames) {
+    rownames(data) <- data[[1]]
+    data[[1]] <- NULL
+  }
+
+  encoding <- attr(data, "encoding") <- attr(data, "encoding")
+
+  ## shorten attributes and reassign
+  labels  <- attr(data, "labels")  <- attr(data, "labels")[cvec]
+  formats <- attr(data, "formats") <- attr(data, "formats")[cvec]
+
+  attr(data, "varnames") <- attr(data, "varnames")[cvec]
+  attr(data, "fmtkeys")  <- attr(data, "fmtkeys")[cvec]
+  attr(data, "fmt32")    <- attr(data, "fmt32")[cvec]
+  attr(data, "ifmt32")   <- attr(data, "ifmt32")[cvec]
+  attr(data, "colwidth") <- attr(data, "colwidth")[cvec]
+  attr(data, "vartyps")  <- attr(data, "vartyps")[cvec]
+  attr(data, "c8vec")    <- attr(data, "c8vec")[cvec]
+
 
   # override encoding argument if file contains no valid information
   if (encoding == "")
     recode <- FALSE
 
-
   if (convert_dates) {
-
     # TODO formula to create possible date formats?
     dates <- c(
       "b8601da", "e8601da", "date", "day", "ddmmyy", "ddmmyyb", "ddmmyyc",
@@ -126,8 +182,9 @@ read.sas <- function(file, debug = FALSE, convert_dates = TRUE, recode = TRUE,
 
     del_rows <- attr(data, "deleted_rows")
 
-    val <- attr(data, "valid")
-    del <- attr(data, "deleted")
+    sel <- attr(data, "rvec")
+    val <- attr(data, "valid")[sel]
+    del <- attr(data, "deleted")[sel]
     attr(data, "deleted") <- NULL
     attr(data, "valid") <- NULL
 
@@ -151,7 +208,7 @@ read.sas <- function(file, debug = FALSE, convert_dates = TRUE, recode = TRUE,
 
     }
 
-    # better save than sorry
+    # better safe than sorry
     if (del_rows > 0 && (all(isFALSE(del)) || all(isTRUE(val))))
       warning("file indicated deleted rows, but none was found")
 
