@@ -2265,15 +2265,12 @@ Rcpp::List readsas(const char * filePath,
       Rprintf("%d %d \n", nn, kk);
     }
 
-    if (nn > 0)
-      rvec = seq(1, nn);
-
-    if (varnames.size() > kk)
-      cvec = seq(1, kk);
+    // if (varnames.size() > kk)
+    //   cvec = seq(1, kk);
 
     // 3. Create a data.frame
     if (nn > 0)
-      df.attr("row.names") = rvec;
+      df.attr("row.names") = seq(1, nn);
 
     if (varnames_kk.size() == kk)
       df.attr("names") = varnames_kk;
