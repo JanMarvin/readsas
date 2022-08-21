@@ -55,8 +55,10 @@
 <span>  debug <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  convert_dates <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  recode <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  rowcount <span class="op">=</span> <span class="op">-</span><span class="fl">1</span>,</span>
-<span>  remove_deleted <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  select.rows <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  select.cols <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  remove_deleted <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  rownames <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -78,13 +80,22 @@
 <dd><p>default is TRUE</p></dd>
 
 
-<dt>rowcount</dt>
-<dd><p>number of rows to import (from start). negative values are
-ignored</p></dd>
+<dt>select.rows</dt>
+<dd><p><em>integer.</em> Vector of one or two numbers. If single
+value rows from 1:val are selected. If two values of a range are selected
+the rows in range will be selected.</p></dd>
+
+
+<dt>select.cols</dt>
+<dd><p><em>character:</em> Vector of variables to select.</p></dd>
 
 
 <dt>remove_deleted</dt>
 <dd><p>logical if deleted rows should be removed from data</p></dd>
+
+
+<dt>rownames</dt>
+<dd><p>first column will be used as rowname and removed from data</p></dd>
 
 </dl></div>
     <div id="author">
