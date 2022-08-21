@@ -11,9 +11,9 @@ readsas(filePath, debug, selectrows_, selectcols_)
 
 \item{debug}{print debug information}
 
-\item{selectrows}{integer vector of selected rows}
+\item{selectrows_}{integer vector of selected rows}
 
-\item{selectcols}{character vector of selected rows}
+\item{selectcols_}{character vector of selected rows}
 }
 \description{
 Reads SAS data files
