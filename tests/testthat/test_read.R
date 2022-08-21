@@ -51,7 +51,7 @@ test_that("read file with deleted rows", {
 
 
 ### select rows
-fl <- system.file("extdata", "mtcars.sas7bdat", package="readsas")
+fl <- system.file("extdata", "mtcars.sas7bdat", package = "readsas")
 
 dd <- read.sas(fl, select.rows = c(2,5), rownames = TRUE)
 
@@ -61,7 +61,7 @@ test_that("select.rows", {
 
 
 ### select cols
-fl <- system.file("extdata", "mtcars.sas7bdat", package="readsas")
+fl <- system.file("extdata", "mtcars.sas7bdat", package = "readsas")
 
 dd <- read.sas(fl, select.cols = c("VAR1", "mpg", "hp"), rownames = TRUE)
 
@@ -71,7 +71,7 @@ test_that("select.rows", {
 
 
 ### select cols & rows
-fl <- system.file("extdata", "mtcars.sas7bdat", package="readsas")
+fl <- system.file("extdata", "mtcars.sas7bdat", package = "readsas")
 
 dd <- read.sas(fl, select.cols = c("VAR1", "mpg", "hp"), select.rows = c(2,5), rownames = TRUE)
 

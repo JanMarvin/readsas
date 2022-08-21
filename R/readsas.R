@@ -44,7 +44,7 @@ read.sas <- function(file, debug = FALSE, convert_dates = TRUE, recode = TRUE,
       return(message("select.rows must be of type numeric"))
     } else {
       # guard against negative values
-      if (any(select.rows < 0) )
+      if (any(select.rows < 0))
         select.rows <- abs(select.rows)
 
       # check that length is not > 2
@@ -60,7 +60,7 @@ read.sas <- function(file, debug = FALSE, convert_dates = TRUE, recode = TRUE,
         select.rows <- c(select.rows[2], select.rows[1])
 
       # make sure to start at index position 1 if select.rows[2] > 0
-      if (select.rows[2] > 0 & select.rows[1] == 0)
+      if (select.rows[2] > 0 && select.rows[1] == 0)
         select.rows[1] <- 1
     }
 
@@ -99,7 +99,7 @@ read.sas <- function(file, debug = FALSE, convert_dates = TRUE, recode = TRUE,
 
   # override encoding argument if file contains no valid information
   if (encoding == "")
-    recode = FALSE
+    recode <- FALSE
 
   if (convert_dates) {
     # TODO formula to create possible date formats?
