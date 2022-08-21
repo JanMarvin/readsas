@@ -1892,11 +1892,12 @@ Rcpp::List readsas(const char * filePath,
     CharacterVector varnames_kk = clone(varnames)[select];
     IntegerVector vartyps_kk = clone(vartyps)[select];
 
+
     // 2. fill it with data
 
     // 1. Create Rcpp::List
     Rcpp::List df(kk);
-    for (auto i = 0; i < kk; ++i)
+    for (uint32_t i = 0; i < kk; ++i)
     {
       int32_t const type = vartyps_kk[i];
 
@@ -1948,8 +1949,7 @@ Rcpp::List readsas(const char * filePath,
       sas.seekg(data_pos[0], sas.beg);
 
       auto i = -1;  // counter output data frame
-      auto ii = 0; // some inner counter
-      // iii = 0;  // counter for outer data frame
+      uint64_t ii = 0;  // row on the selected page
       for (uint64_t iii = 0; iii < n; ++iii) {
 
         /* nmin is not a c vector starting at 0. i is initialized at -1 so will
@@ -1964,7 +1964,7 @@ Rcpp::List readsas(const char * filePath,
         // Rcout << "---------------------" << std::endl;
         // Rcout << iii << " " << nmin << std::endl;
         if (debug && i == 0)
-          Rcout << "row i / iii / keepr: " << i << " " << iii <<" " << keepr << std::endl;
+          Rcout << "row i / ii / iii / keepr: " << i << " " << ii << " " << iii <<" " << keepr << std::endl;
 
         if (iii >= nmax) break;
 
@@ -1978,25 +1978,30 @@ Rcpp::List readsas(const char * filePath,
               break;
           }
 
+          if (debug && i == 0)
+            Rcout << "page: " << page << std::endl;
+
           // beg handle delmarker
           std::string page_pagedelmarker = pagedelmarker[page];
 
-          // Rcout << page_pagedelmarker << std::endl;
+          // Rcout << page_pagedelmarker << " : " << ii << std::endl;
+
 
           std::string delmarked = "";
-          if (page_pagedelmarker.size() > 0 && ii < page_pagedelmarker.size()) {
+          if (!page_pagedelmarker.empty() && (uint64_t)page_pagedelmarker.size() > 0 && ii < page_pagedelmarker.size()) {
             delmarked = page_pagedelmarker[ii];
             // Rcout << page_pagedelmarker[ii] << std::endl;
           }
           if (delmarked == "1")
-            deleted[i] = true;
+            deleted[iii] = true;
           else
-            deleted[i] = false;
+            deleted[iii] = false;
 
-          valid[i] = true;
+          valid[iii] = true;
           // end handle delmarker
 
-          if (totalrowsvec[page] == iii) {
+
+          if (totalrowsvec[page] == ii) {
             ++page;
             ii = 0;
             firstpage = 1;
@@ -2004,7 +2009,7 @@ Rcpp::List readsas(const char * filePath,
         }
 
         auto pp = data_pos[page];
-        auto pos = pp + (double)rowlength * iii;
+        auto pos = pp + (double)rowlength * ii;
 
         /* unknown */
         if (!(dataoffset == 1 || dataoffset == 256) & (firstpage == 0)) {
@@ -2113,8 +2118,9 @@ Rcpp::List readsas(const char * filePath,
             break;
           }
 
-          ++ii;
         }
+
+        ++ii;
       }
     }
 
