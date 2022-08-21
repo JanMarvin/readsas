@@ -11,7 +11,8 @@ read.sas(
   recode = TRUE,
   select.rows = NULL,
   select.cols = NULL,
-  remove_deleted = TRUE
+  remove_deleted = TRUE,
+  rownames = FALSE
 )
 }
 \arguments{
@@ -30,6 +31,8 @@ the rows in range will be selected.}
 \item{select.cols}{\emph{character:} Vector of variables to select.}
 
 \item{remove_deleted}{logical if deleted rows should be removed from data}
+
+\item{rownames}{first column will be used as rowname and removed from data}
 }
 \description{
 read.sas

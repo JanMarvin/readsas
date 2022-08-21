@@ -4,7 +4,7 @@
 \alias{readsas}
 \title{Reads SAS data files}
 \usage{
-readsas(filePath, debug, selectrows, selectcols)
+readsas(filePath, debug, selectrows_, selectcols_)
 }
 \arguments{
 \item{filePath}{The full systempath to the sas7bdat file you want to import.}
