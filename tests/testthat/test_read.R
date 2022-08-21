@@ -60,11 +60,21 @@ test_that("select.rows", {
 })
 
 
-### select rows
+### select cols
 fl <- system.file("extdata", "mtcars.sas7bdat", package="readsas")
 
 dd <- read.sas(fl, select.cols = c("VAR1", "mpg", "hp"), rownames = TRUE)
 
 test_that("select.rows", {
   expect_true(all.equal(dd, mtcars[,c("mpg", "hp")], check.attributes = FALSE))
+})
+
+
+### select cols & rows
+fl <- system.file("extdata", "mtcars.sas7bdat", package="readsas")
+
+dd <- read.sas(fl, select.cols = c("VAR1", "mpg", "hp"), select.rows = c(2,5), rownames = TRUE)
+
+test_that("select.rows", {
+  expect_true(all.equal(dd, mtcars[2:5,c("mpg", "hp")], check.attributes = FALSE))
 })

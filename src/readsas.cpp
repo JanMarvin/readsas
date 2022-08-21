@@ -1945,6 +1945,8 @@ Rcpp::List readsas(const char * filePath,
     // available in compressed data. BUT THIS IS A GUESS.
     if (compr == 0) {
 
+      Rcout << "no compression" << std::endl;
+
       auto page = 0;
       sas.seekg(data_pos[0], sas.beg);
 
@@ -2008,8 +2010,8 @@ Rcpp::List readsas(const char * filePath,
           }
         }
 
-        auto pp = data_pos[page];
-        auto pos = pp + (double)rowlength * ii;
+        uint64_t pp = data_pos[page];
+        uint64_t pos = pp + (double)rowlength * ii;
 
         /* unknown */
         if (!(dataoffset == 1 || dataoffset == 256) & (firstpage == 0)) {
@@ -2112,12 +2114,12 @@ Rcpp::List readsas(const char * filePath,
 
           }
 
-          // check if eof is reached sas.eof() did not work
-          if ((sas_size - sas.tellg()) == 0) {
-            // Rcout << "eof reached" << std::endl;
-            break;
-          }
+        }
 
+        // check if eof is reached sas.eof() did not work
+        if ((sas_size - sas.tellg()) == 0) {
+          // Rcout << "eof reached" << std::endl;
+          break;
         }
 
         ++ii;
@@ -2130,32 +2132,36 @@ Rcpp::List readsas(const char * filePath,
 
     if ((compr == 1) || (compr == 2)) {
 
-      std::ifstream sas(tempstr,
-                        std::ios::in | std::ios::binary);
+      Rcout << "compression" << std::endl;
+
+      std::ifstream sas(tempstr, std::ios::in | std::ios::binary | std::ios::ate);
 
       if (sas) {
 
-        /* With compressed files the uncompressed data part is assumed to be
-         * rowwise. This allows to skip right into it. Additionally it could
-         * be possible to select only certain rows for uncompression.
-         */
-        if (nmin != 0) {
-          // skip into the data part! potentially dangerous!
-          sas.seekg((double)rowlength * (nmin-1), sas.cur);
-          // Rcout << "yep" << std::endl;
-        }
+        sas_size = sas.tellg();
+        sas.seekg(0, std::ios_base::beg);
 
+        auto i = -1;
         auto ii = 0;
-        for (uint64_t i = 0; i < n; ++i) {
+        for (uint64_t iii = 0; iii < n; ++iii) {
 
           if (debug && i == 0)
             Rcout << "row: " << i << " --------------------" <<std::endl;
 
-          valid[i] = true;
+          valid[iii] = true;
+
+          /* nmin is not a c vector starting at 0. i is initialized at -1 so will
+           * be 0 once its bigger than nmin. This allows to import only the
+           * selected rows. Once nmax is reached, import will stop.
+           */
+          if (iii >= (nmin-1) ) {
+            keepr = 1;
+            ++i;
+          }
 
           for (auto j = 0; j < k; ++j) {
 
-            int32_t ord = ordered[j];
+            auto ord = ordered[j];
             auto wid = colwidth[ord];
             auto typ = vartyps[ord];
             auto col = cvec[ord];
