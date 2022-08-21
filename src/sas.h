@@ -486,6 +486,33 @@ inline std::string SASEncoding(uint8_t encval) {
   return enc;
 }
 
+// order only the valid options
+Rcpp::IntegerVector order_(Rcpp::IntegerVector v) {
+  Rcpp::IntegerVector z = clone(v);
+  if (any(Rcpp::is_na(z))) {
+    return z[z >= 0] = order(z[z >= 0]);
+  } else{
+    // Rcpp::Rcout << "no missings" << order(z) << std::endl;
+    return order(z);
+  }
+}
+
+// create new column vector. has the expected length, but counts new
+Rcpp::IntegerVector cvec_(Rcpp::LogicalVector &l) {
+
+  Rcpp::IntegerVector out(l.size());
+
+  auto idx = 0;
+  for (auto i = 0; i < l.size(); ++i) {
+    if (l[i] == 0) {
+      out[i] = idx;
+      ++idx;
+    } else
+      out[i] = -1;
+  }
+
+  return out;
+}
 
 
 #endif

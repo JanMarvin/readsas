@@ -11,16 +11,16 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // readsas
-Rcpp::List readsas(const char * filePath, const bool debug, const IntegerVector selectrows, const CharacterVector selectcols);
-RcppExport SEXP _readsas_readsas(SEXP filePathSEXP, SEXP debugSEXP, SEXP selectrowsSEXP, SEXP selectcolsSEXP) {
+Rcpp::List readsas(const char * filePath, const bool debug, Nullable<IntegerVector> selectrows_, Nullable<CharacterVector> selectcols_);
+RcppExport SEXP _readsas_readsas(SEXP filePathSEXP, SEXP debugSEXP, SEXP selectrows_SEXP, SEXP selectcols_SEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const char * >::type filePath(filePathSEXP);
     Rcpp::traits::input_parameter< const bool >::type debug(debugSEXP);
-    Rcpp::traits::input_parameter< const IntegerVector >::type selectrows(selectrowsSEXP);
-    Rcpp::traits::input_parameter< const CharacterVector >::type selectcols(selectcolsSEXP);
-    rcpp_result_gen = Rcpp::wrap(readsas(filePath, debug, selectrows, selectcols));
+    Rcpp::traits::input_parameter< Nullable<IntegerVector> >::type selectrows_(selectrows_SEXP);
+    Rcpp::traits::input_parameter< Nullable<CharacterVector> >::type selectcols_(selectcols_SEXP);
+    rcpp_result_gen = Rcpp::wrap(readsas(filePath, debug, selectrows_, selectcols_));
     return rcpp_result_gen;
 END_RCPP
 }

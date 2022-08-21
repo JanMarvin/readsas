@@ -11,6 +11,7 @@
 #' the rows in range will be selected.
 #'@param select.cols \emph{character:} Vector of variables to select.
 #'@param remove_deleted logical if deleted rows should be removed from data
+#'@param rownames first column will be used as rowname and removed from data
 #'
 #'@useDynLib readsas, .registration=TRUE
 #'@importFrom utils download.file
@@ -18,7 +19,8 @@
 #'
 #'@export
 read.sas <- function(file, debug = FALSE, convert_dates = TRUE, recode = TRUE,
-                     select.rows = NULL, select.cols = NULL, remove_deleted = TRUE) {
+                     select.rows = NULL, select.cols = NULL, remove_deleted = TRUE,
+                     rownames = FALSE) {
 
   # Check if path is a url
   if (length(grep("^(http|ftp|https)://", file))) {
@@ -36,6 +38,11 @@ read.sas <- function(file, debug = FALSE, convert_dates = TRUE, recode = TRUE,
 
 
   data <- readsas(filepath, debug, select.rows, select.cols)
+
+  if (rownames) {
+    rownames(data) <- data[[1]]
+    data[[1]] <- NULL
+  }
 
   labels  <- attr(data, "labels")
   formats <- attr(data, "formats")
@@ -111,10 +118,11 @@ read.sas <- function(file, debug = FALSE, convert_dates = TRUE, recode = TRUE,
 
     del_rows <- attr(data, "deleted_rows")
 
-    val <- attr(data, "valid")
-    del <- attr(data, "deleted")
-    attr(data, "deleted") <- NULL
-    attr(data, "valid") <- NULL
+    sel <- attr(data, "rvec")
+    val <- attr(data, "valid")[sel]
+    del <- attr(data, "deleted")[sel]
+    # attr(data, "deleted") <- NULL
+    # attr(data, "valid") <- NULL
 
     if (del_rows > 0) {
 

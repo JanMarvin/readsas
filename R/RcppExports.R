@@ -9,7 +9,7 @@
 #' @param selectcols character vector of selected rows
 #' @import Rcpp
 #' @export
-readsas <- function(filePath, debug, selectrows, selectcols) {
-    .Call(`_readsas_readsas`, filePath, debug, selectrows, selectcols)
+readsas <- function(filePath, debug, selectrows_, selectcols_) {
+    .Call(`_readsas_readsas`, filePath, debug, selectrows_, selectcols_)
 }
 

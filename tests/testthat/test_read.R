@@ -44,10 +44,7 @@ test_that("read file with deleted rows", {
   # skip row
   fl <- system.file("extdata", "test2.sas7bdat", package = "readsas")
   exp <- data.frame(x = 1:3)[c(1), , drop = FALSE]
-  expect_warning(
-    got <- read.sas(fl, rowcount = 2),
-    "User requested to read 2 of 3 rows"
-  )
+  got <- read.sas(fl, select.rows = c(1, 2))
   expect_equal(exp, got, check.attributes = FALSE)
 
 })
@@ -56,19 +53,18 @@ test_that("read file with deleted rows", {
 ### select rows
 fl <- system.file("extdata", "mtcars.sas7bdat", package="readsas")
 
-dd <- read.sas(fl, select.rows = c(2,5))[-1]
-
+dd <- read.sas(fl, select.rows = c(2,5), rownames = TRUE)
 
 test_that("select.rows", {
   expect_true(all.equal(dd, mtcars[2:5,], check.attributes = FALSE))
 })
 
 
-# ### select rows # FIXME: crashing
-# fl <- system.file("extdata", "mtcars.sas7bdat", package="readsas")
-#
-# dd <- read.sas(fl, select.cols = "MPG", debug = F)
-#
-# test_that("select.rows", {
-#   expect_true(all.equal(dd, mtcars[2:5,], check.attributes = FALSE))
-# })
+### select rows
+fl <- system.file("extdata", "mtcars.sas7bdat", package="readsas")
+
+dd <- read.sas(fl, select.cols = c("VAR1", "mpg", "hp"), rownames = TRUE)
+
+test_that("select.rows", {
+  expect_true(all.equal(dd, mtcars[,c("mpg", "hp")], check.attributes = FALSE))
+})
