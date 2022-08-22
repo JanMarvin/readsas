@@ -2132,6 +2132,8 @@ Rcpp::List readsas(const char * filePath,
 
         }
 
+        // ! not needed to skip ahead, we recalc the position for every row !
+
         // check if eof is reached sas.eof() did not work
         if ((sas_size - sas.tellg()) == 0) {
           // Rcout << "eof reached" << std::endl;
@@ -2266,6 +2268,12 @@ Rcpp::List readsas(const char * filePath,
               }
 
             }
+          }
+
+          // end of row reached, skip to end if required
+          if (skipahead > 0) {
+            sas.seekg(skipahead, sas.cur);
+            skipahead = 0;
           }
 
           // check if eof is reached sas.eof() did not work
