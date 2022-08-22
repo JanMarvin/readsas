@@ -2030,6 +2030,7 @@ Rcpp::List readsas(const char * filePath,
 
         pos = 0;
 
+        auto skipahead = 0;
         for (auto j = 0; j < k; ++j) {
 
           auto ord = ordered[j];
@@ -2051,70 +2052,82 @@ Rcpp::List readsas(const char * filePath,
 
           if ((wid < 8) & (typ == 1)) {
 
-            double val_d = 0.0;
-
-            val_d = readbinlen(val_d, sas, 0, wid);
-
-            if (debug && i == 0)
-              Rcout << val_d << std::endl;
-
-            if (debug && i == 0)
-              Rcout << "writing: " << i << "/" << col << std::endl;
-
-            if (keepr) {
-              if (keepc) {
-                if (std::isnan(val_d))
-                  REAL(VECTOR_ELT(df,col))[i] = NA_REAL;
-                else
-                  REAL(VECTOR_ELT(df,col))[i] = val_d;
+            if (keepr && keepc) {
+              if (skipahead > 0) {
+                sas.seekg(skipahead, sas.cur);
+                skipahead = 0;
               }
+
+              double val_d = 0.0;
+              val_d = readbinlen(val_d, sas, 0, wid);
+
+              if (debug && i == 0)
+                Rcout << val_d << std::endl;
+
+              if (debug && i == 0)
+                Rcout << "writing: " << i << "/" << col << std::endl;
+
+              if (std::isnan(val_d))
+                REAL(VECTOR_ELT(df,col))[i] = NA_REAL;
+              else
+                REAL(VECTOR_ELT(df,col))[i] = val_d;
+            } else {
+              skipahead += wid;
             }
 
           }
 
           if ((wid == 8) & (typ == 1)) {
 
-            double val_d = 0.0;
-
-            val_d = readbin(val_d, sas, swapit);
-
-            if (debug && i == 0)
-              Rcout << val_d << std::endl;
-
-            if (debug && i == 0)
-              Rcout << "writing: " << i << "/" << col << std::endl;
-
-            if (keepr) {
-              if (keepc) {
-                if (std::isnan(val_d))
-                  REAL(VECTOR_ELT(df,col))[i] = NA_REAL;
-                else
-                  REAL(VECTOR_ELT(df,col))[i] = val_d;
+            if (keepr && keepc) {
+              if (skipahead > 0) {
+                sas.seekg(skipahead, sas.cur);
+                skipahead = 0;
               }
+
+              double val_d = 0.0;
+              val_d = readbin(val_d, sas, swapit);
+
+              if (debug && i == 0)
+                Rcout << val_d << std::endl;
+
+              if (debug && i == 0)
+                Rcout << "writing: " << i << "/" << col << std::endl;
+
+              if (std::isnan(val_d))
+                REAL(VECTOR_ELT(df,col))[i] = NA_REAL;
+              else
+                REAL(VECTOR_ELT(df,col))[i] = val_d;
+            } else {
+              skipahead += wid;
             }
 
           }
 
           if ((wid > 0) & (typ == 2)) {
 
-            std::string val_s(wid, ' ');
-
-            val_s = readstring(val_s, sas);
-
-            val_s = std::regex_replace(val_s,
-                                       std::regex(" +$"), "$1");
-
-            if (debug && i == 0)
-              Rcout << val_s << std::endl;
-
-            if (debug && i == 0)
-              Rcout << "writing: " << i << "/" << col << std::endl;
-
-            if (keepr)
-              if (keepc) {
-                as<CharacterVector>(df[col])[i] = val_s;
+            if (keepr && keepc) {
+              if (skipahead > 0) {
+                sas.seekg(skipahead, sas.cur);
+                skipahead = 0;
               }
 
+              std::string val_s(wid, ' ');
+              val_s = readstring(val_s, sas);
+
+              val_s = std::regex_replace(val_s,
+                                         std::regex(" +$"), "$1");
+
+              if (debug && i == 0)
+                Rcout << val_s << std::endl;
+
+              if (debug && i == 0)
+                Rcout << "writing: " << i << "/" << col << std::endl;
+
+              as<CharacterVector>(df[col])[i] = val_s;
+            } else {
+              skipahead += wid;
+            }
           }
 
         }
@@ -2167,6 +2180,7 @@ Rcpp::List readsas(const char * filePath,
           valid[iii] = true;
           deleted[iii] = false;
 
+          auto skipahead = 0;
           for (auto j = 0; j < k; ++j) {
 
             auto ord = ordered[j];
@@ -2181,58 +2195,75 @@ Rcpp::List readsas(const char * filePath,
               Rcout << "row i / iii / keepr: " << i << " " << iii <<" " << keepr << std::endl;
             }
 
-            // stop("stop");
-
             if ((wid > 0) & (wid < 8) & (typ == 1)) {
 
-              double val_d = 0.0;
-
-              val_d = readbinlen(val_d, sas, 0, wid);
-
-              if (debug && i == 0)
-                Rcout << val_d << std::endl;
 
               if (keepc) {
+
+                double val_d = 0.0;
+                val_d = readbinlen(val_d, sas, 0, wid);
+
+                if (debug && i == 0)
+                  Rcout << val_d << std::endl;
+
                 if (std::isnan(val_d))
                   REAL(VECTOR_ELT(df,col))[i] = NA_REAL;
                 else
                   REAL(VECTOR_ELT(df,col))[i] = val_d;
+              } else {
+                skipahead += wid;
               }
 
             }
 
             if ((wid == 8) & (typ == 1)) {
 
-              double val_d = 0.0;
-
-              val_d = readbin(val_d, sas, swapit);
-
-              if (debug && i == 0)
-                Rcout << val_d << std::endl;
-
               if (keepc) {
+
+                if (skipahead > 0) {
+                  sas.seekg(skipahead, std::ios_base::cur);
+                  skipahead = 0;
+                }
+
+                double val_d = 0.0;
+                val_d = readbin(val_d, sas, swapit);
+
+                if (debug && i == 0)
+                  Rcout << val_d << std::endl;
+
                 if (std::isnan(val_d))
                   REAL(VECTOR_ELT(df,col))[i] = NA_REAL;
                 else
                   REAL(VECTOR_ELT(df,col))[i] = val_d;
+              } else {
+                skipahead += wid;
               }
 
             }
 
             if ((wid > 0) & (typ == 2)) {
 
-              std::string val_s(wid, ' ');
+              if (keepc) {
 
-              val_s = readstring(val_s, sas);
+                if (skipahead > 0) {
+                  sas.seekg(skipahead, std::ios_base::cur);
+                  skipahead = 0;
+                }
 
-              val_s = std::regex_replace(val_s,
-                                         std::regex(" +$"), "$1");
+                std::string val_s(wid, ' ');
+                val_s = readstring(val_s, sas);
 
-              if (debug && i == 0)
-                Rcout << val_s << std::endl;
+                val_s = std::regex_replace(val_s,
+                                           std::regex(" +$"), "$1");
 
-              if (keepc)
+                if (debug && i == 0)
+                  Rcout << val_s << std::endl;
+
                 as<CharacterVector>(df[col])[i] = val_s;
+
+              } else {
+                skipahead += wid;
+              }
 
             }
           }
@@ -2264,9 +2295,6 @@ Rcpp::List readsas(const char * filePath,
     if (debug) {
       Rprintf("%d %d \n", nn, kk);
     }
-
-    // if (varnames.size() > kk)
-    //   cvec = seq(1, kk);
 
     // 3. Create a data.frame
     if (nn > 0)
