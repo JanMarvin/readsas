@@ -50,9 +50,11 @@ head(dd)
 
 ## Select columns or rows
 
-This is not necessarily faster (only if less than the maximum number of
-rows is selected). selected), but it is memory efficient to load only
-certain columns or rows.
+This should be much faster, since unselected cells of the entire data
+frame are skipped when reading, and it is memory efficient to load only
+specific columns or rows. However, the file header is always read in its
+entirety. If the file header is large enough, it will still take some
+time to read.
 
 ``` r
 fl <- system.file("extdata", "mtcars.sas7bdat", package="readsas")
