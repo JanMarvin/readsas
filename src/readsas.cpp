@@ -99,21 +99,21 @@ Rcpp::List readsas(const char * filePath,
     std::vector<idxofflen> unk;
     std::vector<int16_t> c8vec;
 
-    Rcpp::NumericVector fmt32s;
-    Rcpp::NumericVector ifmt32s;
-    Rcpp::NumericVector fmtkeys;
-    Rcpp::IntegerVector vartyps;
-    Rcpp::IntegerVector colwidth;
-    Rcpp::IntegerVector page_type;
-    Rcpp::IntegerVector coloffset;
-    Rcpp::IntegerVector cnidx;
-    Rcpp::IntegerVector cnoff;
-    Rcpp::IntegerVector cnlen;
-    Rcpp::IntegerVector cnzer;
+    std::vector<double> fmt32s;
+    std::vector<double> ifmt32s;
+    std::vector<double> fmtkeys;
+    std::vector<int32_t> vartyps;
+    std::vector<int32_t> colwidth;
+    std::vector<int64_t> coloffset;
+    std::vector<int16_t> page_type;
+    std::vector<int16_t> cnidx;
+    std::vector<int16_t> cnoff;
+    std::vector<int16_t> cnlen;
+    std::vector<int16_t> cnzer;
 
-    Rcpp::CharacterVector labels;
-    Rcpp::CharacterVector formats;
-    Rcpp::CharacterVector varnames; // (k)
+    std::vector<std::string> labels;
+    std::vector<std::string> formats;
+    std::vector<std::string> varnames; // (k)
 
     // read 2* 4*4 = 32
     // 0 - 31: Magic Number
@@ -1891,8 +1891,10 @@ Rcpp::List readsas(const char * filePath,
     uint32_t kk = select.size();
 
     // shrink variables to selected size
-    CharacterVector varnames_kk = clone(varnames)[select];
-    IntegerVector vartyps_kk = clone(vartyps)[select];
+    CharacterVector varnames_kk = Rcpp::wrap(varnames);
+    varnames_kk = varnames_kk[select];
+    IntegerVector vartyps_kk = Rcpp::wrap(vartyps);
+    vartyps_kk = vartyps_kk[select];
 
 
     // 2. fill it with data
@@ -1924,9 +1926,9 @@ Rcpp::List readsas(const char * filePath,
     if (debug)
     {
       Rcout << "ll "        << ll           << std::endl;
-      Rcout << "vartyps "   << vartyps      << std::endl;
+      // Rcout << "vartyps "   << vartyps      << std::endl;
       Rcout << "vartyps "   << vartyps_kk   << std::endl;
-      Rcout << "coloffset " << coloffset    << std::endl;
+      // Rcout << "coloffset " << coloffset    << std::endl;
       // Rcout << "coloffset " << coloffset_kk << std::endl;
       Rcout << "ordered "   << ordered      << std::endl;
     }
