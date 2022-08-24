@@ -23,8 +23,11 @@ inline void writestr(std::string val_s, int32_t len, std::fstream& sas)
 // Vectors or I could not make it work. Wanted to select the selected varname
 // position from the varnames vector.
 inline Rcpp::IntegerVector choose(Rcpp::CharacterVector x,
-                                  Rcpp::CharacterVector y)
+                                  std::vector<std::string> y_)
 {
+
+  Rcpp::CharacterVector y = Rcpp::wrap(y_);
+
   Rcpp::IntegerVector mm = Rcpp::match(x, y);
 
   if (Rcpp::any(Rcpp::is_na(mm))) {
@@ -487,8 +490,8 @@ inline std::string SASEncoding(uint8_t encval) {
 }
 
 // order only the valid options
-Rcpp::IntegerVector order_(Rcpp::IntegerVector v) {
-  Rcpp::IntegerVector z = clone(v);
+Rcpp::IntegerVector order_(std::vector<int64_t> v) {
+  Rcpp::IntegerVector z = Rcpp::wrap(v);
   if (any(Rcpp::is_na(z))) {
     return z[z >= 0] = order(z[z >= 0]);
   } else{
