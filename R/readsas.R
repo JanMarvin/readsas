@@ -136,6 +136,16 @@ read.sas <- function(file, debug = FALSE, convert_dates = TRUE, recode = TRUE,
       data[[var]] <- convert_to_datetime(data[[var]])
     }
 
+    time <- c(
+      "time", "timeampm", "tod", "hhmm", "hour", "mmss", "systime"
+    )
+
+    vars <- which(toupper(formats) %in% toupper(time))
+
+    for (var in vars) {
+      data[[var]] <- convert_to_time(data[[var]])
+    }
+
   }
 
   if (recode) {
@@ -238,3 +248,14 @@ convert_to_datetime <- function(x) {
              origin = "1960-01-01",
              tz = "UTC")
 }
+
+
+#' @rdname converttimedate
+#' @examples
+#'  # 04:04:46
+#'  convert_to_time(14686)
+#' @export
+convert_to_time <- function(x) {
+  format(convert_to_datetime(x), format = "%H:%M:%S")
+}
+
