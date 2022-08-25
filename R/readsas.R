@@ -121,10 +121,7 @@ read.sas <- function(file, debug = FALSE, convert_dates = TRUE, recode = TRUE,
     vars <- which(toupper(formats) %in% toupper(dates))
 
     for (var in vars) {
-      data[[var]] <- as.Date(
-        as.POSIXct(data[[var]] * 24 * 60 * 60,
-                   origin = "1960-01-01"),
-      )
+      data[[var]] <- convert_to_date(data[[var]])
     }
 
     datetime <- c(
@@ -136,11 +133,8 @@ read.sas <- function(file, debug = FALSE, convert_dates = TRUE, recode = TRUE,
     vars <- which(toupper(formats) %in% toupper(datetime))
 
     for (var in vars) {
-      data[[var]] <- as.POSIXct(data[[var]],
-                                origin = "1960-01-01",
-                                tz = "UTC")
+      data[[var]] <- convert_to_datetime(data[[var]])
     }
-
 
   }
 
@@ -217,4 +211,30 @@ read.sas <- function(file, debug = FALSE, convert_dates = TRUE, recode = TRUE,
   }
 
   return(data)
+}
+
+
+#' helper function to convert SAS date numeric to date
+#' @param x date or datetime variable
+#' @examples
+#'  # 2000-03-17
+#'  convert_to_date(14686)
+#' @name converttimedate
+#' @export
+convert_to_date <- function(x) {
+  as.Date(
+    as.POSIXct(x * 24 * 60 * 60,
+               origin = "1960-01-01")
+  )
+}
+
+#' @rdname converttimedate
+#' @examples
+#'  # 2012-11-10 03:49:19
+#'  convert_to_datetime(1668138559)
+#' @export
+convert_to_datetime <- function(x) {
+  as.POSIXct(x,
+             origin = "1960-01-01",
+             tz = "UTC")
 }

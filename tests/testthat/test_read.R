@@ -78,3 +78,17 @@ dd <- read.sas(fl, select.cols = c("VAR1", "mpg", "hp"), select.rows = c(2,5), r
 test_that("select.rows", {
   expect_true(all.equal(dd, mtcars[2:5,c("mpg", "hp")], check.attributes = FALSE))
 })
+
+
+test_that("convert time and date", {
+
+  exp <- structure(11033, class = "Date")
+  got <- convert_to_date(14686)
+  expect_equal(exp, got)
+
+  exp <- structure(1352519359, tzone = "UTC", class = c("POSIXct", "POSIXt"))
+  got <- convert_to_datetime(1668138559)
+  expect_equal(exp, got)
+
+})
+
