@@ -14,8 +14,9 @@ std::string SASYZCRL(uint64_t rowlen, uint64_t reslen, std::string rowstr,
                      bool debug)
 {
 
-  char row[rowstr.size()];
-  memcpy(row, rowstr.data(), rowstr.size());
+  size_t rowstr_size= rowstr.size();
+  char row[rowstr_size];
+  memcpy(row, rowstr.data(), rowstr_size);
 
 
   std::string res = "";
@@ -166,8 +167,9 @@ std::string SASYZCR2(uint64_t rowlen, uint64_t reslen, std::string rowstr,
   if (debug)
     Rcpp::Rcout << "row ----------------------------- " << std::endl;
 
-  char row[rowstr.size()];
-  memcpy(row, rowstr.data(), rowstr.size());
+  size_t rowstr_size= rowstr.size();
+  char row[rowstr_size];
+  memcpy(row, rowstr.data(), rowstr_size);
 
   std::string res = "";
   uint32_t rowoff = 0;
