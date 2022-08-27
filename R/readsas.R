@@ -75,7 +75,7 @@ read.sas <- function(file, debug = FALSE, convert_dates = TRUE, recode = TRUE,
 
   # rowcount <- attr(data, "rowcount")
   # if rownames, remove the rowname variable from attributes
-  cvec <- attr(data, "cvec") <- which(attr(data, "cvec") >= 0)[ifelse(rownames, -1, substitute())]
+  cvec <- ifelse(rownames, -1, substitute())
 
   if (rownames) {
     rownames(data) <- data[[1]]
@@ -208,6 +208,10 @@ read.sas <- function(file, debug = FALSE, convert_dates = TRUE, recode = TRUE,
 
     if (del_rows == 0 && (any(del) || !all(val)))
       warning("file indicated no deleted rows, but some were found")
+  }
+
+  if (!debug) {
+    attr(data, "cvec") <- attr(data, "rvec") <- NULL
   }
 
   return(data)

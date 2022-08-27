@@ -489,33 +489,41 @@ inline std::string SASEncoding(uint8_t encval) {
   return enc;
 }
 
+std::vector<int64_t> vec_order(const std::vector<int64_t> &v) {
+  std::vector<int64_t> idx(v.size());
+  iota(idx.begin(), idx.end(), 0);
+  stable_sort(idx.begin(), idx.end(),
+              [&v](size_t i1, size_t i2) {return v[i1] < v[i2];});
+
+  return idx;
+}
+
 // order only the valid options
-Rcpp::IntegerVector order_(std::vector<int64_t> v) {
-  Rcpp::IntegerVector z = Rcpp::wrap(v);
-  if (any(Rcpp::is_na(z))) {
-    return z[z >= 0] = order(z[z >= 0]);
-  } else{
-    // Rcpp::Rcout << "no missings" << order(z) << std::endl;
-    return order(z);
-  }
+std::vector<int64_t> order_(std::vector<int64_t> v) {
+  // if (std::count(v.begin(), v.end(), -1)) {
+  //   std::vector<int64_t> idx(v.size());
+  //   iota(idx.begin(), idx.end(), -1);
+  //
+  //   // fetch and sort
+  //   std::vector<int64_t> tmp;
+  //   for(std::size_t i = 0; i < v.size(); ++i) {
+  //     if(v[i] >= 0)  tmp.push_back(v[i]);
+  //   }
+  //   tmp = vec_order(tmp);
+  //
+  //   auto j = 0;
+  //   for (size_t i = 0; i < v.size(); ++i) {
+  //     if (v[i] >= 0) {
+  //       v[i] = tmp[j];
+  //       ++j;
+  //     }
+  //   }
+  //
+  //   return v;
+  //
+  // } else {
+    return vec_order(v);
+  // }
 }
-
-// create new column vector. has the expected length, but counts new
-Rcpp::IntegerVector cvec_(Rcpp::LogicalVector &l) {
-
-  Rcpp::IntegerVector out(l.size());
-
-  auto idx = 0;
-  for (auto i = 0; i < l.size(); ++i) {
-    if (l[i] == 0) {
-      out[i] = idx;
-      ++idx;
-    } else
-      out[i] = -1;
-  }
-
-  return out;
-}
-
 
 #endif
