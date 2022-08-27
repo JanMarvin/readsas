@@ -19,11 +19,11 @@ test_that("parso external tests", {
   for (fl in parso_files) {
 
     message(fl)
-    sas7bdat <- sprintf("https://github.com/epam/parso/raw/master/src/test/resources/sas7bdat/%s.sas7bdat", fl)
-    csv      <- sprintf("https://github.com/epam/parso/raw/master/src/test/resources/csv/%s.csv", fl)
+    # sas7bdat <- sprintf("https://github.com/epam/parso/raw/master/src/test/resources/sas7bdat/%s.sas7bdat", fl)
+    # csv      <- sprintf("https://github.com/epam/parso/raw/master/src/test/resources/csv/%s.csv", fl)
     # # testing with local parso
-    # sas7bdat <- sprintf("~/Source/parso/src/test/resources/sas7bdat/%s.sas7bdat", fl)
-    # csv      <- sprintf("~/Source/parso/src/test/resources/csv/%s.csv", fl)
+    sas7bdat <- sprintf("~/Source/parso/src/test/resources/sas7bdat/%s.sas7bdat", fl)
+    csv      <- sprintf("~/Source/parso/src/test/resources/csv/%s.csv", fl)
 
     got <- read.sas(sas7bdat, debug = FALSE)
     exp <- read.csv(csv)

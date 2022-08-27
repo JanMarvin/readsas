@@ -1772,7 +1772,6 @@ Rcpp::List readsas(const char * filePath,
     // select vars: either select every var or only matched cases. This will
     // return index positions of the selected variables. If non are selected the
     // index position is cvec
-    // IntegerVector select = cvec, nselect;
 
     std::vector<std::string> select_cols;
     if (selectvars) {
@@ -1780,8 +1779,9 @@ Rcpp::List readsas(const char * filePath,
       select_cols = Rcpp::as<std::vector<std::string>>(selectcols);
     }
 
-    std::vector<int64_t> cvec, select, nselect;
+    std::vector<int64_t> cvec, select;
 
+    auto ii = 0;
     for (size_t i = 0; i < cnpois.size(); ++i) {
 
       if (debug)
@@ -1797,16 +1797,20 @@ Rcpp::List readsas(const char * filePath,
 
       bool keepc = true;
 
-      if (selectvars) {
-        if(std::find(select_cols.begin(), select_cols.end(), varname) != select_cols.end()) {
+      if(selectvars)  {
+        if (std::find(select_cols.begin(), select_cols.end(), varname) != select_cols.end()) {
           keepc = true;
-          cvec.push_back(i);
+          cvec.push_back(ii);
           select.push_back(i);
+          ++ii;
         } else {
           keepc = false;
           cvec.push_back(-1);
-          nselect.push_back(i);
         }
+      } else {
+        keepc = true;
+        cvec.push_back(i);
+        select.push_back(i);
       }
 
       if (keepc && (int16_t)varname.size() == cnpois[i].CN_LEN)
@@ -1842,7 +1846,6 @@ Rcpp::List readsas(const char * filePath,
 
 
     // sequences of column and row
-    // IntegerVector cvec = seq(0, (k-1));
     IntegerVector rvec = seq(nmin, nmax);
     // otherwise if n == 0 nn would be 1
     if (nmax > 0) nn = rvec.size();
@@ -1861,12 +1864,35 @@ Rcpp::List readsas(const char * filePath,
     uint32_t kk = select.size();
 
     // shrink variables to selected size
-    // CharacterVector varnames_kk = clone(varnames)[select];
-    // IntegerVector vartyps_kk = clone(vartyps)[select];
+
+    std::vector<int16_t> c8vec_kk;
+    std::vector<int32_t> vartyps_kk, colwidth_kk;
+    std::vector<double> fmt32s_kk, ifmt32s_kk, fmtkeys_kk;
+
+    if (selectcols_.isNotNull()) {
+      // reduce to selected
+      // keep both vartyps and vartyps_kk
+      for(std::size_t i = 0; i < vartyps.size(); ++i) {
+        if(cvec[i] >= 0) {
+          c8vec_kk.push_back(c8vec[i]);
+          vartyps_kk.push_back(vartyps[i]);
+          colwidth_kk.push_back(vartyps[i]);
+          fmt32s_kk.push_back(fmt32s[i]);
+          ifmt32s_kk.push_back(ifmt32s[i]);
+          fmtkeys_kk.push_back(fmtkeys[i]);
+        }
+      }
+      c8vec  = std::move(c8vec_kk);
+      fmt32s  = std::move(fmt32s_kk);
+      ifmt32s = std::move(ifmt32s_kk);
+      fmtkeys = std::move(fmtkeys_kk);
+
+    } else {
+      vartyps_kk = vartyps;
+      colwidth_kk = colwidth;
+    }
 
     // --- end select rows or cols ------------------------------------- //
-
-
 
     if (hasattributes) {
 
@@ -1874,48 +1900,31 @@ Rcpp::List readsas(const char * filePath,
 
         if (cvec[i] >= 0) {
 
-        /* read formats and labels */
-        std::string format = "";
-        if ((size_t)i < fmt.size() && fmt[i].LEN > 0) {
-          uint64_t fpos = (varname_pos[fmt[i].IDX] + fmt[i].OFF);
-          sas.seekg(fpos, sas.beg);
-          format.resize(fmt[i].LEN, '\0');
-          format = readstring(format, sas);
-        }
+          /* read formats and labels */
+          std::string format = "";
+          if ((size_t)i < fmt.size() && fmt[i].LEN > 0) {
+            uint64_t fpos = (varname_pos[fmt[i].IDX] + fmt[i].OFF);
+            sas.seekg(fpos, sas.beg);
+            format.resize(fmt[i].LEN, '\0');
+            format = readstring(format, sas);
+          }
 
-        std:: string label = "";
-        if ((size_t)i < lbl.size() && lbl[i].LEN > 0) {
-          uint64_t lpos = (varname_pos[lbl[i].IDX] + lbl[i].OFF);
-          sas.seekg(lpos, sas.beg);
-          label.resize(lbl[i].LEN, '\0');
-          label = readstring(label, sas);
-        }
+          std:: string label = "";
+          if ((size_t)i < lbl.size() && lbl[i].LEN > 0) {
+            uint64_t lpos = (varname_pos[lbl[i].IDX] + lbl[i].OFF);
+            sas.seekg(lpos, sas.beg);
+            label.resize(lbl[i].LEN, '\0');
+            label = readstring(label, sas);
+          }
 
-        if (debug)
-          Rcout << format << " : " << label << std::endl;
+          if (debug)
+            Rcout << format << " : " << label << std::endl;
 
-        formats.push_back( format );
-        labels.push_back( label );
+          formats.push_back( format );
+          labels.push_back( label );
         }
       }
     }
-
-    IntegerVector sels = select;
-
-    // separate the selected from the not selected cases
-    LogicalVector ll = is_na(select);
-    nselect = cvec[ll == 1];
-    select = cvec[ll == 0];
-
-    // get new cvec_
-    cvec = cvec_(ll);
-
-    uint32_t kk = select.size();
-
-    // shrink variables to selected size
-    CharacterVector varnames_kk = clone(varnames)[select];
-    IntegerVector vartyps_kk = clone(vartyps)[select];
-
 
     // 2. fill it with data
 
@@ -1937,20 +1946,20 @@ Rcpp::List readsas(const char * filePath,
       }
     }
 
-    // IntegerVector coloffset_kk = clone(coloffset);
-    // coloffset_kk[ll == 1] = -1;
-    //
-    // Rf_PrintValue(coloffset_kk);
-    Rcpp::IntegerVector ordered = order_(coloffset);
+    auto ordered = order_(coloffset);
 
     if (debug)
     {
-      Rcout << "ll "        << ll           << std::endl;
-      Rcout << "vartyps "   << vartyps      << std::endl;
-      Rcout << "vartyps "   << vartyps_kk   << std::endl;
-      Rcout << "coloffset " << coloffset    << std::endl;
-      // Rcout << "coloffset " << coloffset_kk << std::endl;
-      Rcout << "ordered "   << ordered      << std::endl;
+      Rcout << "vartyps " << std::endl;
+      Rf_PrintValue(wrap(vartyps));
+      Rcout << "vartyps_kk " << std::endl;
+      Rf_PrintValue(wrap(vartyps_kk));
+      Rcout << "coloffset " << std::endl;
+      Rf_PrintValue(wrap(coloffset));
+      Rcout << "ordered " << std::endl;
+      Rf_PrintValue(wrap(ordered));
+      Rcout << "cvec " << std::endl;
+      Rf_PrintValue(wrap(cvec));
     }
 
     // new offset ----------------------------------------------------------- //
@@ -2153,6 +2162,9 @@ Rcpp::List readsas(const char * filePath,
           }
 
         }
+
+        // Rf_PrintValue(df);
+        // stop("stop");
 
         // end of row reached, skip to end if required
         if (skipahead > 0) {
@@ -2369,7 +2381,7 @@ Rcpp::List readsas(const char * filePath,
     df.attr("rowcount") = nn;
     df.attr("rowlength") = rowlength;
     df.attr("deleted_rows") = delobs;
-    df.attr("colwidth") = colwidth;
+    df.attr("colwidth") = colwidth_kk;
     // df.attr("coloffset") = coloffset;
     df.attr("vartyps") = vartyps_kk;
     df.attr("c8vec") = c8vec;
