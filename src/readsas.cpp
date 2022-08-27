@@ -520,6 +520,7 @@ Rcpp::List readsas(const char * filePath,
 
       if ((
           PAGE_TYPE == 16384 ||                   // PAGE_META_TYPE_2
+            PAGE_TYPE == 4096 ||                    // CATALOG
             PAGE_TYPE == 1024 ||                    // PAGE_AMD_TYPE
             PAGE_TYPE == 640 || PAGE_TYPE == 512 || // PAGE_MIX_TYPE_2   PAGE_MIX_TYPE_1
             PAGE_TYPE == 384 || PAGE_TYPE == 256 || // PAGE_DATA_TYPE_2  PAGE_DATA_TYPE
@@ -528,6 +529,21 @@ Rcpp::List readsas(const char * filePath,
       {
 
         for (auto i = 0; i < SUBHEADER_COUNT; ++i) {
+
+          if (PAGE_TYPE == 4096) {
+
+            size_t txt_pos = unk16 + alignval;
+            sas.seekg(txt_pos, sas.cur);
+
+            std::string sysresr_bitmap;
+            sysresr_bitmap.resize(16, '\0');
+            sysresr_bitmap = readstring(sysresr_bitmap, sas);
+            Rcout << sysresr_bitmap << std::endl;
+
+            stop("stop");
+
+          }
+
           if (u64 == 4) {
 
             potabs[i].SH_OFF = readbin(potabs[i].SH_OFF, sas, swapit);           // 8
