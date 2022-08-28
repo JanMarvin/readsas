@@ -223,7 +223,6 @@ read.sas <- function(file, debug = FALSE, convert_dates = TRUE, recode = TRUE,
   return(data)
 }
 
-
 #' helper function to convert SAS date numeric to date
 #' @param x date or datetime variable
 #' @examples
@@ -249,7 +248,6 @@ convert_to_datetime <- function(x) {
              tz = "UTC")
 }
 
-
 #' @rdname converttimedate
 #' @examples
 #'  # 04:04:46
@@ -258,4 +256,3 @@ convert_to_datetime <- function(x) {
 convert_to_time <- function(x) {
   format(convert_to_datetime(x), format = "%H:%M:%S")
 }
-
