@@ -12,6 +12,8 @@
 #'@param select.cols \emph{character:} Vector of variables to select.
 #'@param remove_deleted logical if deleted rows should be removed from data
 #'@param rownames first column will be used as rowname and removed from data
+#'@param empty_to_na logical. In SAS empty characters are missing. this option
+#' allows to convert `""` to `NA_character_` when importing.
 #'
 #'@useDynLib readsas, .registration=TRUE
 #'@importFrom utils download.file
@@ -20,7 +22,7 @@
 #'@export
 read.sas <- function(file, debug = FALSE, convert_dates = TRUE, recode = TRUE,
                      select.rows = NULL, select.cols = NULL, remove_deleted = TRUE,
-                     rownames = FALSE) {
+                     rownames = FALSE, empty_to_na = FALSE) {
 
   # Check if path is a url
   if (length(grep("^(http|ftp|https)://", file))) {
@@ -70,7 +72,7 @@ read.sas <- function(file, debug = FALSE, convert_dates = TRUE, recode = TRUE,
     return(message("select.cols must be of type character"))
   }
 
-  data <- readsas(filepath, debug, select.rows, select.cols)
+  data <- readsas(filepath, debug, select.rows, select.cols, empty_to_na)
 
 
   # rowcount <- attr(data, "rowcount")

@@ -42,7 +42,8 @@ using namespace Rcpp;
 Rcpp::List readsas(const char * filePath,
                    const bool debug,
                    Nullable<IntegerVector> selectrows_,
-                   Nullable<CharacterVector> selectcols_)
+                   Nullable<CharacterVector> selectcols_,
+                   const bool empty_to_na)
 {
   std::ifstream sas(filePath, std::ios::in | std::ios::binary | std::ios::ate);
   auto sas_size = sas.tellg();
@@ -2155,16 +2156,17 @@ Rcpp::List readsas(const char * filePath,
               if (debug && i == 0)
                 Rcout << "writing: " << i << "/" << col << std::endl;
 
-              as<CharacterVector>(df[col])[i] = val_s;
+              if (empty_to_na && val_s.empty())
+                as<CharacterVector>(df[col])[i] = NA_STRING;
+              else
+                as<CharacterVector>(df[col])[i] = val_s;
+
             } else {
               skipahead += wid;
             }
           }
 
         }
-
-        // Rf_PrintValue(df);
-        // stop("stop");
 
         // end of row reached, skip to end if required
         if (skipahead > 0) {
@@ -2299,7 +2301,10 @@ Rcpp::List readsas(const char * filePath,
                 if (debug && i == 0)
                   Rcout << val_s << std::endl;
 
-                as<CharacterVector>(df[col])[i] = val_s;
+                if (empty_to_na && val_s.empty())
+                  as<CharacterVector>(df[col])[i] = NA_STRING;
+                else
+                  as<CharacterVector>(df[col])[i] = val_s;
 
               } else {
                 skipahead += wid;
