@@ -1,4 +1,5 @@
 .readsas_unc_tmp_file
+.DS_Store
 .Rproj.user
 .Rhistory
 .RData
