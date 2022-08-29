@@ -7,6 +7,7 @@
 #' @param debug print debug information
 #' @param selectrows_ integer vector of selected rows
 #' @param selectcols_ character vector of selected rows
+#' @param empty_to_na logical convert '' to NA_character_
 #' @import Rcpp
 #' @export
 readsas <- function(filePath, debug, selectrows_, selectcols_, empty_to_na) {

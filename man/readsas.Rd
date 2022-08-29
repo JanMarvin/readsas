@@ -14,6 +14,8 @@ readsas(filePath, debug, selectrows_, selectcols_, empty_to_na)
 \item{selectrows_}{integer vector of selected rows}
 
 \item{selectcols_}{character vector of selected rows}
+
+\item{empty_to_na}{logical convert '' to NA_character_}
 }
 \description{
 Reads SAS data files
