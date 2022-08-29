@@ -25,10 +25,10 @@ test_that("parso external tests", {
     # sas7bdat <- sprintf("~/Source/parso/src/test/resources/sas7bdat/%s.sas7bdat", fl)
     # csv      <- sprintf("~/Source/parso/src/test/resources/csv/%s.csv", fl)
 
-    empty_to_na = FALSE
+    empty_to_na <- FALSE
 
     if (fl %in% c("mix_and_missing", "mix_data_with_missing_char", "mix_data_with_partmissing_char"))
-      empty_to_na = TRUE
+      empty_to_na <- TRUE
 
     got <- read.sas(sas7bdat, debug = FALSE, empty_to_na = empty_to_na)
     exp <- read.csv(csv, na.strings = "NA")
