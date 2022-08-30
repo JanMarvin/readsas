@@ -4,7 +4,7 @@
 \alias{readsas}
 \title{Reads SAS data files}
 \usage{
-readsas(filePath, debug, selectrows_, selectcols_)
+readsas(filePath, debug, selectrows_, selectcols_, empty_to_na)
 }
 \arguments{
 \item{filePath}{The full systempath to the sas7bdat file you want to import.}
@@ -14,6 +14,8 @@ readsas(filePath, debug, selectrows_, selectcols_)
 \item{selectrows_}{integer vector of selected rows}
 
 \item{selectcols_}{character vector of selected rows}
+
+\item{empty_to_na}{logical convert '' to NA_character_}
 }
 \description{
 Reads SAS data files
