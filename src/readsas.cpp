@@ -433,9 +433,10 @@ Rcpp::List readsas(const char * filePath,
     uint8_t alignval = 8;
     if (u64 != 4) alignval = 4;
 
-    uint64_t rowlength = 0, n = 0, delobs = 0;
+
+    uint64_t rowlength = 0, delobs = 0;
     int64_t colf_p1 = 0, colf_p2 = 0;
-    int64_t k = 0;
+    int64_t n = 0, k = 0;
     std::vector<std::string> stringvec(pagecount) ;
 
     auto totalrows = 0;
@@ -1840,18 +1841,26 @@ Rcpp::List readsas(const char * filePath,
 
     // --- begin select rows or cols ----------------------------------- //
 
-    uint64_t nmin = 0, nmax = 0;
+    int64_t nmin = 0, nmax = 0;
     uint64_t nn   = 0;
 
     // if  selectrows is c(0,0) use full data
+    IntegerVector rvec;
     if (selectrows_.isNull()) {
-      nmin = 1;
-      nmax = n;
+      nmin = 0;
+      nmax = n -1;
+      // sequences of column and row
+      rvec = seq(nmin, nmax);
     } else {
       IntegerVector selectrows(selectrows_);
-      if (selectrows.size() != 2) stop("selected rows must be vector of two.");
-      nmin = selectrows(0);
-      nmax = selectrows(1);
+
+      // all rows must be available
+      if (any_keepr(selectrows, n))
+        Rcpp::warning("row > %d selected. Reducing select.rows", n);
+
+      rvec = selectrows[selectrows < n];
+      nmin = min(rvec);
+      nmax = max(rvec);
     }
 
     // make sure that n is not greater than nmax or nmin
@@ -1860,9 +1869,6 @@ Rcpp::List readsas(const char * filePath,
     if (n < nmin)
       nmin = n;
 
-
-    // sequences of column and row
-    IntegerVector rvec = seq(nmin, nmax);
     // otherwise if n == 0 nn would be 1
     if (nmax > 0) nn = rvec.size();
 
@@ -1984,7 +1990,6 @@ Rcpp::List readsas(const char * filePath,
     std::vector<bool> valid(n);
 
     bool firstpage = 0;
-    bool keepr = 0;
 
     // sas provides two modes, compressed and uncompressed data. compressed
     // data has to be uncompressed and consists of always single rows. un-
@@ -2002,23 +2007,26 @@ Rcpp::List readsas(const char * filePath,
 
       auto i = -1;  // counter output data frame
       uint64_t ii = 0;  // row on the selected page
-      for (uint64_t iii = 0; iii < n; ++iii) {
+      for (int64_t iii = 0; iii < n; ++iii) {
+
 
         /* nmin is not a c vector starting at 0. i is initialized at -1 so will
          * be 0 once its bigger than nmin. This allows to import only the
          * selected rows. Once nmax is reached, import will stop.
          */
-        if (iii >= (nmin-1) ) {
-          keepr = 1;
+
+        bool keepr = false;
+        if (any_keepr(rvec, iii)) {
+          keepr = true;
           ++i;
         }
+
+        if (iii > nmax) break;
 
         // Rcout << "---------------------" << std::endl;
         // Rcout << iii << " " << nmin << std::endl;
         if (debug && i == 0)
           Rcout << "row i / ii / iii / keepr: " << i << " " << ii << " " << iii <<" " << keepr << std::endl;
-
-        if (iii >= nmax) break;
 
         if (pagecount > 0) {
 
@@ -2215,7 +2223,7 @@ Rcpp::List readsas(const char * filePath,
         sas.seekg(0, std::ios_base::beg);
 
         auto i = -1;
-        for (uint64_t iii = 0; iii < n; ++iii) {
+        for (int64_t iii = 0; iii < n; ++iii) {
 
           if (debug && i == 0)
             Rcout << "row: " << i << " --------------------" <<std::endl;
@@ -2225,12 +2233,14 @@ Rcpp::List readsas(const char * filePath,
            * be 0 once its bigger than nmin. This allows to import only the
            * selected rows. Once nmax is reached, import will stop.
            */
-          if (iii >= (nmin-1)) {
-            keepr = 1;
+
+          bool keepr = false;
+          if (any_keepr(rvec, iii)) {
+            keepr = true;
             ++i;
           }
 
-          if (iii >= nmax) break;
+          if (iii > nmax) break;
 
           // for completeness
           valid[iii] = true;
@@ -2360,7 +2370,7 @@ Rcpp::List readsas(const char * filePath,
 
     // 3. Create a data.frame
     if (nn > 0)
-      df.attr("row.names") = seq(1, nn);
+      df.attr("row.names") = rvec;
 
     if (varnames.size() == kk)
       df.attr("names") = varnames;

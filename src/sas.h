@@ -526,4 +526,9 @@ std::vector<int64_t> order_(std::vector<int64_t> v) {
   // }
 }
 
+bool any_keepr(Rcpp::IntegerVector rvec, uint64_t idx) {
+  return std::find(rvec.begin(), rvec.end(), idx) != rvec.end();
+}
+
+
 #endif

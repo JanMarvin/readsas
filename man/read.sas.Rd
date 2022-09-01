@@ -24,9 +24,8 @@ read.sas(
 
 \item{recode}{default is TRUE}
 
-\item{select.rows}{\emph{integer.} Vector of one or two numbers. If single
-value rows from 1:val are selected. If two values of a range are selected
-the rows in range will be selected.}
+\item{select.rows}{\emph{integer.} Vector of rows to import. Minimum 0. Rows
+imported are sorted.}
 
 \item{select.cols}{\emph{character:} Vector of variables to select.}
 
