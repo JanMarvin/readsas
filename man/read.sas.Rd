@@ -34,7 +34,23 @@ imported are sorted.}
 \item{rownames}{first column will be used as rowname and removed from data}
 }
 \description{
-read.sas
+`read.sas` is a general function for reading sas7bdat files.
+It supports a variety of complex sas7bdat files, x86 and x64, big and small
+endian, and both compression types. It has been tested with numeric and
+character data, and provides helper functions for converting sas7bdat to R
+types `Date` and `POSIXct`. Time variables are converted to characters.
+Conversion to date variables is applied if a known date, datetime or time
+format is found in the sas7bdat file. For user-defined formats, the package
+provides functions to convert from sas7bdat to R.
+Input files may contain deleted lines that are marked as deleted instead of
+being removed from the input data. These are removed on import, if you still
+need them look at `remove_deleted`. Formats, labels and additional file
+information are available with `attributes()`.
+}
+\examples{
+fl <- system.file("extdata", "cars.sas7bdat", package = "readsas")
+read.sas(fl)
+
 }
 \author{
 Jan Marvin Garbuszus \email{jan.garbuszus@ruhr-uni-bochum.de}

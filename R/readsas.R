@@ -1,22 +1,39 @@
 #' read.sas
 #'
-#'@author Jan Marvin Garbuszus \email{jan.garbuszus@@ruhr-uni-bochum.de}
+#' @author Jan Marvin Garbuszus \email{jan.garbuszus@@ruhr-uni-bochum.de}
 #'
-#'@param file file to read
-#'@param debug print debug information
-#'@param convert_dates default is TRUE
-#'@param recode default is TRUE
-#'@param select.rows \emph{integer.} Vector of rows to import. Minimum 0. Rows
+#' @description `read.sas` is a general function for reading sas7bdat files.
+#' It supports a variety of complex sas7bdat files, x86 and x64, big and small
+#' endian, and both compression types. It has been tested with numeric and
+#' character data, and provides helper functions for converting sas7bdat to R
+#' types `Date` and `POSIXct`. Time variables are converted to characters.
+#' Conversion to date variables is applied if a known date, datetime or time
+#' format is found in the sas7bdat file. For user-defined formats, the package
+#' provides functions to convert from sas7bdat to R.
+#' Input files may contain deleted lines that are marked as deleted instead of
+#' being removed from the input data. These are removed on import, if you still
+#' need them look at `remove_deleted`. Formats, labels and additional file
+#' information are available with `attributes()`.
+#'
+#' @param file file to read
+#' @param debug print debug information
+#' @param convert_dates default is TRUE
+#' @param recode default is TRUE
+#' @param select.rows \emph{integer.} Vector of rows to import. Minimum 0. Rows
 #' imported are sorted.
-#'@param select.cols \emph{character:} Vector of variables to select.
-#'@param remove_deleted logical if deleted rows should be removed from data
-#'@param rownames first column will be used as rowname and removed from data
+#' @param select.cols \emph{character:} Vector of variables to select.
+#' @param remove_deleted logical if deleted rows should be removed from data
+#' @param rownames first column will be used as rowname and removed from data
 #'
-#'@useDynLib readsas, .registration=TRUE
-#'@importFrom utils download.file
-#'@importFrom stringi stri_encode
+#' @useDynLib readsas, .registration=TRUE
+#' @importFrom utils download.file
+#' @importFrom stringi stri_encode
 #'
-#'@export
+#' @examples
+#' fl <- system.file("extdata", "cars.sas7bdat", package = "readsas")
+#' read.sas(fl)
+#'
+#' @export
 read.sas <- function(file, debug = FALSE, convert_dates = TRUE, recode = TRUE,
                      select.rows = NULL, select.cols = NULL, remove_deleted = TRUE,
                      rownames = FALSE) {
