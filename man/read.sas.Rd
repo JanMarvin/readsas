@@ -26,7 +26,7 @@ read.sas(
 \item{recode}{default is \code{TRUE}}
 
 \item{select.rows}{\emph{integer.} Vector of rows to import. Minimum 0. Rows
-imported are sorted.}
+imported are sorted. If 0 is in \code{select.rows}, zero rows are returned.}
 
 \item{select.cols}{\emph{character:} Vector of variables to select.}
 

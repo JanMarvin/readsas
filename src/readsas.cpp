@@ -1852,7 +1852,7 @@ Rcpp::List readsas(const char * filePath,
       nmin = 0;
       nmax = n -1;
       // sequences of column and row
-      if (nmax > nmin) rvec = seq(nmin, nmax);
+      if (nmax >= nmin) rvec = seq(nmin, nmax);
     } else {
       IntegerVector selectrows(selectrows_);
 
@@ -1860,9 +1860,14 @@ Rcpp::List readsas(const char * filePath,
       if (any_keepr(selectrows, n))
         Rcpp::warning("row > %d selected. Reducing select.rows", n);
 
-      rvec = selectrows[selectrows < n];
-      nmin = min(rvec);
-      nmax = max(rvec);
+      if (!any_keepr(selectrows, -1)) {
+        rvec = selectrows[selectrows < n];
+        nmin = min(rvec);
+        nmax = max(rvec);
+      } else {
+        nmin = -1;
+        nmax = -1;
+      }
     }
 
     // make sure that n is not greater than nmax or nmin
@@ -1872,7 +1877,7 @@ Rcpp::List readsas(const char * filePath,
       nmin = n;
 
     // otherwise if n == 0 nn would be 1
-    if (nmax > 0) nn = rvec.size();
+    if (rvec.size() > 0) nn = rvec.size();
 
     if (debug)
       Rcout << "reading n/nn/nmin/nmax: " << n << "/" << nn << "/" << nmin << "/" << nmax << std::endl;

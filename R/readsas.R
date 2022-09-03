@@ -19,7 +19,7 @@
 #' @param convert_dates default is `TRUE`
 #' @param recode default is `TRUE`
 #' @param select.rows \emph{integer.} Vector of rows to import. Minimum 0. Rows
-#' imported are sorted.
+#' imported are sorted. If 0 is in `select.rows`, zero rows are returned.
 #' @param select.cols \emph{character:} Vector of variables to select.
 #' @param remove_deleted logical if deleted rows should be removed from data
 #' @param rownames first column will be used as rowname and removed from data
