@@ -1,7 +1,5 @@
 #' read.sas
 #'
-#' @author Jan Marvin Garbuszus \email{jan.garbuszus@@ruhr-uni-bochum.de}
-#'
 #' @description `read.sas` is a general function for reading sas7bdat files.
 #' It supports a variety of complex sas7bdat files, x86 and x64, big and small
 #' endian, and both compression types. It has been tested with numeric and
@@ -10,6 +8,7 @@
 #' Conversion to date variables is applied if a known date, datetime or time
 #' format is found in the sas7bdat file. For user-defined formats, the package
 #' provides functions to convert from sas7bdat to R.
+#'
 #' Input files may contain deleted lines that are marked as deleted instead of
 #' being removed from the input data. These are removed on import, if you still
 #' need them look at `remove_deleted`. Formats, labels and additional file
@@ -17,8 +16,8 @@
 #'
 #' @param file file to read
 #' @param debug print debug information
-#' @param convert_dates default is TRUE
-#' @param recode default is TRUE
+#' @param convert_dates default is `TRUE`
+#' @param recode default is `TRUE`
 #' @param select.rows \emph{integer.} Vector of rows to import. Minimum 0. Rows
 #' imported are sorted.
 #' @param select.cols \emph{character:} Vector of variables to select.
@@ -28,6 +27,8 @@
 #' @useDynLib readsas, .registration=TRUE
 #' @importFrom utils download.file
 #' @importFrom stringi stri_encode
+#'
+#' @seealso \link[foreign]{read.xport}
 #'
 #' @examples
 #' fl <- system.file("extdata", "cars.sas7bdat", package = "readsas")

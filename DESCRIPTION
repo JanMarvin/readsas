@@ -11,11 +11,13 @@ Description: Package to read the SAS file format.
 License: GPL (>= 2) | file LICENSE
 URL: https://github.com/JanMarvin/readsas
 BugReports: https://github.com/JanMarvin/readsas/issues
-Imports: Rcpp (>= 1.0.2), stringi
+Depends: R (>= 3.4.0)
+Imports: Rcpp, stringi
 LinkingTo: Rcpp
-SystemRequirements: C++11
 Suggests: testthat, foreign, datasets
-ByteCompile: yes
-RoxygenNote: 7.2.1
 Encoding: UTF-8
 Language: en-US
+RoxygenNote: 7.2.1
+Roxygen: list(markdown = TRUE)
+Config/testthat/edition: 3
+Config/testthat/parallel: true
