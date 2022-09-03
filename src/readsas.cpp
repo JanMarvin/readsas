@@ -1852,7 +1852,7 @@ Rcpp::List readsas(const char * filePath,
       nmin = 0;
       nmax = n -1;
       // sequences of column and row
-      rvec = seq(nmin, nmax);
+      if (nmax > nmin) rvec = seq(nmin, nmax);
     } else {
       IntegerVector selectrows(selectrows_);
 
