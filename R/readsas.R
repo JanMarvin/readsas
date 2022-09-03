@@ -73,7 +73,10 @@ read.sas <- function(file, debug = FALSE, convert_dates = TRUE, recode = TRUE,
     return(message("select.cols must be of type character"))
   }
 
-  data <- readsas(filepath, debug, select.rows, select.cols, empty_to_na)
+  tempstr <- tempfile()
+  on.exit(unlink(tempstr), add = TRUE)
+  data <- readsas(filepath, debug, select.rows, select.cols, empty_to_na,
+                  tempstr)
 
   cvec <- ifelse(rownames, -1, substitute())
 

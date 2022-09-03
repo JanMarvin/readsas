@@ -37,6 +37,7 @@ using namespace Rcpp;
 //' @param selectrows_ integer vector of selected rows
 //' @param selectcols_ character vector of selected rows
 //' @param empty_to_na logical convert '' to NA_character_
+//' @param tempstr filepath used for temp output when uncompressing
 //' @import Rcpp
 //' @export
 // [[Rcpp::export]]
@@ -44,7 +45,8 @@ Rcpp::List readsas(const char * filePath,
                    const bool debug,
                    Nullable<IntegerVector> selectrows_,
                    Nullable<CharacterVector> selectcols_,
-                   const bool empty_to_na)
+                   const bool empty_to_na,
+                   std::string tempstr)
 {
   std::ifstream sas(filePath, std::ios::in | std::ios::binary | std::ios::ate);
   auto sas_size = sas.tellg();
@@ -52,7 +54,7 @@ Rcpp::List readsas(const char * filePath,
 
     sas.seekg(0, std::ios_base::beg);
 
-    const std::string tempstr = ".readsas_unc_tmp_file";
+    if (tempstr.compare("") == 0) tempstr = ".readsas_unc_tmp_file";
     std::fstream out (tempstr, std::ios::out | std::ios::binary);
 
 
