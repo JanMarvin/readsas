@@ -42,7 +42,7 @@ read.sas <- function(file, debug = FALSE, convert_dates = TRUE, recode = TRUE,
     if (!is.numeric(select.rows)) {
       return(message("select.rows must be of type numeric"))
     } else {
-      if (any(select.rows < 0)) stop("must select at least a single row")
+      if (any(select.rows < 0)) stop("select.rows must be >= 0")
 
       select.rows <- sort(select.rows - 1)
     }
@@ -55,8 +55,6 @@ read.sas <- function(file, debug = FALSE, convert_dates = TRUE, recode = TRUE,
 
   data <- readsas(filepath, debug, select.rows, select.cols)
 
-  # rowcount <- attr(data, "rowcount")
-  # if rownames, remove the rowname variable from attributes
   cvec <- ifelse(rownames, -1, substitute())
 
   # rownames start at 0
