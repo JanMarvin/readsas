@@ -4,11 +4,14 @@
 \alias{converttimedate}
 \alias{convert_to_date}
 \alias{convert_to_datetime}
+\alias{convert_to_time}
 \title{helper function to convert SAS date numeric to date}
 \usage{
 convert_to_date(x)
 
 convert_to_datetime(x)
+
+convert_to_time(x)
 }
 \arguments{
 \item{x}{date or datetime variable}
@@ -21,4 +24,6 @@ helper function to convert SAS date numeric to date
  convert_to_date(14686)
  # 2012-11-10 03:49:19
  convert_to_datetime(1668138559)
+ # 04:04:46
+ convert_to_time(14686)
 }

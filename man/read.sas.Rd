@@ -12,7 +12,8 @@ read.sas(
   select.rows = NULL,
   select.cols = NULL,
   remove_deleted = TRUE,
-  rownames = FALSE
+  rownames = FALSE,
+  empty_to_na = FALSE
 )
 }
 \arguments{
@@ -32,6 +33,9 @@ imported are sorted.}
 \item{remove_deleted}{logical if deleted rows should be removed from data}
 
 \item{rownames}{first column will be used as rowname and removed from data}
+
+\item{empty_to_na}{logical. In SAS empty characters are missing. this option
+allows to convert \code{""} to \code{NA_character_} when importing.}
 }
 \description{
 \code{read.sas} is a general function for reading sas7bdat files.

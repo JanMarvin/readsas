@@ -2,6 +2,7 @@
 
 export(convert_to_date)
 export(convert_to_datetime)
+export(convert_to_time)
 export(read.sas)
 export(readsas)
 import(Rcpp)

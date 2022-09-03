@@ -23,6 +23,8 @@
 #' @param select.cols \emph{character:} Vector of variables to select.
 #' @param remove_deleted logical if deleted rows should be removed from data
 #' @param rownames first column will be used as rowname and removed from data
+#' @param empty_to_na logical. In SAS empty characters are missing. this option
+#' allows to convert `""` to `NA_character_` when importing.
 #'
 #' @useDynLib readsas, .registration=TRUE
 #' @importFrom utils download.file
@@ -37,7 +39,7 @@
 #' @export
 read.sas <- function(file, debug = FALSE, convert_dates = TRUE, recode = TRUE,
                      select.rows = NULL, select.cols = NULL, remove_deleted = TRUE,
-                     rownames = FALSE) {
+                     rownames = FALSE, empty_to_na = FALSE) {
 
   # Check if path is a url
   if (length(grep("^(http|ftp|https)://", file))) {
@@ -71,7 +73,7 @@ read.sas <- function(file, debug = FALSE, convert_dates = TRUE, recode = TRUE,
     return(message("select.cols must be of type character"))
   }
 
-  data <- readsas(filepath, debug, select.rows, select.cols)
+  data <- readsas(filepath, debug, select.rows, select.cols, empty_to_na)
 
   cvec <- ifelse(rownames, -1, substitute())
 
@@ -139,6 +141,16 @@ read.sas <- function(file, debug = FALSE, convert_dates = TRUE, recode = TRUE,
 
     for (var in vars) {
       data[[var]] <- convert_to_datetime(data[[var]])
+    }
+
+    time <- c(
+      "time", "timeampm", "tod", "hhmm", "hour", "mmss", "systime"
+    )
+
+    vars <- which(toupper(formats) %in% toupper(time))
+
+    for (var in vars) {
+      data[[var]] <- convert_to_time(data[[var]])
     }
 
   }
@@ -222,7 +234,6 @@ read.sas <- function(file, debug = FALSE, convert_dates = TRUE, recode = TRUE,
   return(data)
 }
 
-
 #' helper function to convert SAS date numeric to date
 #' @param x date or datetime variable
 #' @examples
@@ -246,4 +257,13 @@ convert_to_datetime <- function(x) {
   as.POSIXct(x,
              origin = "1960-01-01",
              tz = "UTC")
+}
+
+#' @rdname converttimedate
+#' @examples
+#'  # 04:04:46
+#'  convert_to_time(14686)
+#' @export
+convert_to_time <- function(x) {
+  format(convert_to_datetime(x), format = "%H:%M:%S")
 }

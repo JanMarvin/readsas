@@ -20,15 +20,23 @@ accurate as possible. Speed is welcome, but a secondary goal.
 
 With `drat`:
 
-``` r
+```r
 drat::addRepo("JanMarvin")
 install.packages("readsas")
 ```
 
 With `devtools`:
 
-``` r
+```r
 devtools::install_git("https://github.com/JanMarvin/readsas.git")
+```
+
+With `r-universe`:
+```r
+options(repos = c(
+  janmarvin = 'https://janmarvin.r-universe.dev',
+  CRAN = 'https://cloud.r-project.org'))
+install.packages('readsas')
 ```
 
 ## Basic usage
