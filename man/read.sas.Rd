@@ -47,7 +47,7 @@ Conversion to date variables is applied if a known date, datetime or time
 format is found in the sas7bdat file. For user-defined formats, the package
 provides functions to convert from sas7bdat to R.
 
-Input files may contain deleted lines that are marked as deleted instead of
+Input files may contain deleted rows that are marked as deleted instead of
 being removed from the input data. These are removed on import, if you still
 need them look at \code{remove_deleted}. Formats, labels and additional file
 information are available with \code{attributes()}.
