@@ -1,25 +1,42 @@
 #' read.sas
 #'
-#'@author Jan Marvin Garbuszus \email{jan.garbuszus@@ruhr-uni-bochum.de}
+#' @description `read.sas` is a general function for reading sas7bdat files.
+#' It supports a variety of complex sas7bdat files, x86 and x64, big and small
+#' endian, and both compression types. It has been tested with numeric and
+#' character data, and provides helper functions for converting sas7bdat to R
+#' types `Date` and `POSIXct`. Time variables are converted to characters.
+#' Conversion to date variables is applied if a known date, datetime or time
+#' format is found in the sas7bdat file. For user-defined formats, the package
+#' provides functions to convert from sas7bdat to R.
 #'
-#'@param file file to read
-#'@param debug print debug information
-#'@param convert_dates default is TRUE
-#'@param recode default is TRUE
-#'@param select.rows \emph{integer.} Vector of one or two numbers. If single
-#' value rows from 1:val are selected. If two values of a range are selected
-#' the rows in range will be selected.
-#'@param select.cols \emph{character:} Vector of variables to select.
-#'@param remove_deleted logical if deleted rows should be removed from data
-#'@param rownames first column will be used as rowname and removed from data
-#'@param empty_to_na logical. In SAS empty characters are missing. this option
+#' Input files may contain deleted rows that are marked as deleted instead of
+#' being removed from the input data. These are removed on import, if you still
+#' need them look at `remove_deleted`. Formats, labels and additional file
+#' information are available with `attributes()`.
+#'
+#' @param file file to read
+#' @param debug print debug information
+#' @param convert_dates default is `TRUE`
+#' @param recode default is `TRUE`
+#' @param select.rows \emph{integer.} Vector of rows to import. Minimum 0. Rows
+#' imported are sorted. If 0 is in `select.rows`, zero rows are returned.
+#' @param select.cols \emph{character:} Vector of variables to select.
+#' @param remove_deleted logical if deleted rows should be removed from data
+#' @param rownames first column will be used as rowname and removed from data
+#' @param empty_to_na logical. In SAS empty characters are missing. this option
 #' allows to convert `""` to `NA_character_` when importing.
 #'
-#'@useDynLib readsas, .registration=TRUE
-#'@importFrom utils download.file
-#'@importFrom stringi stri_encode
+#' @useDynLib readsas, .registration=TRUE
+#' @importFrom utils download.file
+#' @importFrom stringi stri_encode
 #'
-#'@export
+#' @seealso \link[foreign]{read.xport}
+#'
+#' @examples
+#' fl <- system.file("extdata", "cars.sas7bdat", package = "readsas")
+#' read.sas(fl)
+#'
+#' @export
 read.sas <- function(file, debug = FALSE, convert_dates = TRUE, recode = TRUE,
                      select.rows = NULL, select.cols = NULL, remove_deleted = TRUE,
                      rownames = FALSE, empty_to_na = FALSE) {
@@ -45,25 +62,9 @@ read.sas <- function(file, debug = FALSE, convert_dates = TRUE, recode = TRUE,
     if (!is.numeric(select.rows)) {
       return(message("select.rows must be of type numeric"))
     } else {
-      # guard against negative values
-      if (any(select.rows < 0))
-        select.rows <- abs(select.rows)
+      if (any(select.rows < 0)) stop("select.rows must be >= 0")
 
-      # check that length is not > 2
-      if (length(select.rows) > 2)
-        return(message("select.rows must be of length 1 or 2."))
-
-      # if length 1 start at row 1
-      if (length(select.rows) == 1)
-        select.rows <- c(1, select.rows)
-
-      # reorder if 2 is bigger than 1
-      if (select.rows[2] < select.rows[1])
-        select.rows <- c(select.rows[2], select.rows[1])
-
-      # make sure to start at index position 1 if select.rows[2] > 0
-      if (select.rows[2] > 0 && select.rows[1] == 0)
-        select.rows[1] <- 1
+      select.rows <- sort(select.rows - 1)
     }
 
   }
@@ -72,17 +73,24 @@ read.sas <- function(file, debug = FALSE, convert_dates = TRUE, recode = TRUE,
     return(message("select.cols must be of type character"))
   }
 
-  data <- readsas(filepath, debug, select.rows, select.cols, empty_to_na)
+  tempstr <- tempfile()
+  on.exit(unlink(tempstr), add = TRUE)
+  data <- readsas(filepath, debug, select.rows, select.cols, empty_to_na,
+                  tempstr)
 
-
-  # rowcount <- attr(data, "rowcount")
-  # if rownames, remove the rowname variable from attributes
   cvec <- ifelse(rownames, -1, substitute())
+
+  # rownames start at 0
+  row_names <- attr(data, "rvec") + 1
+
+  # only if a row was returned
+  if (nrow(data)) row.names(data) <- row_names
 
   if (rownames) {
     rownames(data) <- data[[1]]
     data[[1]] <- NULL
   }
+
 
   encoding <- attr(data, "encoding") <- attr(data, "encoding")
 
@@ -186,9 +194,9 @@ read.sas <- function(file, debug = FALSE, convert_dates = TRUE, recode = TRUE,
 
   if (remove_deleted) {
 
+    sel <- row_names
     del_rows <- attr(data, "deleted_rows")
 
-    sel <- attr(data, "rvec")
     val <- attr(data, "valid")[sel]
     del <- attr(data, "deleted")[sel]
     attr(data, "deleted") <- NULL

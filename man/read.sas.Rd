@@ -21,13 +21,12 @@ read.sas(
 
 \item{debug}{print debug information}
 
-\item{convert_dates}{default is TRUE}
+\item{convert_dates}{default is \code{TRUE}}
 
-\item{recode}{default is TRUE}
+\item{recode}{default is \code{TRUE}}
 
-\item{select.rows}{\emph{integer.} Vector of one or two numbers. If single
-value rows from 1:val are selected. If two values of a range are selected
-the rows in range will be selected.}
+\item{select.rows}{\emph{integer.} Vector of rows to import. Minimum 0. Rows
+imported are sorted. If 0 is in \code{select.rows}, zero rows are returned.}
 
 \item{select.cols}{\emph{character:} Vector of variables to select.}
 
@@ -36,11 +35,28 @@ the rows in range will be selected.}
 \item{rownames}{first column will be used as rowname and removed from data}
 
 \item{empty_to_na}{logical. In SAS empty characters are missing. this option
-allows to convert `""` to `NA_character_` when importing.}
+allows to convert \code{""} to \code{NA_character_} when importing.}
 }
 \description{
-read.sas
+\code{read.sas} is a general function for reading sas7bdat files.
+It supports a variety of complex sas7bdat files, x86 and x64, big and small
+endian, and both compression types. It has been tested with numeric and
+character data, and provides helper functions for converting sas7bdat to R
+types \code{Date} and \code{POSIXct}. Time variables are converted to characters.
+Conversion to date variables is applied if a known date, datetime or time
+format is found in the sas7bdat file. For user-defined formats, the package
+provides functions to convert from sas7bdat to R.
+
+Input files may contain deleted rows that are marked as deleted instead of
+being removed from the input data. These are removed on import, if you still
+need them look at \code{remove_deleted}. Formats, labels and additional file
+information are available with \code{attributes()}.
 }
-\author{
-Jan Marvin Garbuszus \email{jan.garbuszus@ruhr-uni-bochum.de}
+\examples{
+fl <- system.file("extdata", "cars.sas7bdat", package = "readsas")
+read.sas(fl)
+
+}
+\seealso{
+\link[foreign]{read.xport}
 }

@@ -8,9 +8,10 @@
 #' @param selectrows_ integer vector of selected rows
 #' @param selectcols_ character vector of selected rows
 #' @param empty_to_na logical convert '' to NA_character_
+#' @param tempstr filepath used for temp output when uncompressing
 #' @import Rcpp
 #' @export
-readsas <- function(filePath, debug, selectrows_, selectcols_, empty_to_na) {
-    .Call(`_readsas_readsas`, filePath, debug, selectrows_, selectcols_, empty_to_na)
+readsas <- function(filePath, debug, selectrows_, selectcols_, empty_to_na, tempstr) {
+    .Call(`_readsas_readsas`, filePath, debug, selectrows_, selectcols_, empty_to_na, tempstr)
 }
 
