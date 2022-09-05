@@ -29,14 +29,22 @@ accurate as possible. Speed is welcome, but a secondary goal.
 ## Installation
 
 With `drat`:
-```R
+``` r
 drat::addRepo("JanMarvin")
 install.packages("readsas")
 ```
 
 With `devtools`:
-```R
+``` r
 devtools::install_git("https://github.com/JanMarvin/readsas.git")
+```
+
+With `r-universe`:
+``` r
+options(repos = c(
+  janmarvin = 'https://janmarvin.r-universe.dev',
+  CRAN = 'https://cloud.r-project.org'))
+install.packages('readsas')
 ```
 
 
@@ -56,7 +64,7 @@ This should be much faster, since unselected cells of the entire data frame are 
 fl <- system.file("extdata", "mtcars.sas7bdat", package="readsas")
 
 dd <- read.sas(fl, select.cols = c("VAR1", "mpg", "hp"),
-               select.rows = c(2,5), rownames = TRUE)
+               select.rows = c(2:5), rownames = TRUE)
 
 head(dd)
 ```

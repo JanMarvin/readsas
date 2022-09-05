@@ -11,7 +11,7 @@ R package using Rcpp to parse a SAS file into a data.frame(). Currently
 
 The package allows (experimental) reading of sas7bdat files that are
 
-- (un)compressed
+-   (un)compressed
 
 As with other releases of the `read` series, focus is again on being as
 accurate as possible. Speed is welcome, but a secondary goal.
@@ -20,19 +20,20 @@ accurate as possible. Speed is welcome, but a secondary goal.
 
 With `drat`:
 
-```r
+``` r
 drat::addRepo("JanMarvin")
 install.packages("readsas")
 ```
 
 With `devtools`:
 
-```r
+``` r
 devtools::install_git("https://github.com/JanMarvin/readsas.git")
 ```
 
 With `r-universe`:
-```r
+
+``` r
 options(repos = c(
   janmarvin = 'https://janmarvin.r-universe.dev',
   CRAN = 'https://cloud.r-project.org'))
@@ -68,7 +69,7 @@ time to read.
 fl <- system.file("extdata", "mtcars.sas7bdat", package="readsas")
 
 dd <- read.sas(fl, select.cols = c("VAR1", "mpg", "hp"),
-               select.rows = c(2,5), rownames = TRUE)
+               select.rows = c(2:5), rownames = TRUE)
 
 head(dd)
 #>                    mpg  hp
