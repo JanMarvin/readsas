@@ -20,10 +20,10 @@ write.sas <- function(dat, filepath, compress = 0, debug = FALSE, bit32 = FALSE)
   dat[ff] <- lapply(dat[ff], as.character)
 
   vartypes <- sapply(dat, is.character) + 1
-  colwidth <- sapply(dat, function(x)max(nchar(x)))
+  colwidth <- sapply(dat, function(x) max(nchar(x)))
   colwidth[vartypes == 1] <- 8
 
-  labels <- "testlab";
+  labels <- "testlab"
 
   vartypen <- sapply(dat, is.numeric)
 
@@ -31,7 +31,7 @@ write.sas <- function(dat, filepath, compress = 0, debug = FALSE, bit32 = FALSE)
   formats[vartypen] <- "BEST"
   formats[!vartypen] <- "$"
 
-  width <- sapply(dat, function(x)(max(nchar(as.character(x)))))
+  width <- sapply(dat, function(x) max(nchar(as.character(x))))
   width[vartypen] <- 32 # fix for now
 
   decim <- sapply(dat, is.integer)
