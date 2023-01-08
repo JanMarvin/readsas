@@ -10,7 +10,8 @@
 #' @param empty_to_na logical convert '' to NA_character_
 #' @param tempstr filepath used for temp output when uncompressing
 #' @import Rcpp
-#' @export
+#' @keywords internal
+#' @noRd
 readsas <- function(filePath, debug, selectrows_, selectcols_, empty_to_na, tempstr) {
     .Call(`_readsas_readsas`, filePath, debug, selectrows_, selectcols_, empty_to_na, tempstr)
 }

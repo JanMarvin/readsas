@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019, 2022 Jan Marvin Garbuszus
+ * Copyright (C) 2019, 2022-2023 Jan Marvin Garbuszus
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -39,7 +39,8 @@ using namespace Rcpp;
 //' @param empty_to_na logical convert '' to NA_character_
 //' @param tempstr filepath used for temp output when uncompressing
 //' @import Rcpp
-//' @export
+//' @keywords internal
+//' @noRd
 // [[Rcpp::export]]
 Rcpp::List readsas(const char * filePath,
                    const bool debug,
