@@ -33,7 +33,9 @@ using namespace Rcpp;
 //' @param dat an R-Object of class data.frame.
 //' @param compress the file
 //' @param debug print debug information
-//' @export
+//' @param bit32 write smaller 32 bit file
+//' @keywords internal
+//' @noRd
 // [[Rcpp::export]]
 void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
               bool debug, bool bit32) {
