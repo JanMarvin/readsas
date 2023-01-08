@@ -65,7 +65,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
     std::string varname = as<std::string>(nvarnames[i]);
     if (varname.size() <= 4)
       varname.resize(4, '\0');
-    if (varname.size()>4 & varname.size() < 8)
+    if (varname.size()>4 && varname.size() < 8)
       varname.resize(8, '\0');
 
     varnames[i] = varname;
@@ -75,7 +75,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
     // std::string varlabel = as<std::string>(nlabels[i]);
     // if (varlabel.size() <= 4)
     //   varlabel.resize(4, '\0');
-    // if (varlabel.size()>4 & varlabel.size() < 8)
+    // if (varlabel.size()>4 && varlabel.size() < 8)
     //   varlabel.resize(8, '\0');
     //
     // varlabels[i] = varlabel;
@@ -85,7 +85,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
     std::string varformat = as<std::string>(nformats[i]);
     if (varformat.size() <= 4)
       varformat.resize(4, '\0');
-    if (varformat.size()>4 & varformat.size() < 8)
+    if (varformat.size()>4 && varformat.size() < 8)
       varformat.resize(8, '\0');
 
     varformats[i] = varformat;
@@ -496,7 +496,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
           //     //           // auto pos = pp + rowlength * ii;
           //     //           //
           //     //           // /* unknown */
-          //     //           // if (!(dataoffset == 256) & (firstpage == 0)) {
+          //     //           // if (!(dataoffset == 256) && (firstpage == 0)) {
           //     //           //   pos += alignval;
           //     //           // }
           //     // //
@@ -513,7 +513,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
             auto wid = colwidth[j];
             auto typ = vartypes[j];
 
-            if ((wid < 8) & (typ == 1)) {
+            if ((wid < 8) && (typ == 1)) {
 
               double val_d = 0.0;
               val_d = as<NumericVector>(dat[j])[i];
@@ -521,7 +521,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
               writebin(val_d, sas, swapit);
             }
 
-            if ((wid == 8) & (typ == 1)) {
+            if ((wid == 8) && (typ == 1)) {
 
               double val_d = 0.0;
               val_d = as<NumericVector>(dat[j])[i];
@@ -529,7 +529,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
               writebin(val_d, sas, swapit);
             }
 
-            if ((wid > 0) & (typ == 2)) {
+            if ((wid > 0) && (typ == 2)) {
 
               int32_t const len = wid;
 
@@ -826,7 +826,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
 
         // unk.push_back(unks);
 
-        if ((unks.IDX != 0) | (unks.OFF != 0) | (unks.LEN != 0)) {
+        if ((unks.IDX != 0) || (unks.OFF != 0) || (unks.LEN != 0)) {
           warning("case3: unk is not 0 as expected, but %d %d %d\n",
                   unks.IDX, unks.OFF, unks.LEN);
           // Rcout << unks.IDX << ", " << unks.OFF <<
@@ -1104,7 +1104,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       writebin(unk16, sas, swapit); // 0
       writebin(unk16, sas, swapit); // 0
 
-      if ((PAGE_TYPE != 1024) & (c5first == 0)) {
+      if ((PAGE_TYPE != 1024) && (c5first == 0)) {
         writebin(unk16, sas, swapit); // 0 |     0 | 27977
         int16_t ptk16 = 5120; // related to visual representation 0 = fills full space
         writebin(ptk16, sas, swapit); // 0 | 15872 | 30064
@@ -1112,7 +1112,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
 
       // len starting here
 
-      if ((c5typ == 0) & (pg == 0)) {
+      if ((c5typ == 0) && (pg == 0)) {
 
         // compression
         if (compress == 0) {
@@ -1279,7 +1279,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
           writebin(scv[i].FIRST, sas, swapit);
           writebin(scv[i].F_POS, sas, swapit);
 
-          if ((i == 0) & (scv[i].SIG != -4))
+          if ((i == 0) && (scv[i].SIG != -4))
             warning("first SIG is not -4");
 
           writebin(unk16, sas, swapit);
@@ -1715,7 +1715,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       //           swlen, todata, textoff);
       //
       //
-      // if (!((dataoffset == 256) | (dataoffset == 1280)) && debug)
+      // if (!((dataoffset == 256) || (dataoffset == 1280)) && debug)
       //   warning("debug: dataoffset is unexpectedly %d\n",
       //           dataoffset);
 
