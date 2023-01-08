@@ -4,6 +4,8 @@
 <!-- badges: start -->
 
 ![R-CMD-check](https://github.com/JanMarvin/readspss/workflows/R-CMD-check/badge.svg)
+[![Codecov test
+coverage](https://codecov.io/gh/JanMarvin/readsas/branch/main/graph/badge.svg)](https://app.codecov.io/gh/JanMarvin/readsas?branch=main)
 <!-- badges: end -->
 
 R package using Rcpp to parse a SAS file into a data.frame(). Currently
@@ -11,7 +13,7 @@ R package using Rcpp to parse a SAS file into a data.frame(). Currently
 
 The package allows (experimental) reading of sas7bdat files that are
 
--   (un)compressed
+- (un)compressed
 
 As with other releases of the `read` series, focus is again on being as
 accurate as possible. Speed is welcome, but a secondary goal.

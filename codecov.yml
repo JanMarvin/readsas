@@ -1,0 +1,9 @@
+codecov:
+  token: 6ada052e-d99a-4f68-af1f-813f426e00ad
+
+comment: no # do not comment PR with the result
+
+coverage:
+  status:
+    project: false
+    patch: false

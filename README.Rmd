@@ -14,6 +14,7 @@ library(readsas)
 # readsas 
 <!-- badges: start -->
 ![R-CMD-check](https://github.com/JanMarvin/readspss/workflows/R-CMD-check/badge.svg)
+[![Codecov test coverage](https://codecov.io/gh/JanMarvin/readsas/branch/main/graph/badge.svg)](https://app.codecov.io/gh/JanMarvin/readsas?branch=main)
 <!-- badges: end -->
 
 R package using Rcpp to parse a SAS file into a data.frame(). Currently 
