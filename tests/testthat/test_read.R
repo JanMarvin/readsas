@@ -111,3 +111,16 @@ test_that("convert time and date", {
   expect_equal(exp, got)
 
 })
+
+test_that("compression works", {
+
+  fl <- system.file("extdata", "mtcars_char.sas7bdat", package = "readsas")
+  exp <- mtcars
+  got <- read.sas(fl)
+  expect_equal(exp, got, ignore_attr = TRUE)
+
+  fl <- system.file("extdata", "mtcars_bin.sas7bdat", package = "readsas")
+  got <- read.sas(fl)
+  expect_equal(exp, got, ignore_attr = TRUE)
+
+})
