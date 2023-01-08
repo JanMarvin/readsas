@@ -614,7 +614,7 @@ Rcpp::List readsas(const char * filePath,
 
           uint64_t pagepos = (headersize + (double)pg * pagesize) + potabs[sc].SH_OFF;
 
-          Rcout << "debug:::" <<  pagepos << std::endl;
+          if (debug) Rcout << "debug:::" <<  pagepos << std::endl;
           // 2 files, where this is a problem
           if(potabs[sc].SH_OFF == 0 || potabs[sc].SH_LEN == 0)
             break;
@@ -782,7 +782,7 @@ Rcpp::List readsas(const char * filePath,
                 ptk64_09 = readbin(ptk64_09, sas, swapit); // 1
                 ptk64_10 = readbin(ptk64_10, sas, swapit); // 7|8 addtextoff (larg number if compressed)
 
-                // if (debug) {
+                if (debug) {
                   Rcout << "<beg case1 unks>" << std::endl;
                   Rcout << ptk64_01 << std::endl;
                   Rcout << ptk64_02 << std::endl;
@@ -795,7 +795,7 @@ Rcpp::List readsas(const char * filePath,
                   Rcout << ptk64_09 << std::endl;
                   Rcout << ptk64_10 << std::endl;
                   Rcout << "<end case1 unks>" << std::endl;
-                // }
+                }
 
                 // unk64 = readbin(unk64, sas, swapit); // val 1?
                 // unk16 = readbin(unk16, sas, swapit); // val 2?
@@ -1024,7 +1024,7 @@ Rcpp::List readsas(const char * filePath,
                 // if (debug) Rcout << unk32 << std::endl;
 
 
-                // if (debug) {
+                if (debug) {
                 Rcout << "<beg case1 unks>" << std::endl;
                 Rcout << ptk64_01 << std::endl;
                 Rcout << ptk64_02 << std::endl;
@@ -1037,7 +1037,7 @@ Rcpp::List readsas(const char * filePath,
                 Rcout << ptk64_09 << std::endl;
                 Rcout << ptk64_10 << std::endl;
                 Rcout << "<end case1 unks>" << std::endl;
-                // }
+                }
 
                 // unk32 = readbin(unk32, sas, swapit); // val 1?
                 // if (debug) Rcout << unk32 << std::endl;
@@ -1168,7 +1168,7 @@ Rcpp::List readsas(const char * filePath,
 
                 /* maybe SAS version information at o131018 ? */
                 unk32 = readbin(unk32, sas, swapit); // 1
-                Rcout << "1 " << unk32 << std::endl;
+                // Rcout << "1 " << unk32 << std::endl;
                 unk32 = readbin(unk32, sas, swapit); // 2
                 if (unk32 != 0) stop("unk32 1. expected 0 is %d", unk32);
                 unk32 = readbin(unk32, sas, swapit); // 3
