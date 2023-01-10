@@ -31,3 +31,27 @@ test_that("basic write sas works", {
   expect_equal(df, data, ignore_attr = TRUE)
 
 })
+
+test_that("formats work", {
+
+  dd <- data.frame(
+    datetime = as.POSIXct("1950-01-02 23:45:43 12:23:45"),
+    date = as.Date(Sys.time()),
+    num = 1,
+    char = "a"
+  )
+
+  tmp <- tempfile(fileext = ".sas7bdat")
+  write.sas(dd, tmp, bit32 = F)
+
+  attributes(df)$formats
+
+
+  df <- read.sas(tmp)
+  expect_equal(dd, df, ignore_attr = TRUE)
+
+  exp <- c("DATETIME", "DATE", "BEST", "$")
+  got <- attributes(df)$formats
+  expect_equal(exp, got)
+
+})

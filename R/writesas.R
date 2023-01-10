@@ -31,6 +31,18 @@ write.sas <- function(dat, filepath, compress = 0, debug = FALSE, bit32 = FALSE)
   formats[vartypen] <- "BEST"
   formats[!vartypen] <- "$"
 
+  is.Date <- function(x) inherits(x, "Date")
+  is.POSIX <- function(x) inherits(x, "POSIXt")
+
+
+  vartypen <- sapply(dat, is.Date)
+  dat[vartypen] <- lapply(dat[vartypen], as_date)
+  formats[vartypen] <- "DATE"
+
+  vartypen <- sapply(dat, is.POSIX)
+  dat[vartypen] <- lapply(dat[vartypen], as_datetime)
+  formats[vartypen] <- "DATETIME"
+
   width <- sapply(dat, function(x) max(nchar(as.character(x))))
   width[vartypen] <- 32 # fix for now
 
@@ -45,10 +57,10 @@ write.sas <- function(dat, filepath, compress = 0, debug = FALSE, bit32 = FALSE)
 
   attr(dat, "vartypes") <- as.integer(vartypes)
   attr(dat, "colwidth") <- as.integer(colwidth)
-  attr(dat, "formats") <- formats
-  attr(dat, "width") <- width
-  attr(dat, "decim") <- decim
-  attr(dat, "labels") <- labels
+  attr(dat, "formats")  <- formats
+  attr(dat, "width")    <- width
+  attr(dat, "decim")    <- decim
+  attr(dat, "labels")   <- labels
 
 
   writesas(filepath, dat, compress = 0, debug = debug, bit32 = bit32)
