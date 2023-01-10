@@ -31,26 +31,29 @@ write.sas <- function(dat, filepath, compress = 0, debug = FALSE, bit32 = FALSE)
   formats[vartypen] <- "BEST"
   formats[!vartypen] <- "$"
 
-  is.Date <- function(x) inherits(x, "Date")
-  is.POSIX <- function(x) inherits(x, "POSIXt")
-
-
-  vartypen <- sapply(dat, is.Date)
-  dat[vartypen] <- lapply(dat[vartypen], as_date)
-  formats[vartypen] <- "DATE"
-
-  vartypen <- sapply(dat, is.POSIX)
-  dat[vartypen] <- lapply(dat[vartypen], as_datetime)
-  formats[vartypen] <- "DATETIME"
-
   width <- sapply(dat, function(x) max(nchar(as.character(x))))
   width[vartypen] <- 32 # fix for now
 
   decim <- sapply(dat, is.integer)
   decim[!vartypen] <- TRUE
 
+  is.Date <- function(x) inherits(x, "Date")
+  is.POSIX <- function(x) inherits(x, "POSIXt")
+
+  vartypen <- sapply(dat, is.Date)
+  dat[vartypen] <- lapply(dat[vartypen], as_date)
+  formats[vartypen] <- "DATE"
+  width[vartypen] <- 9
+
+  vartypen <- sapply(dat, is.POSIX)
+  dat[vartypen] <- lapply(dat[vartypen], as_datetime)
+  formats[vartypen] <- "DATETIME"
+  width[vartypen] <- 22
+  decim[vartypen] <- 3
+
   # print(vartypes)
   # print(decim)
+  # print(width)
 
   # for numerics
   # formats <- rep("BEST", ncol(dat))
