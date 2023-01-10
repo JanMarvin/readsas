@@ -63,10 +63,11 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
   for (auto i = 0; i < k; ++i) {
     // varnames
     std::string varname = as<std::string>(nvarnames[i]);
-    if (varname.size() <= 4)
+    if (varname.size() <= 4) {
       varname.resize(4, '\0');
-    if (varname.size()>4 && varname.size() < 8)
+    } else if (varname.size() > 8) {
       varname.resize(8, '\0');
+    }
 
     varnames[i] = varname;
     totalvarnamesize += varname.size();
@@ -83,13 +84,18 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
 
     // varformats
     std::string varformat = as<std::string>(nformats[i]);
-    if (varformat.size() <= 4)
+    Rcout << varformat << " : " << varformat.size() << std::endl;
+
+    if (varformat.size() <= 4) {
       varformat.resize(4, '\0');
-    if (varformat.size()>4 && varformat.size() < 8)
+    } else if (varformat.size() > 4) { // resize everything to 8 characters
       varformat.resize(8, '\0');
+    }
 
     varformats[i] = varformat;
     totalvarformatssize += varformat.size();
+
+    // Rcout << "varformat size: " << varformat.size() << std::endl;
 
   }
 
@@ -547,126 +553,6 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
         }
       }
 
-      // // ABSOLUTLY NO CLUE WHATSOEVER!
-      //
-      // uint32_t
-      //   uunkt1_0 = 0,
-      //     uunkt1_1 = 0, uunkt1_2 = 0, uunkt1_3 = 4096,
-      //     uunkt1_4 = 5152, uunkt1_5 = 4144, uunkt1_6 = 6064;
-      //
-      // // 01
-      // sas.seekg(69648, sas.beg);
-      //
-      // uunkt1_0 = 4096,
-      //   uunkt1_1 = 12320, uunkt1_2 = 4144, uunkt1_3 = 4145,
-      //   uunkt1_4 = 3578354608, uunkt1_5 = 32656, uunkt1_6 = 1870030160;
-      // writebin(uunkt1_0, sas, 0);
-      // writebin(uunkt1_1, sas, 0);
-      // writebin(uunkt1_2, sas, 0);
-      // writebin(uunkt1_3, sas, 0);
-      // writebin(uunkt1_4, sas, 0);
-      // writebin(uunkt1_5, sas, 0);
-      // writebin(uunkt1_6, sas, 0);
-      //
-      // uunkt1_1 = 0, uunkt1_2 = 849420269, uunkt1_3 = 0,
-      //   uunkt1_4 = 1959006448, uunkt1_5 = 32656, uunkt1_6 = 0;
-      // writebin(uunkt1_1, sas, 0);
-      // writebin(uunkt1_2, sas, 0);
-      // writebin(uunkt1_3, sas, 0);
-      // writebin(uunkt1_4, sas, 0);
-      // writebin(uunkt1_5, sas, 0);
-      // writebin(uunkt1_6, sas, 0);
-      //
-      //
-      // // 02
-      // sas.seekg(73792, sas.beg);
-      //
-      // uunkt1_0 = 4096,
-      //   uunkt1_1 = 9248, uunkt1_2 = 8288, uunkt1_3 = 4145,
-      //   uunkt1_4 = 3578354608, uunkt1_5 = 32656, uunkt1_6 = 1870030160;
-      // writebin(uunkt1_0, sas, 0);
-      // writebin(uunkt1_1, sas, 0);
-      // writebin(uunkt1_2, sas, 0);
-      // writebin(uunkt1_3, sas, 0);
-      // writebin(uunkt1_4, sas, 0);
-      // writebin(uunkt1_5, sas, 0);
-      // writebin(uunkt1_6, sas, 0);
-      //
-      //
-      // // 1
-      // sas.seekg(77928, sas.beg);
-      //
-      // uunkt1_1 = 0, uunkt1_2 = 0, uunkt1_3 = 4096,
-      //   uunkt1_4 = 5152, uunkt1_5 = 4144, uunkt1_6 = 6064;
-      // // 6 x uint32
-      // writebin(uunkt1_1, sas, 0);
-      // writebin(uunkt1_2, sas, 0);
-      // writebin(uunkt1_3, sas, 0);
-      // writebin(uunkt1_4, sas, 0);
-      // writebin(uunkt1_5, sas, 0);
-      // writebin(uunkt1_6, sas, 0);
-      // uunk32 = 4294967295;
-      // writebin(uunk32, sas, 0);
-      // writebin(uunk32, sas, 0);
-      // writebin(uunk32, sas, 0);
-      // writebin(uunk32, sas, 0);
-      // // double x 2
-      // uunkt1_1 = 1959014736, uunkt1_2 = 32656;
-      // writebin(uunkt1_1, sas, 0);
-      // writebin(uunkt1_2, sas, 0);
-      // writebin(uunkt1_1, sas, 0);
-      // writebin(uunkt1_2, sas, 0);
-      //
-      // // 2
-      // sas.seekg(82072, sas.beg);
-      //
-      // uunkt1_1 = 0, uunkt1_2 = 0, uunkt1_3 = 0,
-      //   uunkt1_4 = 1824, uunkt1_5 = 4144, uunkt1_6 = 1920;
-      // // 6 x uint32
-      // writebin(uunkt1_1, sas, 0);
-      // writebin(uunkt1_2, sas, 0);
-      // writebin(uunkt1_3, sas, 0);
-      // writebin(uunkt1_4, sas, 0);
-      // writebin(uunkt1_5, sas, 0);
-      // writebin(uunkt1_6, sas, 0);
-      // uunk32 = 4294967295;
-      // writebin(uunk32, sas, 0);
-      // writebin(uunk32, sas, 0);
-      // writebin(uunk32, sas, 0);
-      // writebin(uunk32, sas, 0);
-      // // double x 2
-      // uunkt1_1 = 1959018880, uunkt1_2 = 32656;
-      // writebin(uunkt1_1, sas, 0);
-      // writebin(uunkt1_2, sas, 0);
-      // writebin(uunkt1_1, sas, 0);
-      // writebin(uunkt1_2, sas, 0);
-      //
-      //
-      // // 3
-      // sas.seekg(84008, sas.beg);
-      //
-      // uunkt1_1 = 18496, uunkt1_2 = 17, uunkt1_3 = 0,
-      //   uunkt1_4 = 229408, uunkt1_5 = 18624, uunkt1_6 = 243424;
-      // // 6 x uint32
-      // writebin(uunkt1_1, sas, 0);
-      // writebin(uunkt1_2, sas, 0);
-      // writebin(uunkt1_3, sas, 0);
-      // writebin(uunkt1_4, sas, 0);
-      // writebin(uunkt1_5, sas, 0);
-      // writebin(uunkt1_6, sas, 0);
-      // // ff ff ff ff  x 2
-      // uunk32 = 4294967295;
-      // writebin(uunk32, sas, 0);
-      // writebin(uunk32, sas, 0);
-      // writebin(uunk32, sas, 0);
-      // writebin(uunk32, sas, 0);
-      // // double x 2
-      // uunkt1_1 = 1959020816, uunkt1_2 = 32656;
-      // writebin(uunkt1_1, sas, 0);
-      // writebin(uunkt1_2, sas, 0);
-      // writebin(uunkt1_1, sas, 0);
-      // writebin(uunkt1_2, sas, 0);
-
       auto pos_at_end_of_file = (headersize + pagecount*pagesize) - subheader_off;
 
       // case1: 800 containing + k * 4 (varnames) + k * 4 (formats)
@@ -738,9 +624,16 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
           std::string fmts = varformats[z];
           // TODO: Add labels
 
-          Rcout << nams << std::endl;
+          // Rcout << nams << " : "<< fmts << std::endl;
           offsetpos += nams.size();
-          offsetpos += fmts.size();
+          offsetpos += 4; // fmts.size();
+        }
+
+        // if we have fmts larger than 4 characters (datetime) we need to add
+        for (auto z = 0; z < (k - i - 1); ++z) {
+          std::string fmts = varformats[z];
+          if (fmts.size() == 8)
+            offsetpos += 4; // fmts.size();
         }
 
 
@@ -795,8 +688,8 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
 
         idxofflen fmts, lbls, unks;
 
-
-        int16_t fmtslen = as<std::string>(nformats[idx]).size();
+        int16_t fmtslen = varformats[idx].size();
+        Rcout << varformats[idx] << "___" << offsetpos << "____" << fmtslen << std::endl;
 
         fmts.IDX = 0, fmts.OFF = offsetpos, fmts.LEN = fmtslen;
 
@@ -1029,7 +922,6 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
 
 
       inioff = 36;
-      if (bit32 == 1) inioff = 32;
 
       auto prevlen = 0 + inioff;
 
@@ -1038,7 +930,6 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
         cnpoi[cn].CN_OFF = prevlen;
         cnpoi[cn].CN_LEN = as<std::string>(nvarnames[cn]).size();
         prevlen += varnames[cn].size();
-
         prevlen += varformats[cn].size();
 
         if(debug) Rcout << "prevlen: " << prevlen << std::endl;
