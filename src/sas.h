@@ -14,6 +14,8 @@
 
 #include "swap_endian.h"
 
+// #define NA_DOUBLE 00 00 00 00 00 FE FF FF
+
 template <typename T>
 inline void writebin(T t, std::fstream& sas, bool swapit)
 {
