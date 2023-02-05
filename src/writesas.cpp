@@ -65,8 +65,9 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
     std::string varname = as<std::string>(nvarnames[i]);
     if (varname.size() <= 4) {
       varname.resize(4, '\0');
-    } else if (varname.size() > 8) {
-      varname.resize(8, '\0');
+      // for now resize everything to 8 char
+    } else if (varname.size() > 32) {
+      varname.resize(32, '\0');
     }
 
     varnames[i] = varname;
@@ -950,7 +951,12 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       for (auto cn = 0; cn < k; ++cn) {
         cnpoi[cn].CN_IDX = pg;
         cnpoi[cn].CN_OFF = prevlen;
-        cnpoi[cn].CN_LEN = as<std::string>(nvarnames[cn]).size();
+        Rcout << "as<std::string>(nvarnames[cn]).size();" << as<std::string>(nvarnames[cn]).size() << std::endl;
+        Rcout << "varnames[cn].size();" << varnames[cn].size() << std::endl;
+        // varnames size < 4 are padded. This len field
+        // tells SAS the actual size of the varname. max value is 32
+        int8_t max_varname_len = 32L;
+        cnpoi[cn].CN_LEN = std::min((int8_t)as<std::string>(nvarnames[cn]).size(), max_varname_len);
         prevlen += varnames[cn].size();
         prevlen += varformats[cn].size();
 
