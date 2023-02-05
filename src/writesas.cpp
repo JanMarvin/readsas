@@ -524,7 +524,16 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
               double val_d = 0.0;
               val_d = as<NumericVector>(dat[j])[i];
 
-              writebin(val_d, sas, swapit);
+              if ( val_d == NA_REAL  || R_IsNA(val_d) || R_IsNaN(val_d) || std::isinf(val_d) ) {
+                uint32_t NA1 = 0;
+                uint32_t NA2 = 4294966784;
+                writebin(NA1, sas, 0);
+                writebin(NA2, sas, 0);
+              } else {
+                writebin(val_d, sas, swapit);
+              }
+
+
             }
 
             if ((wid == 8) && (typ == 1)) {
@@ -532,14 +541,27 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
               double val_d = 0.0;
               val_d = as<NumericVector>(dat[j])[i];
 
-              writebin(val_d, sas, swapit);
+              if ( val_d == NA_REAL  || R_IsNA(val_d) || R_IsNaN(val_d) || std::isinf(val_d) ) {
+                uint32_t NA1 = 0;
+                uint32_t NA2 = 4294966784;
+                writebin(NA1, sas, 0);
+                writebin(NA2, sas, 0);
+              } else {
+                writebin(val_d, sas, swapit);
+              }
             }
 
             if ((wid > 0) && (typ == 2)) {
 
               int32_t const len = wid;
 
-              std::string val_s = as<std::string>(as<CharacterVector>(dat[j])[i]);
+              CharacterVector cv_s = NA_STRING;
+              cv_s = Rcpp::as<CharacterVector>(dat[j])[i];
+              std::string val_s = Rcpp::as<std::string>(cv_s);
+
+              if (cv_s[0] == NA_STRING) {
+                val_s.clear();
+              }
 
               // rcout << val_s << std::endl;
               writestr(val_s, len, sas);
