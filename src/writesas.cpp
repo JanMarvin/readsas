@@ -338,7 +338,8 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
     writebin(unkdub, sas, 0);
     writebin(unkdub, sas, 0);
 
-    Rcout << "pageseqnum32: " << pageseqnum32 << std::endl;
+
+    if (debug) Rcout << "pageseqnum32: " << pageseqnum32 << std::endl;
     writebin(pageseqnum32, sas, 0);
     writebin(unk32, sas, 0);
 
@@ -442,7 +443,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
     if (bit32 == 1) unk3 = 0;
 
     /* unk3 something like max number of something per page? */
-    Rcout << "pageseqnum32: " << pageseqnum32 << std::endl;
+    if (debug) Rcout << "pageseqnum32: " << pageseqnum32 << std::endl;
     // Page Offset Table
     if (u64 == 4) {
       writebin(pageseqnum32, sas, swapit);
@@ -498,8 +499,8 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
 
     if (debug) Rcout << " ---------- writing data ------------- " << std::endl;
 
-    // if (debug)
-    Rcout << sas.tellg() << std::endl;
+    if (debug)
+      Rcout << sas.tellg() << std::endl;
 
     auto data_pos_page1 = sas.tellg();
     // Rcout << pos_at_end_of_page1 << " < " << data_pos_page1 << " < " << rowlength << std::endl;
@@ -578,8 +579,8 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
         }
       }
     }
-    // if (debug)
-    Rcout << sas.tellg() << std::endl;
+    if (debug)
+      Rcout << sas.tellg() << std::endl;
 
     rows_written = rows_on_page1;
     rows_pending = n - rows_written;
@@ -1692,7 +1693,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
 
       ++pagecount;
 
-      // if (debug)
+      if (debug)
         Rcout << "@@@@ write additoinal page @@@@@@@@@@@@@@@@@@@@@@@@@@@@" << std::endl;
 
       sas.seekg(pos, sas.beg);
@@ -1717,7 +1718,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       }
 
       auto rows_on_page = BLOCK_COUNT + rows_written;
-      Rcout << rows_on_page << std::endl;
+      if (debug) Rcout << rows_on_page << std::endl;
 
       // if (n <= (rows_on_page)) {
       //   rows_on_page = n;
@@ -1727,7 +1728,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       unk32 = 0, unk1 = 0, unk2 = 0, unk3 = 0;
 
       // Page Offset Table
-      Rcout << "pageseqnum32: " << pageseqnum32 << std::endl;
+      if (debug) Rcout << "pageseqnum32: " << pageseqnum32 << std::endl;
       if (u64 == 4) {
         writebin(pageseqnum32, sas, swapit);
         writebin(unk32, sas, swapit);
@@ -1829,7 +1830,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
 
         }
       }
-      // if (debug)
+      if (debug)
         Rcout << sas.tellg() << std::endl;
 
       rows_written = rows_on_page;
