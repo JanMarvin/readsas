@@ -29,7 +29,7 @@ write.sas <- function(dat, filepath, compress = 0, debug = FALSE, bit32 = FALSE)
 
   formats <- NA
   formats[vartypen] <- "BEST"
-  formats[!vartypen] <- "$"
+  formats[!vartypen] <- ""
 
   width <- sapply(dat, function(x) max(nchar(as.character(x))))
   width[vartypen] <- 32 # fix for now
