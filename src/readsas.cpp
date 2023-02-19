@@ -472,7 +472,7 @@ Rcpp::List readsas(const char * filePath,
     for (auto pg = 0; pg < pagecount; ++pg) {
       checkUserInterrupt();
 
-      Rcout << "--- new page ------------------------------------" << std::endl;
+      // Rcout << "--- new page ------------------------------------" << std::endl;
 
       /* should already be at this position for pg == 1 */
       if (pagecount > 0) {
@@ -505,10 +505,10 @@ Rcpp::List readsas(const char * filePath,
 
       pageseqnum[pg] = pageseqnum32;
 
-      // if (debug) {
+      if (debug) {
         Rcout << "pageseqnum: " << pageseqnum32 << std::endl;
-        // Rcout << unk1 << " " << unk2 << " " << PAGE_DELETED_POINTER_LENGTH << std::endl;
-      // }
+        Rcout << unk1 << " " << unk2 << " " << PAGE_DELETED_POINTER_LENGTH << std::endl;
+      }
 
       PAGE_TYPE       = readbin(PAGE_TYPE, sas, swapit);
       BLOCK_COUNT     = readbin(BLOCK_COUNT, sas, swapit);
@@ -739,7 +739,7 @@ Rcpp::List readsas(const char * filePath,
                 if (debug) Rcout << "pgsize " << pgsize << std::endl;
                 unk64 = readbin(unk64, sas, swapit);
                 rcmix =  readbin(rcmix, sas, swapit);
-                // if (debug)
+                if (debug)
                   Rcout << "rcmix " << rcmix << std::endl;
 
                 /* next two indicate the end of the initial header ? */
@@ -957,7 +957,7 @@ Rcpp::List readsas(const char * filePath,
                 unk32 = readbin(unk32, sas, swapit);
                 if (debug) Rcout << unk32 << std::endl;
                 rcmix =  readbin((int32_t)rcmix, sas, swapit);
-                // if (debug)
+                if (debug)
                   Rcout << "rcmix " << rcmix << std::endl;
                 uunk32 = readbin(uunk32, sas, swapit);
                 if (debug) Rcout << uunk32 << std::endl;
