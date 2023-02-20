@@ -51,7 +51,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
   IntegerVector colwidth = dat.attr("colwidth");
 
   auto pagecount_pos1 = 0, pagecount_pos2 = 0, rcmix_pos = 0,
-    block_count_pos1 = 0, block_count_pos2 = 0, rowcount_pos = 0;
+    block_count_pos1 = 0, rowcount_pos = 0;
   int64_t pagecount = 1;
 
   // trinity of varnames varlabels and varformats
@@ -371,7 +371,6 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
     auto rows_written = 0;
     uint64_t rows_pending = n;
 
-
     /*** write pages **********************************************************/
 
     // Are these fixed values?
@@ -392,9 +391,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       addextra = 1;
     }
 
-    if (k > 1) subheader_off += 54; // case 8 // 54 but something else is not yet correct
-
-
+    if (k > 1) subheader_off += 54; // case 8
 
     if (bit32 == 1) {
       subheader_off =
@@ -408,7 +405,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
         52 * k        // case 3
       ;
 
-      if (k > 1) subheader_off += 50; // case 8 // 50 but something else is not yet correct
+      if (k > 1) subheader_off += 50 + 38; // case 8 // something is wrong here
     }
 
 
@@ -436,11 +433,6 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
     unk1 = 0;
     unk2 = 0;
     unk3 = 0; // 62950; // 62676; // 2* pagesize - sas.tellg();
-
-    // Rcout << pagesize << " " << sas.tellg() << " " << std::endl;
-    // stop("haaalt");
-
-    if (bit32 == 1) unk3 = 0;
 
     /* unk3 something like max number of something per page? */
     if (debug) Rcout << "pageseqnum32: " << pageseqnum32 << std::endl;
@@ -487,8 +479,8 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
         writebin(zero16, sas, swapit);
         writebin(zero16, sas, swapit);
       } else {
-        writebin((uint32_t)potabs[i].SH_OFF, sas, swapit);
-        writebin((uint32_t)potabs[i].SH_LEN, sas, swapit);
+        writebin((int32_t)potabs[i].SH_OFF, sas, swapit);
+        writebin((int32_t)potabs[i].SH_LEN, sas, swapit);
         writebin(potabs[i].COMPRESSION, sas, swapit);
         writebin(potabs[i].SH_TYPE, sas, swapit);
 
@@ -512,6 +504,8 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
     }
 
     pos = sas.tellg();
+    Rcout << "pos: " << pos << std::endl;
+    Rcout << "block_count_pos1: " << block_count_pos1 << std::endl;
     sas.seekg(block_count_pos1, sas.beg);
     BLOCK_COUNT = rows_on_page1 + SUBHEADER_COUNT;
     writebin(BLOCK_COUNT, sas, swapit);
@@ -585,6 +579,8 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
     rows_written = rows_on_page1;
     rows_pending = n - rows_written;
 
+
+    Rcout << "pos_at_end_of_page1: " << pos_at_end_of_page1 << std::endl;
     sas.seekg(pos_at_end_of_page1 , sas.beg);
 
 
@@ -1116,7 +1112,8 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       // 4th from the end is 1804 meaning is unknown
     }
 
-    int16_t ptk16 = 1804;
+    // int16_t ptk16 = 1804;
+    int16_t ptk16 = 0;
     writebin(ptk16, sas, swapit);
     writebin(unk16, sas, swapit);
     writebin(unk16, sas, swapit);
@@ -1380,7 +1377,6 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       writebin(ptk64_06, sas, swapit); // val 7?
       pagecount_pos2 = sas.tellg();
       writebin(ptk64_07, sas, swapit); // val 7?
-      block_count_pos2 = sas.tellg();
       writebin(ptk64_08, sas, swapit); // val 7?
       writebin(ptk64_09, sas, swapit); // val 7?
       writebin(ptk64_10, sas, swapit); // val 7?
@@ -1521,12 +1517,14 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
         writebin((int32_t)unk64, sas, swapit);;
       }
 
+      ptk64_07 = pagecount;
       writebin((int32_t)ptk64_01, sas, swapit); // val 1?
       writebin((int32_t)ptk64_02, sas, swapit); // val 2?
       writebin((int32_t)ptk64_03, sas, swapit); // val 1?
       writebin((int32_t)ptk64_04, sas, swapit); // val 7?
       writebin((int32_t)ptk64_05, sas, swapit); // val 7?
       writebin((int32_t)ptk64_06, sas, swapit); // val 7?
+      pagecount_pos2 = sas.tellg();
       writebin((int32_t)ptk64_07, sas, swapit); // val 7?
       writebin((int32_t)ptk64_08, sas, swapit); // val 7?
       writebin((int32_t)ptk64_09, sas, swapit); // val 7?
@@ -1657,6 +1655,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
 
     /*write correct offsets *************************************************/
 
+    Rcout << "pos_SH_C: " << pos_SH_C << std::endl;
     sas.seekg(pos_SH_C, sas.beg);
     if (debug) Rcout << pos_SH_C << std::endl;
     if (debug) Rcout << "Writing subheader pos at " << sas.tellg() << std::endl;
@@ -1674,8 +1673,8 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
 
       } else {
 
-        writebin((uint32_t)potabs[i].SH_OFF, sas, swapit);
-        writebin((uint32_t)potabs[i].SH_LEN, sas, swapit);
+        writebin((int32_t)potabs[i].SH_OFF, sas, swapit);
+        writebin((int32_t)potabs[i].SH_LEN, sas, swapit);
         writebin(potabs[i].COMPRESSION, sas, swapit);
         writebin(potabs[i].SH_TYPE, sas, swapit);
 
@@ -1696,12 +1695,14 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       if (debug)
         Rcout << "@@@@ write additoinal page @@@@@@@@@@@@@@@@@@@@@@@@@@@@" << std::endl;
 
+      Rcout << "pos: " << pos << std::endl;
       sas.seekg(pos, sas.beg);
 
       // write empty page
       for (auto i = 0; i < (pagesize/sizeof(double)); ++i) {
         writebin(unkdub, sas, 0);
       }
+      Rcout << "pos: " << pos << std::endl;
       sas.seekg(pos, sas.beg);
 
       int64_t pos_beg = (int64_t)pos + 40;
@@ -1838,6 +1839,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
     }
 
     // update pagecount in file header
+    Rcout << "pagecount_pos1: " << pagecount_pos1 << std::endl;
     sas.seekg(pagecount_pos1, sas.beg);
     if (u64 == 4) {
       writebin(pagecount, sas, swapit);
@@ -1846,7 +1848,12 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
     }
 
     sas.seekg(pagecount_pos2, sas.beg);
-    writebin(pagecount, sas, swapit);
+    Rcout << "pagecount_pos2: "<< pagecount_pos2 << std::endl;
+    if (u64 == 4) {
+      writebin(pagecount, sas, swapit);
+    } else {
+      writebin((int32_t)pagecount, sas, swapit);
+    }
 
   }
 }
