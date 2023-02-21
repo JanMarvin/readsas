@@ -29,7 +29,7 @@ write.sas <- function(dat, filepath, compress = 0, debug = FALSE, bit32 = FALSE)
 
   formats <- NA
   formats[vartypen] <- "BEST"
-  formats[!vartypen] <- "$"
+  formats[!vartypen] <- ""
 
   width <- 0
   width[vartypen] <- 32 # fix for now
@@ -52,12 +52,20 @@ write.sas <- function(dat, filepath, compress = 0, debug = FALSE, bit32 = FALSE)
   width[vartypen] <- 22
   decim[vartypen] <- 3
 
-  # print(vartypes)
-  # print(colwidth)
-  # print(formats)
-  # print(width)
-  # print(decim)
-  # print(labels)
+  if (debug) {
+    message("vartypes")
+    print(vartypes)
+    message("colwidth")
+    print(colwidth)
+    message("formats")
+    print(formats)
+    message("width")
+    print(width)
+    message("decim")
+    print(decim)
+    message("labels")
+    print(labels)
+  }
 
   # for numerics
   # formats <- rep("BEST", ncol(dat))
