@@ -92,7 +92,10 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
     std::string varformat = as<std::string>(nformats[i]);
     if (debug) Rcout << varformat << " : " << varformat.size() << std::endl;
 
-    if (varformat.size() <= 4) {
+    if (varformat.size() == 0) {
+      // Rcout << "size 0" << std::endl;
+    }
+    if (varformat.size() > 0 && varformat.size() <= 4) {
       varformat.resize(4, '\0');
     } else if (varformat.size() > 4) { // resize everything to 8 characters
       varformat.resize(8, '\0');
@@ -719,6 +722,10 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       idxofflen fmts, lbls, unks;
 
       int16_t fmtslen = varformats[idx].size();
+
+      // for characters there is no offset and no format
+      if (fmtslen == 0) offsetpos = 0;
+
       if (debug)
         Rcout << varformats[idx] << "___" << offsetpos << "____" << fmtslen << std::endl;
 
