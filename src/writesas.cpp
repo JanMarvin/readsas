@@ -49,6 +49,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
   IntegerVector decim = dat.attr("decim");
   IntegerVector vartypes = dat.attr("vartypes");
   IntegerVector colwidth = dat.attr("colwidth");
+  CharacterVector nvarlabels = dat.attr("varlabels");
 
   auto pagecount_pos1 = 0, pagecount_pos2 = 0, rcmix_pos = 0,
     block_count_pos1 = 0, rowcount_pos = 0;
@@ -79,14 +80,18 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
     totalvarnamesize += varname.size();
 
     // varlabels
-    // std::string varlabel = as<std::string>(nlabels[i]);
-    // if (varlabel.size() <= 4)
-    //   varlabel.resize(4, '\0');
-    // if (varlabel.size()>4 && varlabel.size() < 8)
-    //   varlabel.resize(8, '\0');
-    //
-    // varlabels[i] = varlabel;
-    // totalvarlabelssize += varlabel.size();
+    std::string varlabel = as<std::string>(nvarlabels[i]);
+    if (varlabel.size() % 4 > 0 && varlabel.size() <= 32) { // for < 4, why not < 32?
+      int8_t div4len = 4 * ceil((double)varlabel.size()/4);
+      varlabel.resize(div4len, '\0');
+      // for now resize everything to 8 char
+    } else if (varlabel.size() > 32) {
+      warning("varlabel was shorten to 32 characters");
+      varlabel.resize(32, '\0');
+    }
+
+    varlabels[i] = varlabel;
+    totalvarlabelssize += varlabel.size();
 
     // varformats
     std::string varformat = as<std::string>(nformats[i]);
@@ -381,7 +386,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
     // Are these fixed values?
     auto subheader_off =
       100 +
-      792 + totalvarnamesize + totalvarformatssize + // case 1
+      792 + totalvarnamesize + totalvarformatssize + totalvarlabelssize + // case 1
       24 +
       600 +
       68 +
@@ -395,7 +400,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
     if (bit32 == 1) {
       subheader_off =
         100 +
-        422 + totalvarnamesize + totalvarformatssize + // case 1 // kleiner
+        422 + totalvarnamesize + totalvarformatssize + totalvarlabelssize + // case 1 // kleiner
         12 +          // case 4
         304 +         // case 2
         64 +          // case 5
@@ -415,7 +420,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       addextra = 1;
     }
 
-    // if (debug)
+    if (debug)
       Rcout << "SUBHEADER_OFFSET: " << subheader_off << std::endl;
 
 
@@ -631,11 +636,14 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
     {
       shc--;
 
+      idxofflen fmts, lbls, unks;
+
       if (debug) Rcout << shc << std::endl;
       pre_shlen = sas.tellg();
       potabs[shc].SH_OFF = pre_shlen - headersize - pg*pagesize;
 
       auto offsetpos = 32;
+      if (bit32 == 1) offsetpos = 28; // no clue at all
 
       // everything is in reverse order - 1 for c index
       auto idx = k-i -1;
@@ -645,24 +653,16 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       //  Stacks them and writes the entire stack as one
       for (auto z = 0; z < (k - i); ++z) {
         std::string nams = varnames[z];
-        std::string fmts = varformats[z];
-        // TODO: Add labels
-
-        // Rcout << nams << " : "<< fmts << std::endl;
         offsetpos += nams.size();
-        offsetpos += 4; // fmts.size();
-      }
 
-      // if we have fmts larger than 4 characters (datetime) we need to add 4
-      // if we have fmts equal 0 characters (character) we need to substract 4
-      for (auto z = 0; z < (k - i - 1); ++z) {
-        std::string fmts = varformats[z];
-        if (fmts.size() == 8)
-          offsetpos += 4; // fmts.size();
-        if (fmts.size() == 0)
-          offsetpos -= 4;
-      }
+        std::string lblz = varlabels[z];
+        offsetpos += lblz.size();
+        lbls.OFF = offsetpos;
 
+        std::string fmtz = varformats[z];
+        offsetpos += fmtz.size();
+        fmts.OFF = offsetpos;
+      }
 
       // calc length of len3
       auto len3 = 0;
@@ -723,8 +723,6 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       // ifmt32s.push_back( ifmt32 + (double)ifmt322/10);
       // fmtkeys.push_back( fmtkey + (double)fmtkey2/10);
 
-      idxofflen fmts, lbls, unks;
-
       int16_t fmtslen = varformats[idx].size();
 
       // for characters there is no offset and no format
@@ -733,7 +731,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       if (debug)
         Rcout << varformats[idx] << "___" << offsetpos << "____" << fmtslen << std::endl;
 
-      fmts.IDX = 0, fmts.OFF = offsetpos, fmts.LEN = fmtslen;
+      fmts.IDX = 0, fmts.LEN = fmtslen;
       if (fmtslen == 0) fmts.OFF = 0;
 
       writebin(fmts.IDX, sas, swapit);
@@ -745,6 +743,10 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
           ", " << fmts.LEN << std::endl;
 
       // fmt.push_back(fmts);
+
+      int16_t lblslen = varlabels[idx].size();
+      lbls.IDX = 0, lbls.LEN = lblslen;
+      if (lblslen == 0) fmts.OFF = 0;
 
       writebin(lbls.IDX, sas, swapit);
       writebin(lbls.OFF, sas, swapit);
@@ -978,6 +980,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       int8_t max_varname_len = 32L;
       cnpoi[cn].CN_LEN = std::min((int8_t)as<std::string>(nvarnames[cn]).size(), max_varname_len);
       prevlen += varnames[cn].size();
+      prevlen += varlabels[cn].size();
       prevlen += varformats[cn].size();
 
       if(debug) Rcout << "prevlen: " << prevlen << std::endl;
@@ -1064,7 +1067,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
 
       for (auto i = 0; i < k; ++i) {
         writestr(varnames[i], varnames[i].size(), sas);
-        // writestr(varlabels[i], varlabels[i].size(), sas);
+        writestr(varlabels[i], varlabels[i].size(), sas);
         writestr(varformats[i], varformats[i].size(), sas);
       }
 
