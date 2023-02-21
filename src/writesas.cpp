@@ -652,11 +652,14 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
         offsetpos += 4; // fmts.size();
       }
 
-      // if we have fmts larger than 4 characters (datetime) we need to add
+      // if we have fmts larger than 4 characters (datetime) we need to add 4
+      // if we have fmts equal 0 characters (character) we need to substract 4
       for (auto z = 0; z < (k - i - 1); ++z) {
         std::string fmts = varformats[z];
         if (fmts.size() == 8)
           offsetpos += 4; // fmts.size();
+        if (fmts.size() == 0)
+          offsetpos -= 4;
       }
 
 
@@ -724,12 +727,13 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       int16_t fmtslen = varformats[idx].size();
 
       // for characters there is no offset and no format
-      if (fmtslen == 0) offsetpos = 0;
+
 
       if (debug)
         Rcout << varformats[idx] << "___" << offsetpos << "____" << fmtslen << std::endl;
 
       fmts.IDX = 0, fmts.OFF = offsetpos, fmts.LEN = fmtslen;
+      if (fmtslen == 0) fmts.OFF = 0;
 
       writebin(fmts.IDX, sas, swapit);
       writebin(fmts.OFF, sas, swapit);
