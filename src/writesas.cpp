@@ -389,28 +389,30 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
 
     if (k > 1) subheader_off += 54; // case 8
 
+    if (bit32 == 1) {
+      subheader_off =
+        // 100 +
+        422 + totalvarnamesize + totalvarformatssize + // case 1 // kleiner
+        12 +          // case 4
+        304 +         // case 2
+        64 +          // case 5
+        24 + k * 8 +  // case 6            // 44 vielleicht kleiner
+        24 + k * 12 + // case 7            // 56 vielleicht kleiner
+        52 * k        // case 3
+      ;
+
+      if (k > 1) subheader_off += 50 + 34; // case 8 // something is wrong here
+    }
+
     auto addextra = 0;
     if (((subheader_off) % 8) > 0) {
-      // subheader_off += 4;
+      // get the required offset from the end of the file so that the content
+      // can be written completely
       subheader_off = ceil(8 * ((double)subheader_off / 8)) + 4;
       addextra = 1;
     }
-    Rcout << "SUBHEADER_OFFSET: " << subheader_off << std::endl;
 
-    // if (bit32 == 1) {
-    //   subheader_off =
-    //     // 100 +
-    //     422 + totalvarnamesize + totalvarformatssize + // case 1 // kleiner
-    //     12 +          // case 4
-    //     304 +         // case 2
-    //     64 +          // case 5
-    //     24 + k * 8 +  // case 6            // 44 vielleicht kleiner
-    //     24 + k * 12 + // case 7            // 56 vielleicht kleiner
-    //     52 * k        // case 3
-    //   ;
-
-    //   if (k > 1) subheader_off += 50 + 38; // case 8 // something is wrong here
-    // }
+    if (debug) Rcout << "SUBHEADER_OFFSET: " << subheader_off << std::endl;
 
 
     // end of page 1
@@ -501,15 +503,15 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
     auto data_pos_page1 = sas.tellg();
     // Rcout << pos_at_end_of_page1 << " < " << data_pos_page1 << " < " << rowlength << std::endl;
     int64_t rows_on_page1 = floor((pos_at_end_of_page1 - data_pos_page1) / (double)rowlength);
-    Rcout << rows_on_page1 << std::endl;
+    // Rcout << rows_on_page1 << std::endl;
 
     if (n <= rows_on_page1) {
       rows_on_page1 = n;
     }
 
     pos = sas.tellg();
-    Rcout << "pos: " << pos << std::endl;
-    Rcout << "block_count_pos1: " << block_count_pos1 << std::endl;
+    // Rcout << "pos: " << pos << std::endl;
+    // Rcout << "block_count_pos1: " << block_count_pos1 << std::endl;
     sas.seekg(block_count_pos1, sas.beg);
     BLOCK_COUNT = rows_on_page1 + SUBHEADER_COUNT;
     writebin(BLOCK_COUNT, sas, swapit);
@@ -584,7 +586,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
     rows_pending = n - rows_written;
 
 
-    Rcout << "pos_at_end_of_page1: " << pos_at_end_of_page1 << std::endl;
+    // Rcout << "pos_at_end_of_page1: " << pos_at_end_of_page1 << std::endl;
     sas.seekg(pos_at_end_of_page1 , sas.beg);
 
 
@@ -1670,7 +1672,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
 
     /*write correct offsets *************************************************/
 
-    Rcout << "pos_SH_C: " << pos_SH_C << std::endl;
+    // Rcout << "pos_SH_C: " << pos_SH_C << std::endl;
     sas.seekg(pos_SH_C, sas.beg);
     if (debug) Rcout << pos_SH_C << std::endl;
     if (debug) Rcout << "Writing subheader pos at " << sas.tellg() << std::endl;
@@ -1710,14 +1712,14 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       if (debug)
         Rcout << "@@@@ write additoinal page @@@@@@@@@@@@@@@@@@@@@@@@@@@@" << std::endl;
 
-      Rcout << "pos: " << pos << std::endl;
+      // Rcout << "pos: " << pos << std::endl;
       sas.seekg(pos, sas.beg);
 
       // write empty page
       for (auto i = 0; i < (pagesize/sizeof(double)); ++i) {
         writebin(unkdub, sas, 0);
       }
-      Rcout << "pos: " << pos << std::endl;
+      // Rcout << "pos: " << pos << std::endl;
       sas.seekg(pos, sas.beg);
 
       int64_t pos_beg = (int64_t)pos + 40;
@@ -1854,7 +1856,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
     }
 
     // update pagecount in file header
-    Rcout << "pagecount_pos1: " << pagecount_pos1 << std::endl;
+    // Rcout << "pagecount_pos1: " << pagecount_pos1 << std::endl;
     sas.seekg(pagecount_pos1, sas.beg);
     if (u64 == 4) {
       writebin(pagecount, sas, swapit);
@@ -1863,7 +1865,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
     }
 
     sas.seekg(pagecount_pos2, sas.beg);
-    Rcout << "pagecount_pos2: "<< pagecount_pos2 << std::endl;
+    // Rcout << "pagecount_pos2: "<< pagecount_pos2 << std::endl;
     if (u64 == 4) {
       writebin(pagecount, sas, swapit);
     } else {
