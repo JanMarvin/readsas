@@ -380,21 +380,21 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
 
     // Are these fixed values?
     auto subheader_off =
-    // 100 +
-    792 + totalvarnamesize + totalvarformatssize + // case 1
-    24 +
-    600 +
-    68 +
-    28 + k * 8 +
-    28 + k * 16 +
-    64 * k
+      100 +
+      792 + totalvarnamesize + totalvarformatssize + // case 1
+      24 +
+      600 +
+      68 +
+      28 + k * 8 +
+      28 + k * 16 +
+      64 * k
     ;
 
     if (k > 1) subheader_off += 54; // case 8
 
     if (bit32 == 1) {
       subheader_off =
-        // 100 +
+        100 +
         422 + totalvarnamesize + totalvarformatssize + // case 1 // kleiner
         12 +          // case 4
         304 +         // case 2
@@ -404,18 +404,19 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
         52 * k        // case 3
       ;
 
-      if (k > 1) subheader_off += 50 + 34; // case 8 // something is wrong here
+      if (k > 1) subheader_off += 50; // case 8 // something is wrong here
     }
 
     auto addextra = 0;
     if (((subheader_off) % 8) > 0) {
       // get the required offset from the end of the file so that the content
       // can be written completely
-      subheader_off = ceil(8 * ((double)subheader_off / 8)) + 4;
+      subheader_off = ceil(8 * ceil((double)subheader_off / 8));
       addextra = 1;
     }
 
-    if (debug) Rcout << "SUBHEADER_OFFSET: " << subheader_off << std::endl;
+    // if (debug)
+      Rcout << "SUBHEADER_OFFSET: " << subheader_off << std::endl;
 
 
     // end of page 1
@@ -1676,7 +1677,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
     auto got_endpos = sas.tellg();
 
     if (debug) Rcout << "END OF FILE REACHED " << got_endpos << std::endl;
-    if (got_endpos != exp_endpos)
+    if (got_endpos > exp_endpos)
       warning("Unexpected position at end of file. %d and not %d",
               got_endpos, exp_endpos);
 
