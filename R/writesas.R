@@ -11,9 +11,14 @@
 #'@useDynLib readsas, .registration=TRUE
 #'
 #'@export
-write.sas <- function(dat, filepath, compress = 0, debug = FALSE, bit32 = FALSE) {
+write.sas <- function(dat, filepath, compress = 0, debug = FALSE, bit32 = FALSE,
+                      varlabels) {
 
   filepath <- path.expand(filepath)
+
+  if (missing(varlabels)) {
+    varlabels <- rep("", ncol(dat))
+  }
 
   # convert from factor
   ff <- sapply(dat, is.factor)
@@ -76,6 +81,7 @@ write.sas <- function(dat, filepath, compress = 0, debug = FALSE, bit32 = FALSE)
   attr(dat, "width")    <- width
   attr(dat, "decim")    <- decim
   attr(dat, "labels")   <- labels
+  attr(dat, "varlabels") <- varlabels
 
 
   writesas(filepath, dat, compress = 0, debug = debug, bit32 = bit32)
