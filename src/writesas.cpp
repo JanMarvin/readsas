@@ -66,10 +66,12 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
   for (auto i = 0; i < k; ++i) {
     // varnames
     std::string varname = as<std::string>(nvarnames[i]);
-    if (varname.size() <= 4) {
-      varname.resize(4, '\0');
+    if (varname.size() % 4 > 0 && varname.size() <= 32) { // for < 4, why not < 32?
+      int8_t div4len = 4 * ceil((double)varname.size()/4);
+      varname.resize(div4len, '\0');
       // for now resize everything to 8 char
     } else if (varname.size() > 32) {
+      warning("varname was shorten to 32 characters");
       varname.resize(32, '\0');
     }
 
@@ -385,28 +387,30 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
     64 * k
     ;
 
-    auto addextra = 0;
-    if (((totalvarnamesize + totalvarformatssize) % 8) != 0) {
-      subheader_off += 4;
-      addextra = 1;
-    }
-
     if (k > 1) subheader_off += 54; // case 8
 
-    if (bit32 == 1) {
-      subheader_off =
-        // 100 +
-        422 + totalvarnamesize + totalvarformatssize + // case 1 // kleiner
-        12 +          // case 4
-        304 +         // case 2
-        64 +          // case 5
-        24 + k * 8 +  // case 6            // 44 vielleicht kleiner
-        24 + k * 12 + // case 7            // 56 vielleicht kleiner
-        52 * k        // case 3
-      ;
-
-      if (k > 1) subheader_off += 50 + 38; // case 8 // something is wrong here
+    auto addextra = 0;
+    if (((subheader_off) % 8) > 0) {
+      // subheader_off += 4;
+      subheader_off = ceil(8 * ((double)subheader_off / 8)) + 4;
+      addextra = 1;
     }
+    Rcout << "SUBHEADER_OFFSET: " << subheader_off << std::endl;
+
+    // if (bit32 == 1) {
+    //   subheader_off =
+    //     // 100 +
+    //     422 + totalvarnamesize + totalvarformatssize + // case 1 // kleiner
+    //     12 +          // case 4
+    //     304 +         // case 2
+    //     64 +          // case 5
+    //     24 + k * 8 +  // case 6            // 44 vielleicht kleiner
+    //     24 + k * 12 + // case 7            // 56 vielleicht kleiner
+    //     52 * k        // case 3
+    //   ;
+
+    //   if (k > 1) subheader_off += 50 + 38; // case 8 // something is wrong here
+    // }
 
 
     // end of page 1
@@ -672,17 +676,25 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       writebin(unk16, sas, swapit);           // 2
       writebin(unk16, sas, swapit);           // 3
       writebin(unk16, sas, swapit);           // 4
-      if (vartypes[idx] == 1) fmt32 = width[idx];
-      else fmt32 = 0;
+      if (vartypes[idx] == 1) {
+        fmt32 = width[idx];
+      } else {
+        fmt32 = 0;
+      }
       writebin(fmt32, sas, swapit);          // 5  : formatlen for decimals
       fmt322 = 1; // fix one decimal
       // character or integer
-      if (vartypes[idx] == 2) fmt322 = 0;
+      if (vartypes[idx] == 2) {
+        fmt322 = 0;
+      }
       writebin(fmt322, sas, swapit);          // 6 : decimal for numerics
       writebin(ifmt32, sas, swapit);          // 7
       writebin(ifmt322, sas, swapit);         // 8
-      if (vartypes[idx] == 2) fmtkey = width[idx];
-      else fmtkey = 0;
+      if (vartypes[idx] == 2) {
+        fmtkey = width[idx];
+      } else {
+        fmtkey = 0;
+      }
       writebin(fmtkey, sas, swapit);           // 9  : formatlen for characters
       writebin(fmtkey2, sas, swapit);         // 10 : decimal for characters?
       writebin(unk16, sas, swapit);           // 11
@@ -1651,7 +1663,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
     auto got_endpos = sas.tellg();
 
     if (debug) Rcout << "END OF FILE REACHED " << got_endpos << std::endl;
-    if (got_endpos < exp_endpos)
+    if (got_endpos != exp_endpos)
       warning("Unexpected position at end of file. %d and not %d",
               got_endpos, exp_endpos);
 
