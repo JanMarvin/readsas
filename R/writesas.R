@@ -33,7 +33,7 @@ write.sas <- function(dat, filepath, compress = 0, debug = FALSE, bit32 = FALSE)
 
   width <- 0
   width[vartypen] <- 32 # fix for now
-  width[!vartypen] <- colwidth[!vartypen]
+  width[!vartypen] <- 0 # colwidth[!vartypen]
 
   decim <- sapply(dat, is.integer)
   decim[!vartypen] <- TRUE
