@@ -592,7 +592,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
     // while(shc < SUBHEADER_COUNT) {
 
     int16_t swlen = 0, proclen = 8, comprlen = 0, textoff = 28,
-      addtextoff = 7, fmtkey = 1, fmtkey2 = 0,
+      addtextoff = 7, fmtkey = 0, fmtkey2 = 0,
       fmt32 = 0, fmt322 = 0, ifmt32 = 0, ifmt322 = 0;
 
     int16_t lenremain16 = 0;
@@ -672,17 +672,19 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       writebin(unk16, sas, swapit);           // 2
       writebin(unk16, sas, swapit);           // 3
       writebin(unk16, sas, swapit);           // 4
-      writebin(fmt32, sas, swapit);           // 5
-      writebin(fmt322, sas, swapit);          // 6
+      if (vartypes[idx] == 1) fmt32 = width[idx];
+      else fmt32 = 0;
+      writebin(fmt32, sas, swapit);          // 5  : formatlen for decimals
+      fmt322 = 1; // fix one decimal
+      // character or integer
+      if (vartypes[idx] == 2) fmt322 = 0;
+      writebin(fmt322, sas, swapit);          // 6 : decimal for numerics
       writebin(ifmt32, sas, swapit);          // 7
       writebin(ifmt322, sas, swapit);         // 8
-      fmtkey = width[idx];
-      writebin(fmtkey, sas, swapit);          // 9
-      fmtkey2 = 1;
-      // character or integer
-      if (vartypes[idx] == 2 || decim[idx] == 1)
-        fmtkey2 = 0;
-      writebin(fmtkey2, sas, swapit);         // 10
+      if (vartypes[idx] == 2) fmtkey = width[idx];
+      else fmtkey = 0;
+      writebin(fmtkey, sas, swapit);           // 9  : formatlen for characters
+      writebin(fmtkey2, sas, swapit);         // 10 : decimal for characters?
       writebin(unk16, sas, swapit);           // 11
       writebin(unk16, sas, swapit);           // 12
       writebin(unk16, sas, swapit);           // 13
@@ -703,7 +705,8 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       idxofflen fmts, lbls, unks;
 
       int16_t fmtslen = varformats[idx].size();
-      if (debug) Rcout << varformats[idx] << "___" << offsetpos << "____" << fmtslen << std::endl;
+      if (debug)
+        Rcout << varformats[idx] << "___" << offsetpos << "____" << fmtslen << std::endl;
 
       fmts.IDX = 0, fmts.OFF = offsetpos, fmts.LEN = fmtslen;
 

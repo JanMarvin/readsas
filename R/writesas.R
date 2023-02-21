@@ -15,7 +15,7 @@ write.sas <- function(dat, filepath, compress = 0, debug = FALSE, bit32 = FALSE)
 
   filepath <- path.expand(filepath)
 
-  # convert to factor
+  # convert from factor
   ff <- sapply(dat, is.factor)
   dat[ff] <- lapply(dat[ff], as.character)
 
@@ -29,10 +29,11 @@ write.sas <- function(dat, filepath, compress = 0, debug = FALSE, bit32 = FALSE)
 
   formats <- NA
   formats[vartypen] <- "BEST"
-  formats[!vartypen] <- ""
+  formats[!vartypen] <- "$"
 
-  width <- sapply(dat, function(x) max(nchar(as.character(x))))
+  width <- 0
   width[vartypen] <- 32 # fix for now
+  width[!vartypen] <- colwidth[!vartypen]
 
   decim <- sapply(dat, is.integer)
   decim[!vartypen] <- TRUE
@@ -52,8 +53,11 @@ write.sas <- function(dat, filepath, compress = 0, debug = FALSE, bit32 = FALSE)
   decim[vartypen] <- 3
 
   # print(vartypes)
-  # print(decim)
+  # print(colwidth)
+  # print(formats)
   # print(width)
+  # print(decim)
+  # print(labels)
 
   # for numerics
   # formats <- rep("BEST", ncol(dat))
