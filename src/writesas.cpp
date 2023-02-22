@@ -514,9 +514,9 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
     int64_t rows_on_page1 = floor((pos_at_end_of_page1 - data_pos_page1) / (double)rowlength);
     // Rcout << rows_on_page1 << std::endl;
 
-    if (n <= rows_on_page1) {
-      rows_on_page1 = n;
-    }
+    // if (n <= rows_on_page1) {
+    //   rows_on_page1 = n;
+    // }
 
     pos = sas.tellg();
     // Rcout << "pos: " << pos << std::endl;
@@ -842,15 +842,16 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       writebin(unkdub, sas, 0);
 
       // // padding? Not in lenremain
-      // writebin((int8_t)unk16, sas, swapit); // 0
-      // writebin((int8_t)unk16, sas, swapit); // 0
-      // writebin((int8_t)unk16, sas, swapit); // 0
-      // writebin((int8_t)unk16, sas, swapit); // 0
+      // writebin(unk16, sas, swapit); // 0
+      // writebin(unk16, sas, swapit); // 0
+      // writebin(unk16, sas, swapit); // 0
+      // writebin(unk16, sas, swapit); // 0
 
 
       // break;
       post_shlen = sas.tellg();
       potabs[shc].SH_LEN = post_shlen - pre_shlen;
+      potabs[shc].SH_TYPE = 1;
     }
 
     /************************************************************************/
