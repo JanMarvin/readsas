@@ -308,7 +308,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
 
     writebin(unkdub, sas, 0);
 
-    std::string sasrel = "9.0401M6";
+    std::string sasrel = "9.0401M7";
     sasrel.resize(8);
     sasrel[sasrel.size()] = '\0';
 
@@ -514,9 +514,9 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
     int64_t rows_on_page1 = floor((pos_at_end_of_page1 - data_pos_page1) / (double)rowlength);
     // Rcout << rows_on_page1 << std::endl;
 
-    // if (n <= rows_on_page1) {
-    //   rows_on_page1 = n;
-    // }
+    if (n <= rows_on_page1) {
+      rows_on_page1 = n;
+    }
 
     pos = sas.tellg();
     // Rcout << "pos: " << pos << std::endl;
@@ -800,7 +800,8 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
 
       int16_t cls = k;
       int64_t lenremain = 14 +
-        cls * 2 + 8; // 14 below, (k+2) * 2 and double?
+        cls * 2 + 8 +
+        12; // 14 below, (k+2) * 2 and double?
 
       int32_t ptk32 = 2143813666;
       writebin(ptk32, sas, swapit); // unkown large number
@@ -842,6 +843,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       writebin(unkdub, sas, 0);
 
       // // padding? Not in lenremain
+      writebin(unk16, sas, swapit); // 0
       // writebin(unk16, sas, swapit); // 0
       // writebin(unk16, sas, swapit); // 0
       // writebin(unk16, sas, swapit); // 0
@@ -1359,7 +1361,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
 
       /* */
       // pkt64_2 is +2 with k * 2
-      int64_t pkt64_1 = 240, pkt64_2 = 12, pkt64_3 = 0, pkt64_4 = 2240529;
+      int64_t pkt64_1 = 240, pkt64_2 = 21, pkt64_3 = 0, pkt64_4 = 2240529;
       writebin(pkt64_1, sas, swapit);
       writebin(pkt64_2, sas, swapit);
       writebin(pkt64_3, sas, swapit);
@@ -1373,8 +1375,9 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
 
       writebin(colf_p1, sas, swapit); // k related
       writebin(colf_p2, sas, swapit);
-      writebin(unk64, sas, swapit); // p3 and p4?
-      int64_t ptk64 = 8; // was 8 for k = 1
+      int64_t ptk64 = 0; // changing this makes SAS complain about missing tables
+      writebin(ptk64, sas, swapit); // p3 and p4?
+      ptk64 = 34; // was 8 for k = 1
       writebin(ptk64, sas, swapit);
       writebin(pgsize, sas, swapit);
       writebin(unk64, sas, swapit);
