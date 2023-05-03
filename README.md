@@ -20,13 +20,6 @@ accurate as possible. Speed is welcome, but a secondary goal.
 
 ## Installation
 
-With `drat`:
-
-``` r
-drat::addRepo("JanMarvin")
-install.packages("readsas")
-```
-
 With `devtools`:
 
 ``` r
