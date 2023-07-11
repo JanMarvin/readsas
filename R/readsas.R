@@ -246,9 +246,11 @@ read.sas <- function(file, debug = FALSE, convert_dates = TRUE, recode = TRUE,
 #' @export
 convert_to_date <- function(x) {
 
-  # leap year bug in year 4000
+  # leap year bug in year 4000/8000
   feb29_4k <- 745154
+  feb29_8k <- 2206123
   x[x >= feb29_4k] <- x[x >= feb29_4k] + 1
+  x[x >= feb29_8k] <- x[x >= feb29_8k] + 1
 
   as.Date(
     as.POSIXct(x * 24 * 60 * 60,
@@ -263,9 +265,11 @@ convert_to_date <- function(x) {
 #' @export
 convert_to_datetime <- function(x) {
 
-  # leap year bug in year 4000
+  # leap year bug in year 4000/8000
   feb29_4k <- 64381305600
+  feb29_8k <- 190609027200
   x[x >= feb29_4k] <- x[x >= feb29_4k] + 24 * 60 * 60
+  x[x >= feb29_8k] <- x[x >= feb29_8k] + 24 * 60 * 60
 
   as.POSIXct(x,
              origin = "1960-01-01",
