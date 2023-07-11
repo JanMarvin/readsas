@@ -110,6 +110,15 @@ test_that("convert time and date", {
   got <- convert_to_datetime(1668138559)
   expect_equal(exp, got)
 
+  ## corrected for SAS leap year bug in year 4000
+  exp <- structure(741502, class = "Date")
+  got <- convert_to_date(745154)
+  expect_equal(exp, got)
+
+  exp <- structure(64065772800, tzone = "UTC", class = c("POSIXct", "POSIXt"))
+  got <- convert_to_datetime(64381305600)
+  expect_equal(exp, got)
+
 })
 
 test_that("compression works", {
