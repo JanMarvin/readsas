@@ -20,7 +20,7 @@ accurate as possible. Speed is welcome, but a secondary goal.
 
 ## Installation
 
-With \`remotes\`\`:
+With `remotes`:
 
 ``` r
 remotes::install_github("JanMarvin/readsas")
