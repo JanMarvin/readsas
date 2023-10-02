@@ -20,10 +20,10 @@ accurate as possible. Speed is welcome, but a secondary goal.
 
 ## Installation
 
-With `devtools`:
+With \`remotes\`\`:
 
 ``` r
-devtools::install_git("https://github.com/JanMarvin/readsas.git")
+remotes::install_github("JanMarvin/readsas")
 ```
 
 With `r-universe`:
@@ -38,7 +38,7 @@ install.packages('readsas')
 ## Basic usage
 
 ``` r
-fl <- system.file("extdata", "cars.sas7bdat", package="readsas")
+fl <- system.file("extdata", "cars.sas7bdat", package = "readsas")
 
 dd <- read.sas(fl)
 
@@ -61,7 +61,7 @@ entirety. If the file header is large enough, it will still take some
 time to read.
 
 ``` r
-fl <- system.file("extdata", "mtcars.sas7bdat", package="readsas")
+fl <- system.file("extdata", "mtcars.sas7bdat", package = "readsas")
 
 dd <- read.sas(fl, select.cols = c("VAR1", "mpg", "hp"),
                select.rows = c(2:5), rownames = TRUE)
