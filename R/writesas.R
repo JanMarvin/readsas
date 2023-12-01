@@ -31,6 +31,10 @@ write.sas <- function(dat, filepath, compress = 0, debug = FALSE, bit32 = FALSE,
     size = c(size[1], size[1])
   }
 
+  if (!inherits(dat, "data.frame")) {
+    dat <- as.data.frame(dat)
+  }
+
   # convert from factor
   ff <- sapply(dat, is.factor)
   dat[ff] <- lapply(dat[ff], as.character)
