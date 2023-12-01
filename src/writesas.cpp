@@ -38,7 +38,7 @@ using namespace Rcpp;
 //' @noRd
 // [[Rcpp::export]]
 void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
-              bool debug, bool bit32) {
+              bool debug, bool bit32, int32_t headersize, int32_t pagesize) {
 
   uint32_t k = dat.size();
   uint64_t n = dat.nrows();
@@ -149,10 +149,10 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
     double thrdts = 0;
 
     // possibly make headersize and pagesize variable
-    int32_t headersize = 65536;
-    if (bit32 == 1) headersize = 1024;
-    int32_t pagesize = 65536;
-    if (bit32 == 1) pagesize = 8192;
+    // int32_t headersize = 65536;
+    // if (bit32 == 1) headersize = 1024;
+    // int32_t pagesize = 65536;
+    // if (bit32 == 1) pagesize = 8192;
     // int64_t pagecount = 1;
     int32_t pgidx = 0;
     int32_t pageseqnum32 = pgidx;
