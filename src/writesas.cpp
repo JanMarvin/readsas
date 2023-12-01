@@ -659,6 +659,8 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
         offsetpos += lblz.size();
         lbls.OFF = offsetpos;
 
+        // somehow this does not work with datetime. Maybe the offset
+        // needs to be recalculated afterwards?
         std::string fmtz = varformats[z];
         offsetpos += fmtz.size();
         fmts.OFF = offsetpos;
