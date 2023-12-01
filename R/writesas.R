@@ -12,12 +12,23 @@
 #'
 #'@export
 write.sas <- function(dat, filepath, compress = 0, debug = FALSE, bit32 = FALSE,
-                      varlabels) {
+                      varlabels, size) {
 
   filepath <- path.expand(filepath)
 
   if (missing(varlabels)) {
     varlabels <- rep("", ncol(dat))
+  }
+
+  if (missing(size)) {
+    headersize = 65536;
+    if (bit32 == 1) headersize = 1024;
+    pagesize = 65536;
+    if (bit32 == 1) pagesize = 8192;
+
+    size = c(headersize, pagesize)
+  } else if (length(size) != 2) {
+    size = c(size[1], size[1])
   }
 
   # convert from factor
@@ -84,6 +95,7 @@ write.sas <- function(dat, filepath, compress = 0, debug = FALSE, bit32 = FALSE,
   attr(dat, "varlabels") <- varlabels
 
 
-  writesas(filepath, dat, compress = 0, debug = debug, bit32 = bit32)
+  writesas(filepath, dat, compress = 0, debug = debug, bit32 = bit32,
+           headersize = size[1], pagesize = size[1])
 
 }
