@@ -104,6 +104,6 @@ write.sas <- function(dat, filepath, compress = 0, debug = FALSE, bit32 = FALSE,
 
 
   writesas(filepath, dat, compress = 0, debug = debug, bit32 = bit32,
-           headersize = size[1], pagesize = size[2])
+           headersize = size[1], pagesize = size[2], dateval = as_datetime(Sys.time()))
 
 }
