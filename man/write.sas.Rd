@@ -4,7 +4,15 @@
 \alias{write.sas}
 \title{write.sas}
 \usage{
-write.sas(dat, filepath, compress = 0, debug = FALSE, bit32 = FALSE)
+write.sas(
+  dat,
+  filepath,
+  compress = 0,
+  debug = FALSE,
+  bit32 = FALSE,
+  varlabels,
+  size
+)
 }
 \arguments{
 \item{dat}{data frame to save}
