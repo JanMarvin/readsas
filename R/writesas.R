@@ -21,10 +21,14 @@ write.sas <- function(dat, filepath, compress = 0, debug = FALSE, bit32 = FALSE,
   }
 
   if (missing(size)) {
-    headersize = 65536;
-    if (bit32 == 1) headersize = 1024;
-    pagesize = 65536;
-    if (bit32 == 1) pagesize = 8192;
+
+    hsize <- 65536
+    psize <- 65536
+
+    if (bit32) {
+      hsize <- 1024
+      psize <- 8192
+    }
 
     size = c(headersize, pagesize)
   } else if (length(size) != 2) {
