@@ -343,9 +343,11 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
 
     // large unk
     // something related to file password?
-    // 0000 and 4 byte from date
-    uint32_t pktu32 = 0;
-    std::memcpy(&pktu32, &created, sizeof(int32_t));
+    // this and the next are some cryptic sequence.
+    // This should be the first 4 byte from the date double. But unsure how
+    // to get the second part.
+    uint32_t pktu32 = 1172664912;
+    // std::memcpy(&pktu32, &created, sizeof(int32_t));
     writebin(pktu32, sas, swapit);
 
     pktu32 = 545930268;
