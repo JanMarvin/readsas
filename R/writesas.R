@@ -9,12 +9,13 @@
 #'@param bit32 write 32bit file
 #'@param varlabels optional variable labels
 #'@param size optional header/pagesize
+#'@param encoding encoding 62 = windows, 20 = utf
 #'
 #'@useDynLib readsas, .registration=TRUE
 #'
 #'@export
 write.sas <- function(dat, filepath, compress = 0, debug = FALSE, bit32 = FALSE,
-                      varlabels, size) {
+                      varlabels, size, encoding = 20) {
 
   filepath <- path.expand(filepath)
 
@@ -96,16 +97,15 @@ write.sas <- function(dat, filepath, compress = 0, debug = FALSE, bit32 = FALSE,
   # for numerics
   # formats <- rep("BEST", ncol(dat))
 
-  attr(dat, "vartypes") <- as.integer(vartypes)
-  attr(dat, "colwidth") <- as.integer(colwidth)
-  attr(dat, "formats")  <- formats
-  attr(dat, "width")    <- width
-  attr(dat, "decim")    <- decim
-  attr(dat, "labels")   <- labels
+  attr(dat, "vartypes")  <- as.integer(vartypes)
+  attr(dat, "colwidth")  <- as.integer(colwidth)
+  attr(dat, "formats")   <- formats
+  attr(dat, "width")     <- width
+  attr(dat, "decim")     <- decim
+  attr(dat, "labels")    <- labels
   attr(dat, "varlabels") <- varlabels
 
-
   writesas(filepath, dat, compress = 0, debug = debug, bit32 = bit32,
-           headersize = size[1], pagesize = size[2], dateval = as_datetime(Sys.time()))
-
+           headersize = size[1], pagesize = size[2],
+           dateval = as_datetime(Sys.time()), encoding32 = encoding)
 }
