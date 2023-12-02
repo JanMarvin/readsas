@@ -337,12 +337,12 @@ Rcpp::List readsas(const char * filePath,
 
     uint32_t headersize = 0;
     headersize = readbin(headersize, sas, swapit);
-    if (debug) Rprintf("headersize: %d \n", headersize);
+    if (debug) Rcpp::Rcout << "headersize: " << headersize << std::endl;
     if (headersize <= 0) stop("headersize <= 0");
 
     uint32_t pagesize = 0;
     pagesize = readbin(pagesize, sas, swapit);
-    if (debug) Rprintf("pagesize: %d \n", pagesize);
+    if (debug) Rcpp::Rcout << "pagesize: " << pagesize << std::endl;
     if (pagesize <= 0) stop("pagesize <= 0");
 
     int64_t pagecount = 0;
@@ -351,7 +351,8 @@ Rcpp::List readsas(const char * filePath,
     } else {
       pagecount = readbin((int32_t)pagecount, sas, swapit);
     }
-    if (debug) Rprintf("pagecount: %d \n", pagecount);
+    if (debug)
+      Rcpp::Rcout << "pagecount: " << pagecount << std::endl;
 
     /*
      * theoretically every page contains data and/or varnames. practically
@@ -561,9 +562,10 @@ Rcpp::List readsas(const char * filePath,
           }
 
           if (debug)
-            Rprintf("SH_OFF: %d ; SH_LEN: %d ; COMPR.: %d ; SH_TYPE: %d \n",
-                    potabs[i].SH_OFF, potabs[i].SH_LEN,
-                    potabs[i].COMPRESSION, potabs[i].SH_TYPE);
+            Rcpp::Rcout << "SH_OFF: " << potabs[i].SH_OFF
+                        << "SH_LEN: " << potabs[i].SH_LEN
+                        << "COMPR.: " << potabs[i].COMPRESSION
+                        << "SH_TYPE: " << potabs[i].SH_TYPE << std::endl;
 
           dataoff = potabs[i].SH_OFF - ((double)rowsperpage[pg] * rowlength);
 
@@ -1212,9 +1214,12 @@ Rcpp::List readsas(const char * filePath,
                 }
 
                 if (debug)
-                  Rprintf("SIG %d; FIRST %d; F_POS %d; LAST %d; L_POS %d\n",
-                          scv[i].SIG, scv[i].FIRST, scv[i].F_POS,
-                          scv[i].LAST, scv[i].L_POS);
+                  Rcpp::Rcout << "Sig: " << scv[i].SIG
+                              << "FIRST " << scv[i].FIRST
+                              << "F_POS " << scv[i].F_POS
+                              << "LAST " << scv[i].LAST
+                              << "L_POS " << scv[i].L_POS
+                              << std::endl;
 
               }
 
@@ -1334,8 +1339,7 @@ Rcpp::List readsas(const char * filePath,
               }
 
               if (debug)
-                Rprintf("k %d; uunk64 %d\n",
-                        k, uunk64);
+                Rcpp::Rcout << "k " << k << "; uunk64 " << uunk64 << std::endl;
 
               break;
             }
@@ -1376,8 +1380,12 @@ Rcpp::List readsas(const char * filePath,
                 if (!hasproc) tmp = 0;
 
                 if (debug)
-                  Rprintf("%d, %d, %d, %d; %d\n",
-                          comprlen, tmp, proclen, swlen, varname_pos[0]);
+                  Rcpp::Rcout << comprlen << ", "
+                              << tmp << ", "
+                              << proclen << ", "
+                              << swlen << "; "
+                              << varname_pos[0]
+                              << std::endl;
 
                 uint64_t txtpos = varname_pos[0] + 12;
 
@@ -1429,8 +1437,8 @@ Rcpp::List readsas(const char * filePath,
               }
 
               if (debug)
-                Rprintf("SH_LEN %d; len %d;\n",
-                        potabs[sc].SH_LEN, len);
+                Rcpp::Rcout << "SH_LEN " << potabs[sc].SH_LEN
+                            << "; len " << len << std::endl;
 
               ++c5typ;
 
@@ -1483,12 +1491,12 @@ Rcpp::List readsas(const char * filePath,
                 cnzer.push_back( cnpoi.zeros );
 
                 if (debug) {
-                  Rprintf("CN_IDX %d; CN_OFF %d; CN_LEN %d; zeros %d; len %d;\n",
-                          cnpois[cn].CN_IDX,
-                          cnpois[cn].CN_OFF,
-                          cnpois[cn].CN_LEN,
-                          cnpois[cn].zeros,
-                          cn);
+                  Rcpp::Rcout << "CN_IDX " << cnpois[cn].CN_IDX
+                              << "; CN_OFF " << cnpois[cn].CN_OFF
+                              << "; CN_LEN " << cnpois[cn].CN_LEN
+                              << "; zeros " << cnpois[cn].zeros
+                              << "; len " << cn
+                              << std::endl;
                 }
 
 
@@ -1546,10 +1554,12 @@ Rcpp::List readsas(const char * filePath,
                     (capois[i].CN_WID >= 0) && // just > ?
                     ((uint32_t)capois[i].CN_WID <= pagesize)) {
                   if (debug)
-                    Rprintf("OFF %d; WID: %d; FLAG %d; TYP %d; UNK8 %d\n",
-                            capois[i].CN_OFF, capois[i].CN_WID,
-                            capois[i].NM_FLAG,
-                            capois[i].CN_TYP, capois[i].UNK8 );
+                    Rcpp::Rcout << "OFF " << capois[i].CN_OFF
+                                << "; WID: " << capois[i].CN_WID
+                                << "; FLAG " << capois[i].NM_FLAG
+                                << "; TYP " << capois[i].CN_TYP
+                                << "; UNK8 " << capois[i].UNK8
+                                << std::endl;
 
                   coloffset.push_back( capois[i].CN_OFF );
                   colwidth.push_back( capois[i].CN_WID );
@@ -1680,9 +1690,11 @@ Rcpp::List readsas(const char * filePath,
               Rcout << "SAS HEX STRING: "  << sas_hex << std::endl;
               Rcout << "rowlength is " << rowlength << std::endl;
 
-              Rprintf("SH_OFF: %d ; SH_LEN: %d ; COMPR.: %d ; SH_TYPE: %d \n",
-                      potabs[sc].SH_OFF, potabs[sc].SH_LEN,
-                      potabs[sc].COMPRESSION, potabs[sc].SH_TYPE);
+              Rcpp::Rcout << "SH_OFF: " << potabs[sc].SH_OFF
+                          << "; SH_LEN: " << potabs[sc].SH_LEN
+                          << "; COMPR.: " << potabs[sc].COMPRESSION
+                          << "; SH_TYPE: " << potabs[sc].SH_TYPE
+                          << std::endl;
 
             }
 
@@ -1792,9 +1804,11 @@ Rcpp::List readsas(const char * filePath,
     for (size_t i = 0; i < cnpois.size(); ++i) {
 
       if (debug)
-        Rprintf("CN_IDX %d; CN_OFF %d; CN_LEN %d; zeros %d \n",
-                cnpois[i].CN_IDX, cnpois[i].CN_OFF,
-                cnpois[i].CN_LEN, cnpois[i].zeros);
+        Rcpp::Rcout << "CN_IDX " << cnpois[i].CN_IDX
+                    << "; CN_OFF " << cnpois[i].CN_OFF
+                    << "; CN_LEN " << cnpois[i].CN_LEN
+                    << "; zeros " << cnpois[i].zeros
+                    << std::endl;
 
       uint64_t vpos = (varname_pos[cnpois[i].CN_IDX] + cnpois[i].CN_OFF);
       sas.seekg(vpos, sas.beg);
