@@ -602,8 +602,8 @@ Rcpp::List readsas(const char * filePath,
 
           // not sure yet, whats the right thing to do here
           bool page0not = 0;
-          if ((pg == 0) & (sc != 3))
-            page0not = (PAGE_TYPE == 0) &  (potabs[sc].SH_LEN == rowlength);
+          if ((pg == 0) && (sc != 3))
+            page0not = (PAGE_TYPE == 0) &&  (potabs[sc].SH_LEN == rowlength);
 
           int64_t sas_offset = alignval;
           if (! ((potabs[sc].COMPRESSION == 4) |
@@ -1176,7 +1176,7 @@ Rcpp::List readsas(const char * filePath,
                   scv[i].FIRST = readbin(scv[i].FIRST, sas, swapit);
                   scv[i].F_POS = readbin(scv[i].F_POS, sas, swapit);
 
-                  if ((i == 0) & (scv[i].SIG != -4))
+                  if ((i == 0) && (scv[i].SIG != -4))
                     warning("first SIG is not -4");
 
                   unk16 = readbin(unk16, sas, swapit);
@@ -1362,14 +1362,14 @@ Rcpp::List readsas(const char * filePath,
               unk16 = readbin(unk16, sas, swapit); // 0
               // Rcout << unk16 << std::endl;
 
-              if ((PAGE_TYPE != 1024) & (c5first == 0)) {
+              if ((PAGE_TYPE != 1024) && (c5first == 0)) {
                 unk16 = readbin(unk16, sas, swapit); // 0 |     0 | 27977
                 // Rcout << unk16 << std::endl;
                 unk16 = readbin(unk16, sas, swapit); // 0 | 15872 | 30064
                 // Rcout << unk16 << std::endl;
               }
 
-              if ((c5typ == 0) & (pg == 0)) {
+              if ((c5typ == 0) && (pg == 0)) {
 
                 uint64_t pos_beg = sas.tellg();
                 int8_t tmp = 16; // always 16?
@@ -1542,8 +1542,8 @@ Rcpp::List readsas(const char * filePath,
                 capois[i].UNK8       = readbin(capois[i].UNK8, sas, swapit);
 
 
-                if ((capois[i].CN_TYP >= 1) & (capois[i].CN_TYP <= 2) &
-                    (capois[i].CN_WID >= 0) & // just > ?
+                if ((capois[i].CN_TYP >= 1) && (capois[i].CN_TYP <= 2) &&
+                    (capois[i].CN_WID >= 0) && // just > ?
                     ((uint32_t)capois[i].CN_WID <= pagesize)) {
                   if (debug)
                     Rprintf("OFF %d; WID: %d; FLAG %d; TYP %d; UNK8 %d\n",
@@ -1658,7 +1658,7 @@ Rcpp::List readsas(const char * filePath,
               if (debug)
                 Rcout << "-------- case 10 "<< sas.tellg()  << std::endl;
 
-              if ((potabs[sc].SH_LEN > alignval) &
+              if ((potabs[sc].SH_LEN > alignval) &&
                   (potabs[sc].SH_LEN < pagesize))
               {
                 // uncompressed row containing data
@@ -1689,8 +1689,8 @@ Rcpp::List readsas(const char * filePath,
               // some subheaders are pointers to positions inside the file.
               // their use for SAS is unknown and they are not required for R.
               // if SC_LEN == alignval it is just padding?
-              if ((potabs[sc].SH_LEN > alignval) &
-                  (potabs[sc].SH_LEN < pagesize) &
+              if ((potabs[sc].SH_LEN > alignval) &&
+                  (potabs[sc].SH_LEN < pagesize) &&
                   (potabs[sc].COMPRESSION != 4) )
               {
                 auto unklen = potabs[sc].SH_LEN;
@@ -2067,7 +2067,7 @@ Rcpp::List readsas(const char * filePath,
         uint64_t pos = pp + (double)rowlength * ii;
 
         /* unknown */
-        if (!(dataoffset == 1 || dataoffset == 256) & (firstpage == 0)) {
+        if (!(dataoffset == 1 || dataoffset == 256) && (firstpage == 0)) {
           pos += alignval;
         }
 
@@ -2100,7 +2100,7 @@ Rcpp::List readsas(const char * filePath,
           if (debug && i == 0)
             Rcout << ord << std::endl;
 
-          if ((wid < 8) & (typ == 1)) {
+          if ((wid < 8) && (typ == 1)) {
 
             if (keepr && keepc) {
               if (skipahead > 0) {
@@ -2127,7 +2127,7 @@ Rcpp::List readsas(const char * filePath,
 
           }
 
-          if ((wid == 8) & (typ == 1)) {
+          if ((wid == 8) && (typ == 1)) {
 
             if (keepr && keepc) {
               if (skipahead > 0) {
@@ -2154,7 +2154,7 @@ Rcpp::List readsas(const char * filePath,
 
           }
 
-          if ((wid > 0) & (typ == 2)) {
+          if ((wid > 0) && (typ == 2)) {
 
             if (keepr && keepc) {
               if (skipahead > 0) {
@@ -2257,7 +2257,7 @@ Rcpp::List readsas(const char * filePath,
               Rcout << "row i / iii / keepr: " << i << " " << iii <<" " << keepr << std::endl;
             }
 
-            if ((wid > 0) & (wid < 8) & (typ == 1)) {
+            if ((wid > 0) && (wid < 8) && (typ == 1)) {
 
 
               if (keepc) {
@@ -2278,7 +2278,7 @@ Rcpp::List readsas(const char * filePath,
 
             }
 
-            if ((wid == 8) & (typ == 1)) {
+            if ((wid == 8) && (typ == 1)) {
 
               if (keepc) {
 
@@ -2303,7 +2303,7 @@ Rcpp::List readsas(const char * filePath,
 
             }
 
-            if ((wid > 0) & (typ == 2)) {
+            if ((wid > 0) && (typ == 2)) {
 
               if (keepc) {
 
