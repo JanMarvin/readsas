@@ -26,7 +26,7 @@ readsas <- function(filePath, debug, selectrows_, selectcols_, empty_to_na, temp
 #' @param bit32 write smaller 32 bit file
 #' @keywords internal
 #' @noRd
-writesas <- function(filePath, dat, compress, debug, bit32, headersize, pagesize) {
-    invisible(.Call(`_readsas_writesas`, filePath, dat, compress, debug, bit32, headersize, pagesize))
+writesas <- function(filePath, dat, compress, debug, bit32, headersize, pagesize, dateval) {
+    invisible(.Call(`_readsas_writesas`, filePath, dat, compress, debug, bit32, headersize, pagesize, dateval))
 }
 

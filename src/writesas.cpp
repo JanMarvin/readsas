@@ -38,7 +38,8 @@ using namespace Rcpp;
 //' @noRd
 // [[Rcpp::export]]
 void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
-              bool debug, bool bit32, int32_t headersize, int32_t pagesize) {
+              bool debug, bool bit32, int32_t headersize, int32_t pagesize,
+              double dateval) {
 
   uint32_t k = dat.size();
   uint64_t n = dat.nrows();
@@ -144,8 +145,8 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
     double unkdub = 0;
     auto inioff = 0;
 
-    double created = 0, created2 = 0;   // 8
-    double modified = 0, modified2 = 0; // 16
+    double created = dateval, created2 = 0;   // 8
+    double modified = dateval, modified2 = 0; // 16
     double thrdts = 0;
 
     // possibly make headersize and pagesize variable
@@ -180,7 +181,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
     if (bit32 == 1) U64_BYTE_CHECKER_VALUE = 50;
     if (U64_BYTE_CHECKER_VALUE == 51) ALIGN_2_VALUE = 4;
 
-    pkt2 = 34, pkt3 = 0;
+    pkt2 = 20, pkt3 = 0;
 
     writebin(ALIGN_1_CHECKER_VALUE, sas, swapit);
     writebin(pkt2, sas, swapit); // 34
@@ -191,8 +192,8 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
     int8_t ENDIANNESS = 1; // 0 is swapit = 1
     uint8_t PLATFORM = 49; // (1) 49 Unix (2) 50 Win
 
-    pkt1 = 51, pkt3 = 2;
-    if (bit32 == 1) pkt1 = 50;
+    pkt1 = 0, pkt3 = 0;
+    // if (bit32 == 1) pkt1 = 50;
     writebin(pkt1, sas, swapit); // 51
     writebin(ENDIANNESS, sas, swapit);
     writebin(pkt3, sas, swapit); // 2
@@ -286,9 +287,11 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       writebin(unk32, sas, swapit);
     }
 
+    // Rcpp::Rcout << created << std::endl;
+
     writebin(created, sas, swapit);
-    writebin(created2, sas, swapit);
     writebin(modified, sas, swapit);
+    writebin(created2, sas, swapit);
     writebin(modified2, sas, swapit);
 
     writebin(headersize, sas, swapit);
@@ -335,11 +338,13 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
     writestr(osname, 16, sas);
 
     // large unk
+    // something related to file password?
     uint32_t pktu32 = 1157289805;
     writebin(pktu32, sas, swapit);
 
     pktu32 = 563452161;
     // three identical smaller unks
+    // required so that the file is identified as SAS file
     writebin(pktu32, sas, swapit);
     writebin(pktu32, sas, swapit);
     writebin(pktu32, sas, swapit);
@@ -355,11 +360,15 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
 
     writebin(thrdts, sas, swapit);
 
+    if (headersize < (int32_t)sas.tellg())
+      stop("headersize to small");
+
     uint64_t num_zeros = headersize - sas.tellg();
 
     for (uint64_t i = 0; i < num_zeros; ++i) {
       writebin(zero8, sas, swapit);
     }
+
     // end of header -------------------------------------------------------- //
 
     auto pos = sas.tellg();
@@ -652,6 +661,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       //  writes the cases to a buffer internally.
       //  Stacks them and writes the entire stack as one
       for (auto z = 0; z < (k - i); ++z) {
+
         std::string nams = varnames[z];
         offsetpos += nams.size();
 
@@ -662,8 +672,10 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
         // somehow this does not work with datetime. Maybe the offset
         // needs to be recalculated afterwards?
         std::string fmtz = varformats[z];
+        if (fmtz.size() == 8) offsetpos -= 4;
         offsetpos += fmtz.size();
         fmts.OFF = offsetpos;
+        if (fmtz.size() == 8) offsetpos += 4;
       }
 
       // calc length of len3
