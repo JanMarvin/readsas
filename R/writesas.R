@@ -30,7 +30,7 @@ write.sas <- function(dat, filepath, compress = 0, debug = FALSE, bit32 = FALSE,
       psize <- 8192
     }
 
-    size = c(headersize, pagesize)
+    size = c(hsize, psize)
   } else if (length(size) != 2) {
     size = c(size[1], size[1])
   }

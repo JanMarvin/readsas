@@ -182,10 +182,10 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
 
     pkt2 = 34, pkt3 = 0;
 
-    writebin(ALIGN_1_CHECKER_VALUE, sas, 0);
-    writebin(pkt2, sas, 0); // 34
-    writebin(pkt3, sas, 0); // 0
-    writebin(U64_BYTE_CHECKER_VALUE, sas, 0);
+    writebin(ALIGN_1_CHECKER_VALUE, sas, swapit);
+    writebin(pkt2, sas, swapit); // 34
+    writebin(pkt3, sas, swapit); // 0
+    writebin(U64_BYTE_CHECKER_VALUE, sas, swapit);
 
     // packet 2 --------------------------------------- //
     int8_t ENDIANNESS = 1; // 0 is swapit = 1
@@ -193,38 +193,38 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
 
     pkt1 = 51, pkt3 = 2;
     if (bit32 == 1) pkt1 = 50;
-    writebin(pkt1, sas, 0); // 51
-    writebin(ENDIANNESS, sas, 0);
-    writebin(pkt3, sas, 0); // 2
-    writebin(PLATFORM, sas, 0);
+    writebin(pkt1, sas, swapit); // 51
+    writebin(ENDIANNESS, sas, swapit);
+    writebin(pkt3, sas, swapit); // 2
+    writebin(PLATFORM, sas, swapit);
 
     // packet 3 --------------------------------------- //
     pkt1 = 1, pkt2 = 0, pkt3 = 0, pkt4 = 0;
-    writebin(pkt1, sas, 0); // 1
-    writebin(pkt2, sas, 0);
-    writebin(pkt3, sas, 0);
-    writebin(pkt4, sas, 0);
+    writebin(pkt1, sas, swapit); // 1
+    writebin(pkt2, sas, swapit);
+    writebin(pkt3, sas, swapit);
+    writebin(pkt4, sas, swapit);
 
     // packet 5 --------------------------------------- //
     pkt1 = 0, pkt2 = 0, pkt3 = 0, pkt4 = 20;
-    writebin(pkt1, sas, 0);
-    writebin(pkt2, sas, 0);
-    writebin(pkt3, sas, 0);
-    writebin(pkt4, sas, 0); // 20
+    writebin(pkt1, sas, swapit);
+    writebin(pkt2, sas, swapit);
+    writebin(pkt3, sas, swapit);
+    writebin(pkt4, sas, swapit); // 20
 
     // packet 5 --------------------------------------- //
     pkt1 = 0, pkt2 = 0, pkt3 = 3, pkt4 = 1;
-    writebin(pkt1, sas, 0);
-    writebin(pkt2, sas, 0);
-    writebin(pkt3, sas, 0);
-    writebin(pkt4, sas, 0);
+    writebin(pkt1, sas, swapit);
+    writebin(pkt2, sas, swapit);
+    writebin(pkt3, sas, swapit);
+    writebin(pkt4, sas, swapit);
 
     // packet 6 --------------------------------------- //
     pkt1 = 24, pkt2 = 31, pkt3 = 16, pkt4 = 17;
-    writebin(pkt1, sas, 0); // 24
-    writebin(pkt2, sas, 0); // 31
-    writebin(pkt3, sas, 0); // 16
-    writebin(pkt4, sas, 0); // 17
+    writebin(pkt1, sas, swapit); // 24
+    writebin(pkt2, sas, swapit); // 31
+    writebin(pkt3, sas, swapit); // 16
+    writebin(pkt4, sas, swapit); // 17
 
     // packet 7 --------------------------------------- //
     int8_t U64_BYTE_CHECKER_VALUE2 = 51;
@@ -232,46 +232,46 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
 
     pkt1 = 0, pkt2 = 34, pkt3 = 0, pkt4 = 0;
 
-    writebin(ALIGN_1_CHECKER_VALUE, sas, 0);
-    writebin(pkt2, sas, 0); // 34
-    writebin(pkt3, sas, 0); // 0
-    writebin(U64_BYTE_CHECKER_VALUE2, sas, 0);
+    writebin(ALIGN_1_CHECKER_VALUE, sas, swapit);
+    writebin(pkt2, sas, swapit); // 34
+    writebin(pkt3, sas, swapit); // 0
+    writebin(U64_BYTE_CHECKER_VALUE2, sas, swapit);
 
     // packet 8 --------------------------------------- //
 
     pkt1 = 51, pkt2 = 0, pkt3 = 2, pkt4 = 0;
     if (bit32 == 1) pkt1 = 50;
-    writebin(pkt1, sas, 0); // 51
-    writebin(ENDIANNESS, sas, 0);
-    writebin(pkt3, sas, 0); // 2
-    writebin(PLATFORM, sas, 0);
+    writebin(pkt1, sas, swapit); // 51
+    writebin(ENDIANNESS, sas, swapit);
+    writebin(pkt3, sas, swapit); // 2
+    writebin(PLATFORM, sas, swapit);
 
     // packet 9 --------------------------------------- //
     pkt1 = 1, pkt2 = 51, pkt3 = 1, pkt4 = 35;
     if (bit32 == 1) pkt2 = 50;
-    writebin(pkt1, sas, 0); // 1 | 4
-    writebin(pkt2, sas, 0);
-    writebin(pkt3, sas, 0);
-    writebin(pkt4, sas, 0);
+    writebin(pkt1, sas, swapit); // 1 | 4
+    writebin(pkt2, sas, swapit);
+    writebin(pkt3, sas, swapit);
+    writebin(pkt4, sas, swapit);
 
     // packet 10 -------------------------------------- //
     int8_t encoding = 20; // utf8
     pkt1 = 51, pkt2 = 0, pkt3 = 0, pkt4 = 20;
     if (bit32 == 1) pkt1 = 50;
-    writebin(pkt1, sas, 0); // 51
-    writebin(unk8, sas, 0); // 0
-    writebin(encoding, sas, 0);
-    writebin(pkt4, sas, 0); // encoding again?
+    writebin(pkt1, sas, swapit); // 51
+    writebin(unk8, sas, swapit); // 0
+    writebin(encoding, sas, swapit);
+    writebin(pkt4, sas, swapit); // encoding again?
 
     // packet 11 --------------------------------------- //
     pkt1 = 0, pkt2 = 32, pkt3 = 3, pkt4 = 1;
-    writebin(pkt1, sas, 0);
-    writebin(pkt2, sas, 0); // 16 | 32 (int16 or 32?)
-    writebin(pkt3, sas, 0);
-    writebin(pkt4, sas, 0);
+    writebin(pkt1, sas, swapit);
+    writebin(pkt2, sas, swapit); // 16 | 32 (int16 or 32?)
+    writebin(pkt3, sas, swapit);
+    writebin(pkt4, sas, swapit);
 
-    writebin(unk32, sas, 0);
-    writebin(unk32, sas, 0);
+    writebin(unk32, sas, swapit);
+    writebin(unk32, sas, swapit);
 
     std::string sasfile = "SAS FILE";
     writestr(sasfile, sasfile.size(), sas);
@@ -283,16 +283,16 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
     writestr(filetype, 8, sas);
 
     if (ALIGN_2_VALUE == 4) {
-      writebin(unk32, sas, 0);
+      writebin(unk32, sas, swapit);
     }
 
-    writebin(created, sas, 0);
-    writebin(created2, sas, 0);
-    writebin(modified, sas, 0);
-    writebin(modified2, sas, 0);
+    writebin(created, sas, swapit);
+    writebin(created2, sas, swapit);
+    writebin(modified, sas, swapit);
+    writebin(modified2, sas, swapit);
 
-    writebin(headersize, sas, 0);
-    writebin(pagesize, sas, 0);
+    writebin(headersize, sas, swapit);
+    writebin(pagesize, sas, swapit);
 
     if (debug) {
       Rcout << "headersize: "  << headersize <<
@@ -306,7 +306,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       writebin((int32_t)pagecount, sas, swapit);
     }
 
-    writebin(unkdub, sas, 0);
+    writebin(unkdub, sas, swapit);
 
     std::string sasrel = "9.0401M7";
     sasrel.resize(8);
@@ -336,24 +336,24 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
 
     // large unk
     uint32_t pktu32 = 1157289805;
-    writebin(pktu32, sas, 0);
+    writebin(pktu32, sas, swapit);
 
     pktu32 = 563452161;
     // three identical smaller unks
-    writebin(pktu32, sas, 0);
-    writebin(pktu32, sas, 0);
-    writebin(pktu32, sas, 0);
+    writebin(pktu32, sas, swapit);
+    writebin(pktu32, sas, swapit);
+    writebin(pktu32, sas, swapit);
 
     // 2 * zero
-    writebin(unkdub, sas, 0);
-    writebin(unkdub, sas, 0);
+    writebin(unkdub, sas, swapit);
+    writebin(unkdub, sas, swapit);
 
 
     if (debug) Rcout << "pageseqnum32: " << pageseqnum32 << std::endl;
-    writebin(pageseqnum32, sas, 0);
-    writebin(unk32, sas, 0);
+    writebin(pageseqnum32, sas, swapit);
+    writebin(unk32, sas, swapit);
 
-    writebin(thrdts, sas, 0);
+    writebin(thrdts, sas, swapit);
 
     uint64_t num_zeros = headersize - sas.tellg();
 
@@ -369,7 +369,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
     // this, it seems plausible to always write a full page at first and seek to
     // the positions SAS expects afterwards.
     for (auto i = 0; i < (pagesize/sizeof(double)); ++i) {
-      writebin(unkdub, sas, 0);
+      writebin(unkdub, sas, swapit);
     }
 
     // rewind
@@ -544,8 +544,8 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
             if ( val_d == NA_REAL  || R_IsNA(val_d) || R_IsNaN(val_d) || std::isinf(val_d) ) {
               uint32_t NA1 = 0;
               uint32_t NA2 = 4294966784;
-              writebin(NA1, sas, 0);
-              writebin(NA2, sas, 0);
+
+              write_case_i(NA1, NA2, ENDIANNESS, bit32, swapit, sas);
             } else {
               writebin(val_d, sas, swapit);
             }
@@ -561,8 +561,8 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
             if ( val_d == NA_REAL  || R_IsNA(val_d) || R_IsNaN(val_d) || std::isinf(val_d) ) {
               uint32_t NA1 = 0;
               uint32_t NA2 = 4294966784;
-              writebin(NA1, sas, 0);
-              writebin(NA2, sas, 0);
+
+              write_case_i(NA1, NA2, ENDIANNESS, bit32, swapit, sas);
             } else {
               writebin(val_d, sas, swapit);
             }
@@ -679,9 +679,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       uint32_t case32 = 4294967295;
       // int64_t case3 = 4294966270;
 
-      writebin(case31, sas, 0);
-      if (bit32 == 0)
-        writebin(case32, sas, 0);
+      write_case_i(case31, case32, ENDIANNESS, bit32, swapit, sas);
 
       writebin(unk16, sas, swapit);           // 1
       writebin(unk16, sas, swapit);           // 2
@@ -796,9 +794,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       uint32_t case81 = 4294967294;
       uint32_t case82 = 4294967295;
 
-      writebin(case81, sas, 0);
-      if (bit32 == 0)
-        writebin(case82, sas, 0);
+      write_case_i(case81, case82, ENDIANNESS, bit32, swapit, sas);
 
       int16_t cls = k;
       int64_t lenremain = 14 +
@@ -842,7 +838,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       // }
 
       // to be on par with lenremain
-      writebin(unkdub, sas, 0);
+      writebin(unkdub, sas, swapit);
 
       // // padding? Not in lenremain
       writebin(unk16, sas, swapit); // 0
@@ -876,9 +872,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
     uint32_t case71 = 4294967292;
     uint32_t case72 = 4294967295;
 
-    writebin(case71, sas, 0);
-    if (bit32 == 0)
-      writebin(case72, sas, 0);
+    write_case_i(case71, case72, ENDIANNESS, bit32, swapit, sas);
 
     int8_t divs = 16;
     if (u64 != 4) divs = 12;
@@ -949,9 +943,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
     uint32_t case61 = 4294967295;
     uint32_t case62 = 4294967295;
 
-    writebin(case61, sas, 0);
-    if (bit32 == 0)
-      writebin(case62, sas, 0);
+    write_case_i(case61, case62, ENDIANNESS, bit32, swapit, sas);
 
     lenremain16 = k * 8 + 8; // empty double at the end?
     if (debug) Rprintf("lenremain16 %d \n", lenremain16);
@@ -998,7 +990,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       writebin(cnpoi[cn].CN_LEN, sas, swapit);
       writebin(cnpoi[cn].zeros,  sas, swapit);
     }
-    writebin(unkdub, sas, 0);
+    writebin(unkdub, sas, swapit);
 
     // padding? Not in lenremain
     writebin(unk16, sas, swapit); // 0
@@ -1027,9 +1019,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
     uint32_t case51 = 4294967293;
     uint32_t case52 = 4294967295;
 
-    writebin(case51, sas, 0);
-    if (bit32 == 0)
-      writebin(case52, sas, 0);
+    write_case_i(case51, case52, ENDIANNESS, bit32, swapit, sas);
 
 
     int16_t len =
@@ -1078,13 +1068,13 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
 
       // padding
       // if(addextra == 1)
-      writebin(unk32, sas, 0); // presumably wrong?
+      writebin(unk32, sas, swapit); // presumably wrong?
 
       // handling of labels is similar, but labels may exceed size of 8
       // still must be dividable by 8 (maybe 4) if 14, add 2
 
-      writebin(unk32, sas, 0);
-      writebin(unk32, sas, 0);
+      writebin(unk32, sas, swapit);
+      writebin(unk32, sas, swapit);
 
       // // additional software string
       // if (swlen > 0) {
@@ -1116,9 +1106,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
     uint32_t case21 = 4294966272;
     uint32_t case22 = 4294967295;
 
-    writebin(case21, sas, 0);
-    if (bit32 == 0)
-      writebin(case22, sas, 0);
+    write_case_i(case21, case22, ENDIANNESS, bit32, swapit, sas);
 
     inioff = 36;
     if (bit32 == 1) inioff = 32;
@@ -1283,9 +1271,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
     uint32_t case41 = 4143380214;
     uint32_t case42 = 0;
 
-    writebin(case41, sas, 0);
-    if (bit32 == 0)
-      writebin(case42, sas, 0);
+    write_case_i(case41, case42, ENDIANNESS, bit32, swapit, sas);
 
     uint64_t uunk64 = 0;
     int64_t colnum = k;
@@ -1316,9 +1302,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
     uint32_t case11 = 4160223223;
     uint32_t case12 = 0; //4294967295;
 
-    writebin(case11, sas, 0);
-    if (bit32 == 0)
-      writebin(case12, sas, 0);
+    write_case_i(case11, case12, ENDIANNESS, bit32, swapit, sas);
 
     /* Row Size */
 
@@ -1700,14 +1684,14 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
     // Rcout << "pos is " << sas.tellg() << " and " << pos_SH_C << std::endl;
     for (auto i = 0; i < SUBHEADER_COUNT; ++i) {
       if (u64 == 4) {
-        writebin(potabs[i].SH_OFF, sas, 0);
-        writebin(potabs[i].SH_LEN, sas, 0);
-        writebin(potabs[i].COMPRESSION, sas, 0);
-        writebin(potabs[i].SH_TYPE, sas, 0);
+        writebin(potabs[i].SH_OFF, sas, swapit);
+        writebin(potabs[i].SH_LEN, sas, swapit);
+        writebin(potabs[i].COMPRESSION, sas, swapit);
+        writebin(potabs[i].SH_TYPE, sas, swapit);
 
-        writebin(zero16, sas, 0);
-        writebin(zero16, sas, 0);
-        writebin(zero16, sas, 0);
+        writebin(zero16, sas, swapit);
+        writebin(zero16, sas, swapit);
+        writebin(zero16, sas, swapit);
 
       } else {
 
@@ -1738,7 +1722,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
 
       // write empty page
       for (auto i = 0; i < (pagesize/sizeof(double)); ++i) {
-        writebin(unkdub, sas, 0);
+        writebin(unkdub, sas, swapit);
       }
       // Rcout << "pos: " << pos << std::endl;
       sas.seekg(pos, sas.beg);
@@ -1824,8 +1808,8 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
               if ( val_d == NA_REAL  || R_IsNA(val_d) || R_IsNaN(val_d) || std::isinf(val_d) ) {
                 uint32_t NA1 = 0;
                 uint32_t NA2 = 4294966784;
-                writebin(NA1, sas, 0);
-                writebin(NA2, sas, 0);
+
+                write_case_i(NA1, NA2, ENDIANNESS, bit32, swapit, sas);
               } else {
                 writebin(val_d, sas, swapit);
               }
@@ -1841,8 +1825,8 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
               if ( val_d == NA_REAL  || R_IsNA(val_d) || R_IsNaN(val_d) || std::isinf(val_d) ) {
                 uint32_t NA1 = 0;
                 uint32_t NA2 = 4294966784;
-                writebin(NA1, sas, 0);
-                writebin(NA2, sas, 0);
+
+                write_case_i(NA1, NA2, ENDIANNESS, bit32, swapit, sas);
               } else {
                 writebin(val_d, sas, swapit);
               }
