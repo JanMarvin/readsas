@@ -27,6 +27,23 @@ inline void writebin(T t, std::fstream& sas, bool swapit)
   }
 }
 
+
+inline void write_case_i(uint32_t f1, uint32_t f2, bool ENDIANNES, bool bit32, bool swapit, std::fstream& sas) {
+
+  // with ENDIANNES == 0 aka big endian
+  // f2 is written first. So this requires an additional swap
+  if (ENDIANNES == 0) {
+    writebin(f2, sas, swapit);
+    if (bit32 == 0)
+      writebin(f1, sas, swapit);
+  } else if (ENDIANNES == 1) {
+    writebin(f1, sas, swapit);
+    if (bit32 == 0)
+      writebin(f2, sas, swapit);
+  }
+
+}
+
 inline void writestr(std::string val_s, int32_t len, std::fstream& sas)
 {
 
