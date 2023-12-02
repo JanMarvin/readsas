@@ -431,7 +431,7 @@ Rcpp::List readsas(const char * filePath,
 
     // debug
     int64_t pagestart = sas.tellg();
-    if (debug) Rprintf("position: %d\n", pagestart);
+    if (debug) Rcpp::Rcout << "position: " << pagestart << std::endl;
 
     // end of Header ---------------------------------------------------------//
 
@@ -2378,7 +2378,7 @@ Rcpp::List readsas(const char * filePath,
     }
 
     if (debug) {
-      Rprintf("%d %d \n", nn, kk);
+      Rcpp::Rcout << nn << " " << kk << std::endl;
     }
 
     // 3. Create a data.frame
