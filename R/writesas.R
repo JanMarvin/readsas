@@ -7,6 +7,8 @@
 #'@param compress option to compress file
 #'@param debug print debug information
 #'@param bit32 write 32bit file
+#'@param varlabels optional variable labels
+#'@param size optional header/pagesize
 #'
 #'@useDynLib readsas, .registration=TRUE
 #'

@@ -34,6 +34,8 @@ using namespace Rcpp;
 //' @param compress the file
 //' @param debug print debug information
 //' @param bit32 write smaller 32 bit file
+//' @param headersize,pagesize size parameters 512 / 1024 times x
+//' @param dateval timestamp
 //' @keywords internal
 //' @noRd
 // [[Rcpp::export]]

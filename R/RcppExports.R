@@ -24,6 +24,8 @@ readsas <- function(filePath, debug, selectrows_, selectcols_, empty_to_na, temp
 #' @param compress the file
 #' @param debug print debug information
 #' @param bit32 write smaller 32 bit file
+#' @param headersize,pagesize size parameters 512 / 1024 times x
+#' @param dateval timestamp
 #' @keywords internal
 #' @noRd
 writesas <- function(filePath, dat, compress, debug, bit32, headersize, pagesize, dateval) {

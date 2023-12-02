@@ -24,6 +24,10 @@ write.sas(
 \item{debug}{print debug information}
 
 \item{bit32}{write 32bit file}
+
+\item{varlabels}{optional variable labels}
+
+\item{size}{optional header/pagesize}
 }
 \description{
 write.sas
