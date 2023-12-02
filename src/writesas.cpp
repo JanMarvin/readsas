@@ -41,7 +41,9 @@ using namespace Rcpp;
 // [[Rcpp::export]]
 void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
               bool debug, bool bit32, int32_t headersize, int32_t pagesize,
-              double dateval) {
+              double dateval, int32_t encoding32) {
+
+  int8_t encoding = (int8_t)encoding32;
 
   uint32_t k = dat.size();
   uint64_t n = dat.nrows();
@@ -149,7 +151,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
 
     double created = dateval, created2 = 0;   // 8
     double modified = dateval, modified2 = 0; // 16
-    double thrdts = 0;
+    double thrdts = dateval;
 
     // possibly make headersize and pagesize variable
     // int32_t headersize = 65536;
@@ -183,7 +185,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
     if (bit32 == 1) U64_BYTE_CHECKER_VALUE = 50;
     if (U64_BYTE_CHECKER_VALUE == 51) ALIGN_2_VALUE = 4;
 
-    pkt2 = 20, pkt3 = 0;
+    pkt2 = 34, pkt3 = 0;
 
     writebin(ALIGN_1_CHECKER_VALUE, sas, swapit);
     writebin(pkt2, sas, swapit); // 34
@@ -194,8 +196,8 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
     int8_t ENDIANNESS = 1; // 0 is swapit = 1
     uint8_t PLATFORM = 49; // (1) 49 Unix (2) 50 Win
 
-    pkt1 = 0, pkt3 = 0;
-    // if (bit32 == 1) pkt1 = 50;
+    pkt1 = 51, pkt3 = 2;
+    if (bit32 == 1) pkt1 = 50;
     writebin(pkt1, sas, swapit); // 51
     writebin(ENDIANNESS, sas, swapit);
     writebin(pkt3, sas, swapit); // 2
@@ -258,7 +260,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
     writebin(pkt4, sas, swapit);
 
     // packet 10 -------------------------------------- //
-    int8_t encoding = 20; // utf8
+    // int8_t encoding = 20; // utf8
     pkt1 = 51, pkt2 = 0, pkt3 = 0, pkt4 = 20;
     if (bit32 == 1) pkt1 = 50;
     writebin(pkt1, sas, swapit); // 51
@@ -341,10 +343,12 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
 
     // large unk
     // something related to file password?
-    uint32_t pktu32 = 1157289805;
+    // 0000 and 4 byte from date
+    uint32_t pktu32 = 0;
+    std::memcpy(&pktu32, &created, sizeof(int32_t));
     writebin(pktu32, sas, swapit);
 
-    pktu32 = 563452161;
+    pktu32 = 545930268;
     // three identical smaller unks
     // required so that the file is identified as SAS file
     writebin(pktu32, sas, swapit);

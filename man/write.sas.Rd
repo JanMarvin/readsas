@@ -11,7 +11,8 @@ write.sas(
   debug = FALSE,
   bit32 = FALSE,
   varlabels,
-  size
+  size,
+  encoding = 20
 )
 }
 \arguments{
@@ -28,6 +29,8 @@ write.sas(
 \item{varlabels}{optional variable labels}
 
 \item{size}{optional header/pagesize}
+
+\item{encoding}{encoding 62 = windows, 20 = utf}
 }
 \description{
 write.sas

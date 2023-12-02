@@ -28,7 +28,7 @@ readsas <- function(filePath, debug, selectrows_, selectcols_, empty_to_na, temp
 #' @param dateval timestamp
 #' @keywords internal
 #' @noRd
-writesas <- function(filePath, dat, compress, debug, bit32, headersize, pagesize, dateval) {
-    invisible(.Call(`_readsas_writesas`, filePath, dat, compress, debug, bit32, headersize, pagesize, dateval))
+writesas <- function(filePath, dat, compress, debug, bit32, headersize, pagesize, dateval, encoding32) {
+    invisible(.Call(`_readsas_writesas`, filePath, dat, compress, debug, bit32, headersize, pagesize, dateval, encoding32))
 }
 
