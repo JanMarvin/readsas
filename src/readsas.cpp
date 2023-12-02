@@ -49,6 +49,7 @@ Rcpp::List readsas(const char * filePath,
                    const bool empty_to_na,
                    std::string tempstr)
 {
+
   std::ifstream sas(filePath, std::ios::in | std::ios::binary | std::ios::ate);
   auto sas_size = sas.tellg();
   if (sas) {
@@ -79,7 +80,7 @@ Rcpp::List readsas(const char * filePath,
       fmt32 = 0, fmt322 = 0, ifmt32 = 0, ifmt322 = 0;
     int16_t PAGE_TYPE = 0, BLOCK_COUNT = 0, SUBHEADER_COUNT = 0;
 
-    uint32_t pageseqnum32 = 0;
+    int32_t pageseqnum32 = 0;
 
     double created = 0, created2 = 0;   // 8
     double modified = 0, modified2 = 0; // 16
@@ -503,10 +504,23 @@ Rcpp::List readsas(const char * filePath,
 
       pageseqnum[pg] = pageseqnum32;
 
+      if (debug) {
+        Rcout << "pageseqnum: " << pageseqnum32 << std::endl;
+        Rcout << unk1 << " " << unk2 << " " << PAGE_DELETED_POINTER_LENGTH << std::endl;
+      }
+
       PAGE_TYPE       = readbin(PAGE_TYPE, sas, swapit);
       BLOCK_COUNT     = readbin(BLOCK_COUNT, sas, swapit);
       SUBHEADER_COUNT = readbin(SUBHEADER_COUNT, sas, swapit);
       unk16           = readbin(unk16, sas, swapit);
+
+      if(debug) {
+        Rcout << "PAGE_TYPE: " << PAGE_TYPE <<
+          " - BLOCK_COUNT: "  << BLOCK_COUNT <<
+            " - SUBHEADER_COUNT: " << SUBHEADER_COUNT << std::endl;
+      }
+
+      // Rcout << sas.tellg() << std::endl;
 
       page_type.push_back(PAGE_TYPE);
 
@@ -709,8 +723,11 @@ Rcpp::List readsas(const char * filePath,
                 unk64 = readbin(unk64, sas, swapit);
                 if (debug) Rcout << unk64 << std::endl;
                 pgsize = readbin(pgsize, sas, swapit);
+                if (debug) Rcout << "pgsize " << pgsize << std::endl;
                 unk64 = readbin(unk64, sas, swapit);
                 rcmix =  readbin(rcmix, sas, swapit);
+                if (debug)
+                  Rcout << "rcmix " << rcmix << std::endl;
 
                 /* next two indicate the end of the initial header ? */
                 unk64 = readbin(unk64, sas, swapit);
@@ -756,6 +773,7 @@ Rcpp::List readsas(const char * filePath,
                 unk16 = readbin(unk16, sas, swapit); // padding
 
                 pgc = readbin(pgc, sas, swapit);
+                if (debug) Rcout << "pgc: " << pgc << std::endl;
 
                 unk16 = readbin(unk16, sas, swapit); // val ?
                 unk16 = readbin(unk16, sas, swapit); // padding
@@ -926,7 +944,8 @@ Rcpp::List readsas(const char * filePath,
                 unk32 = readbin(unk32, sas, swapit);
                 if (debug) Rcout << unk32 << std::endl;
                 rcmix =  readbin((int32_t)rcmix, sas, swapit);
-                if (debug) Rcout << "rcmix " << rcmix << std::endl;
+                if (debug)
+                  Rcout << "rcmix " << rcmix << std::endl;
                 uunk32 = readbin(uunk32, sas, swapit);
                 if (debug) Rcout << uunk32 << std::endl;
                 uunk32 = readbin(uunk32, sas, swapit);
