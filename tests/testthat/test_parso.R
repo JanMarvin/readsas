@@ -49,31 +49,31 @@ test_that("parso external tests", {
 test_that("parso external char tests", {
 
   parso_files <- c(#"charset_aara",
-                   #"charset_acro",
-                   "charset_acyr", "charset_agrk",
-                   # "charset_aheb",
-                   # "charset_aice",
-                   "charset_ansi", "charset_arab",
-                   # "charset_arma",
-                   "charset_arom",
-                   # "charset_atha",
-                   "charset_atur",
-                   "charset_aukr", "charset_big5", "charset_cyrl", "charset_gbke",
-                   "charset_grek", "charset_hebr", "charset_j932", "charset_j942",
-                   "charset_jeuc", "charset_jiso", "charset_keuc", "charset_kiso",
-                   "charset_kpce", "charset_kwin", "charset_lat1", "charset_lat2",
-                   "charset_lat3", "charset_lat4", "charset_lat5", "charset_lat7",
-                   "charset_lat9", "charset_p852", "charset_p857", "charset_p858",
-                   "charset_p860", "charset_p862", "charset_p864", "charset_p874",
-                   "charset_sjis",
-                   # "charset_sjs4",
-                   "charset_thai", "charset_utf8",
-                   "charset_wara", "charset_wbal", "charset_wcyr", "charset_wgrk",
-                   "charset_wheb", "charset_wlt1", "charset_wlt2", "charset_wtur",
-                   "charset_wvie", "charset_yeuc", "charset_ywin", "charset_zeuc"#,
-                   # "charset_zpce",
-                   # "charset_zwin"
-                   )
+    #"charset_acro",
+    "charset_acyr", "charset_agrk",
+    # "charset_aheb",
+    # "charset_aice",
+    "charset_ansi", "charset_arab",
+    # "charset_arma",
+    "charset_arom",
+    # "charset_atha",
+    "charset_atur",
+    "charset_aukr", "charset_big5", "charset_cyrl", "charset_gbke",
+    "charset_grek", "charset_hebr", "charset_j932", "charset_j942",
+    "charset_jeuc", "charset_jiso", "charset_keuc", "charset_kiso",
+    "charset_kpce", "charset_kwin", "charset_lat1", "charset_lat2",
+    "charset_lat3", "charset_lat4", "charset_lat5", "charset_lat7",
+    "charset_lat9", "charset_p852", "charset_p857", "charset_p858",
+    "charset_p860", "charset_p862", "charset_p864", "charset_p874",
+    "charset_sjis",
+    # "charset_sjs4",
+    "charset_thai", "charset_utf8",
+    "charset_wara", "charset_wbal", "charset_wcyr", "charset_wgrk",
+    "charset_wheb", "charset_wlt1", "charset_wlt2", "charset_wtur",
+    "charset_wvie", "charset_yeuc", "charset_ywin", "charset_zeuc"#,
+    # "charset_zpce",
+    # "charset_zwin"
+  )
 
   for (fl in parso_files) {
 
@@ -83,6 +83,36 @@ test_that("parso external char tests", {
 
     got <- read.sas(sas7bdat, debug = FALSE)
     exp <- read.csv(csv, na.strings = "NA")
+
+    expect_true(all.equal(got, exp, check.attributes = FALSE))
+  }
+
+})
+
+test_that("test external sas7bdat", {
+
+  sas7bdat_files <- c(
+    "charactervalues",
+    "datetimevalues",
+    "datevalues",
+    "floatvalues",
+    "intvalues",
+    "mixedvalues",
+    "mixedvalues_compressed_binary",
+    "mixedvalues_compressed_char",
+    "mixedvalues_compressed_yes",
+    "mixedvalues_empty",
+    "specialcharactervalues",
+    "timevalues"
+  )
+
+  for (fl in sas7bdat_files) {
+
+    message(fl)
+    sas7bdat <- sprintf("https://bitbucket.org/jaredhobbs/sas7bdat/raw/18cbd14407918c1aa90f136c1d6c5d83f307dba0/tests/data/%s.sas7bdat", fl)
+
+    exp <- haven::read_sas(sas7bdat)
+    got <- read.sas(sas7bdat, debug = FALSE)
 
     expect_true(all.equal(got, exp, check.attributes = FALSE))
   }
