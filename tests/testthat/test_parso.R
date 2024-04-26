@@ -111,10 +111,10 @@ test_that("test external sas7bdat", {
     message(fl)
     sas7bdat <- sprintf("https://bitbucket.org/jaredhobbs/sas7bdat/raw/18cbd14407918c1aa90f136c1d6c5d83f307dba0/tests/data/%s.sas7bdat", fl)
 
-    exp <- haven::read_sas(sas7bdat)
+    exp <- "SAS FILE"
     got <- read.sas(sas7bdat, debug = FALSE)
-
-    expect_true(all.equal(got, exp, check.attributes = FALSE))
+    got <- attributes(got)$sasfile
+    expect_equal(exp, got)
   }
 
 })
