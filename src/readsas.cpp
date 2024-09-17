@@ -81,7 +81,7 @@ Rcpp::List readsas(const char * filePath,
       fmt32 = 0, fmt322 = 0, ifmt32 = 0, ifmt322 = 0;
     int16_t PAGE_TYPE = 0, BLOCK_COUNT = 0, SUBHEADER_COUNT = 0;
 
-    int32_t pageseqnum32 = 0;
+    uint32_t pageseqnum32 = 0;
 
     double created = 0, created2 = 0;   // 8
     double modified = 0, modified2 = 0; // 16

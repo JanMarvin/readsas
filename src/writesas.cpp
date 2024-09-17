@@ -160,7 +160,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
     // if (bit32 == 1) pagesize = 8192;
     // int64_t pagecount = 1;
     int32_t pgidx = 0;
-    int32_t pageseqnum32 = pgidx;
+    uint32_t pageseqnum32 = 2139483040;
 
     // Begin: Magic Number
     int32_t
