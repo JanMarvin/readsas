@@ -1,7 +1,13 @@
 #ifndef SAS_H
 #define SAS_H
 
+// check for 1.0.8.0
+#if RCPP_DEV_VERSION >= 1000800
+#include <Rcpp/Lightest>
+#else
 #include <Rcpp.h>
+#endif
+
 #include <fstream>
 #include <string>
 #include <sstream>
