@@ -1,10 +1,8 @@
-
 /*
  * Both functions are c++ conversions of java functions from the parso library
  * Licensed under the Apache License, Version 2.0. Copyright 2015 EPAM
  *
  */
-
 
 #include <Rcpp.h>
 #include <math.h>
@@ -14,9 +12,10 @@ std::string SASYZCRL(uint64_t rowlen, uint64_t reslen, std::string rowstr,
                      bool debug)
 {
 
-  size_t rowstr_size= rowstr.size();
-  char row[rowstr_size];
-  memcpy(row, rowstr.data(), rowstr_size);
+  // Minimal change for VLA: Use new[] for dynamic allocation
+  size_t rowstr_size = rowstr.size();
+  char* row = new char[rowstr_size];
+  memcpy(row, rowstr.data(), rowstr_size); // Copy data to the allocated memory
 
 
   std::string res = "";
@@ -145,8 +144,8 @@ std::string SASYZCRL(uint64_t rowlen, uint64_t reslen, std::string rowstr,
 
     default:
     {
-      Rcpp::warning("Error control byte: %d", cbyte);
-      break;
+      Rcpp::warning("SASYZCRL: Error control byte: %d", cbyte);
+      break; // Exit loop on error
     }
     }
     ++rowoff;
@@ -155,21 +154,26 @@ std::string SASYZCRL(uint64_t rowlen, uint64_t reslen, std::string rowstr,
 
   // comp_deleted throws warning
   if (res.size() != reslen)
-    Rcpp::warning("comp1: string size %d != %d\n",
+    Rcpp::warning("SASYZCRL: string size %zu != %zu\n",
                   res.size(), reslen);
+
+  // Clean up allocated memory
+  delete[] row;
 
   return res;
 }
 
-std::string SASYZCR2(uint64_t rowlen, uint64_t reslen, std::string rowstr,
+std::string SASYZCR2(uint64_t rowlen, uint64_t reslen, const std::string rowstr,
                      bool debug) {
 
   if (debug)
     Rcpp::Rcout << "row ----------------------------- " << std::endl;
 
-  size_t rowstr_size= rowstr.size();
-  char row[rowstr_size];
-  memcpy(row, rowstr.data(), rowstr_size);
+  // Minimal change for VLA: Use new[] for dynamic allocation
+  size_t rowstr_size = rowstr.size();
+  char* row = new char[rowstr_size];
+  memcpy(row, rowstr.data(), rowstr_size); // Copy data to the allocated memory
+
 
   std::string res = "";
   uint32_t rowoff = 0;
@@ -235,7 +239,7 @@ std::string SASYZCR2(uint64_t rowlen, uint64_t reslen, std::string rowstr,
 
       auto pos = resoff - ofs;
       if (pos< 0)
-        pos = abs(pos);
+        pos = std::abs(pos);
 
       // if (debug)
         // Rcpp::Rcout << "d3 " << resoff << " " << ofs << " " << pos << std::endl;
@@ -253,7 +257,7 @@ std::string SASYZCR2(uint64_t rowlen, uint64_t reslen, std::string rowstr,
 
       auto pos = resoff - ofs;
       if (pos< 0)
-        pos = abs(pos);
+        pos = std::abs(pos);
 
       // if (debug)
         // Rcpp::Rcout << "d4 " << resoff << " " << ofs << " " << pos << std::endl;
@@ -267,9 +271,11 @@ std::string SASYZCR2(uint64_t rowlen, uint64_t reslen, std::string rowstr,
   }
 
   if (res.size() != reslen)
-    Rcpp::warning("comp2: string size %d != %d\n",
-               res.size(), reslen);
+    Rcpp::warning("SASYZCR2: string size %zu != %zu\n", // Use %zu for size_t
+                  res.size(), reslen);
+
+  // Clean up allocated memory
+  delete[] row;
 
   return res;
 }
-
