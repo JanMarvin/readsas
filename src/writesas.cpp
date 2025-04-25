@@ -15,7 +15,6 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <Rcpp.h>
 #include <cstdio>
 #include <stdint.h>
 #include <string>
@@ -24,7 +23,6 @@
 #include <regex>
 
 #include "sas.h"
-#include "uncompress.h"
 using namespace Rcpp;
 
 //' Writes the binary SAS file
@@ -69,7 +67,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
   auto totalvarlabelssize = 0;
   auto totalvarformatssize = 0;
 
-  for (auto i = 0; i < k; ++i) {
+  for (uint32_t i = 0; i < k; ++i) {
     // varnames
     std::string varname = as<std::string>(nvarnames[i]);
     if (varname.size() % 4 > 0 && varname.size() <= 32) { // for < 4, why not < 32?
@@ -385,7 +383,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
     // consists of only a few bytes, a full page is written. since SAS requires
     // this, it seems plausible to always write a full page at first and seek to
     // the positions SAS expects afterwards.
-    for (auto i = 0; i < (pagesize/sizeof(double)); ++i) {
+    for (uint32_t i = 0; i < (pagesize/sizeof(double)); ++i) {
       writebin(unkdub, sas, swapit);
     }
 
@@ -545,9 +543,9 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
 
     bool firstpage = 0;
     if (compress == 0) {
-      for (uint64_t i = 0; i < rows_on_page1; ++i) {
+      for (int64_t i = 0; i < rows_on_page1; ++i) {
 
-        for (auto j = 0; j < k; ++j) {
+        for (uint32_t j = 0; j < k; ++j) {
 
           // auto ord = ordered[j];
           auto wid = colwidth[j];
@@ -649,7 +647,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
 
     /**** case 3 ************************************************************/
 
-    for (auto i = 0; i < k; ++i)
+    for (uint32_t i = 0; i < k; ++i)
     {
       shc--;
 
@@ -668,7 +666,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       // write offsets in opposite order. calc offsets -1. Presumably SAS
       //  writes the cases to a buffer internally.
       //  Stacks them and writes the entire stack as one
-      for (auto z = 0; z < (k - i); ++z) {
+      for (uint32_t z = 0; z < (k - i); ++z) {
 
         std::string nams = varnames[z];
         offsetpos += nams.size();
@@ -688,7 +686,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
 
       // calc length of len3
       auto len3 = 0;
-      for (auto ii = 0; ii < k; ++ii) {
+      for (uint32_t ii = 0; ii < k; ++ii) {
         len3 += 64;
       }
 
@@ -913,7 +911,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
     std::vector<CN_Att> capois(k);
 
     auto prevoffset = 0;
-    for (auto i = 0; i < k; ++i) {
+    for (uint32_t i = 0; i < k; ++i) {
 
       capois[i].CN_OFF = prevoffset;
 
@@ -987,7 +985,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
 
     auto prevlen = 0 + inioff;
 
-    for (auto cn = 0; cn < k; ++cn) {
+    for (uint32_t cn = 0; cn < k; ++cn) {
       cnpoi[cn].CN_IDX = pg;
       cnpoi[cn].CN_OFF = prevlen;
       if (debug) Rcout << "as<std::string>(nvarnames[cn]).size();" << as<std::string>(nvarnames[cn]).size() << std::endl;
@@ -1004,7 +1002,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
     }
 
 
-    for (auto cn = 0; cn < k; ++cn) {
+    for (uint32_t cn = 0; cn < k; ++cn) {
       writebin(cnpoi[cn].CN_IDX, sas, swapit);
       writebin(cnpoi[cn].CN_OFF, sas, swapit);
       writebin(cnpoi[cn].CN_LEN, sas, swapit);
@@ -1080,7 +1078,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       std::string proc = "DATASTEP";
       writestr(proc, 8, sas);
 
-      for (auto i = 0; i < k; ++i) {
+      for (uint32_t i = 0; i < k; ++i) {
         writestr(varnames[i], varnames[i].size(), sas);
         writestr(varlabels[i], varlabels[i].size(), sas);
         writestr(varformats[i], varformats[i].size(), sas);
@@ -1263,7 +1261,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       }
 
       if (debug)
-        Rprintf("SIG %d; FIRST %d; F_POS %d; LAST %d; L_POS %d\n",
+        Rprintf("SIG %lld; FIRST %lld; F_POS %hd; LAST %lld; L_POS %d\n",
                 scv[i].SIG, scv[i].FIRST, scv[i].F_POS,
                 scv[i].LAST, scv[i].L_POS);
 
@@ -1304,7 +1302,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       writebin((int32_t)uunk64, sas, swapit);
     }
     if (debug)
-      Rprintf("colnum %d; uunk64 %d\n",
+      Rprintf("colnum %lld; uunk64 %lld\n",
               colnum, uunk64);
 
     post_shlen = sas.tellg();
@@ -1741,7 +1739,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       sas.seekg(pos, sas.beg);
 
       // write empty page
-      for (auto i = 0; i < (pagesize/sizeof(double)); ++i) {
+      for (uint32_t i = 0; i < (pagesize/sizeof(double)); ++i) {
         writebin(unkdub, sas, swapit);
       }
       // Rcout << "pos: " << pos << std::endl;
@@ -1812,9 +1810,9 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
       bool firstpage = 0;
       if (compress == 0) {
 
-        for (uint64_t i = rows_written; i < rows_on_page; ++i) {
+        for (int64_t i = rows_written; i < rows_on_page; ++i) {
 
-          for (auto j = 0; j < k; ++j) {
+          for (uint32_t j = 0; j < k; ++j) {
 
             // auto ord = ordered[j];
             auto wid = colwidth[j];
