@@ -9,10 +9,11 @@
 #' @param selectcols_ character vector of selected rows
 #' @param empty_to_na logical convert '' to NA_character_
 #' @param tempstr filepath used for temp output when uncompressing
+#' @param convert logical convert missings `.I` and `.M` to Inf and -Inf
 #' @import Rcpp
 #' @keywords internal
 #' @noRd
-readsas <- function(filePath, debug, selectrows_, selectcols_, empty_to_na, tempstr) {
-    .Call(`_readsas_readsas`, filePath, debug, selectrows_, selectcols_, empty_to_na, tempstr)
+readsas <- function(filePath, debug, selectrows_, selectcols_, empty_to_na, tempstr, convert) {
+    .Call(`_readsas_readsas`, filePath, debug, selectrows_, selectcols_, empty_to_na, tempstr, convert)
 }
 

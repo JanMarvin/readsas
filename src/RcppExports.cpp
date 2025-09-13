@@ -11,8 +11,8 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // readsas
-Rcpp::List readsas(const char * filePath, const bool debug, Nullable<IntegerVector> selectrows_, Nullable<CharacterVector> selectcols_, const bool empty_to_na, std::string tempstr);
-RcppExport SEXP _readsas_readsas(SEXP filePathSEXP, SEXP debugSEXP, SEXP selectrows_SEXP, SEXP selectcols_SEXP, SEXP empty_to_naSEXP, SEXP tempstrSEXP) {
+Rcpp::List readsas(const char * filePath, const bool debug, Nullable<IntegerVector> selectrows_, Nullable<CharacterVector> selectcols_, const bool empty_to_na, std::string tempstr, const bool convert);
+RcppExport SEXP _readsas_readsas(SEXP filePathSEXP, SEXP debugSEXP, SEXP selectrows_SEXP, SEXP selectcols_SEXP, SEXP empty_to_naSEXP, SEXP tempstrSEXP, SEXP convertSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -22,13 +22,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Nullable<CharacterVector> >::type selectcols_(selectcols_SEXP);
     Rcpp::traits::input_parameter< const bool >::type empty_to_na(empty_to_naSEXP);
     Rcpp::traits::input_parameter< std::string >::type tempstr(tempstrSEXP);
-    rcpp_result_gen = Rcpp::wrap(readsas(filePath, debug, selectrows_, selectcols_, empty_to_na, tempstr));
+    Rcpp::traits::input_parameter< const bool >::type convert(convertSEXP);
+    rcpp_result_gen = Rcpp::wrap(readsas(filePath, debug, selectrows_, selectcols_, empty_to_na, tempstr, convert));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_readsas_readsas", (DL_FUNC) &_readsas_readsas, 6},
+    {"_readsas_readsas", (DL_FUNC) &_readsas_readsas, 7},
     {NULL, NULL, 0}
 };
 

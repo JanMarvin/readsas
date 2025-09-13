@@ -25,6 +25,7 @@
 #' @param rownames first column will be used as rowname and removed from data
 #' @param empty_to_na logical. In SAS empty characters are missing. this option
 #' allows to convert `""` to `NA_character_` when importing.
+#' @param convert logical convert missings `.I` and `.M` to Inf and -Inf
 #'
 #' @useDynLib readsas, .registration=TRUE
 #' @importFrom utils download.file
@@ -39,7 +40,7 @@
 #' @export
 read.sas <- function(file, debug = FALSE, convert_dates = TRUE, recode = TRUE,
                      select.rows = NULL, select.cols = NULL, remove_deleted = TRUE,
-                     rownames = FALSE, empty_to_na = FALSE) {
+                     rownames = FALSE, empty_to_na = FALSE, convert = FALSE) {
 
   # Check if path is a url
   if (length(grep("^(http|ftp|https)://", file))) {
@@ -76,7 +77,7 @@ read.sas <- function(file, debug = FALSE, convert_dates = TRUE, recode = TRUE,
   tempstr <- tempfile()
   on.exit(unlink(tempstr), add = TRUE)
   data <- readsas(filepath, debug, select.rows, select.cols, empty_to_na,
-                  tempstr)
+                  tempstr, convert)
 
   cvec <- ifelse(rownames, -1, substitute())
 

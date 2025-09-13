@@ -13,7 +13,8 @@ read.sas(
   select.cols = NULL,
   remove_deleted = TRUE,
   rownames = FALSE,
-  empty_to_na = FALSE
+  empty_to_na = FALSE,
+  convert = FALSE
 )
 }
 \arguments{
@@ -36,6 +37,8 @@ imported are sorted. If 0 is in \code{select.rows}, zero rows are returned.}
 
 \item{empty_to_na}{logical. In SAS empty characters are missing. this option
 allows to convert \code{""} to \code{NA_character_} when importing.}
+
+\item{convert}{logical convert missings \code{.I} and \code{.M} to Inf and -Inf}
 }
 \description{
 \code{read.sas} is a general function for reading sas7bdat files.

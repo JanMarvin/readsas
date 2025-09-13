@@ -37,6 +37,7 @@ using namespace Rcpp;
 //' @param selectcols_ character vector of selected rows
 //' @param empty_to_na logical convert '' to NA_character_
 //' @param tempstr filepath used for temp output when uncompressing
+//' @param convert logical convert missings `.I` and `.M` to Inf and -Inf
 //' @import Rcpp
 //' @keywords internal
 //' @noRd
@@ -46,7 +47,8 @@ Rcpp::List readsas(const char * filePath,
                    Nullable<IntegerVector> selectrows_,
                    Nullable<CharacterVector> selectcols_,
                    const bool empty_to_na,
-                   std::string tempstr)
+                   std::string tempstr,
+                   const bool convert)
 {
   std::ifstream sas(filePath, std::ios::in | std::ios::binary | std::ios::ate);
   auto sas_size = sas.tellg();
@@ -2131,7 +2133,7 @@ Rcpp::List readsas(const char * filePath,
                 Rcout << "writing: " << i << "/" << col << std::endl;
 
               if (std::isnan(val_d))
-                REAL(VECTOR_ELT(df,col))[i] = NA_REAL;
+                REAL(VECTOR_ELT(df,col))[i] = check_na(val_d, convert, debug);
               else
                 REAL(VECTOR_ELT(df,col))[i] = val_d;
             } else {
@@ -2158,7 +2160,7 @@ Rcpp::List readsas(const char * filePath,
                 Rcout << "writing: " << i << "/" << col << std::endl;
 
               if (std::isnan(val_d))
-                REAL(VECTOR_ELT(df,col))[i] = NA_REAL;
+                REAL(VECTOR_ELT(df,col))[i] = check_na(val_d, convert, debug);
               else
                 REAL(VECTOR_ELT(df,col))[i] = val_d;
             } else {

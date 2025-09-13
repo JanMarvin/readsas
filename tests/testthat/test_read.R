@@ -133,3 +133,18 @@ test_that("compression works", {
   expect_equal(exp, got, ignore_attr = TRUE)
 
 })
+
+test_that("missing values", {
+
+  fl <- system.file("extdata", "missing_values.sas7bdat", package = "readsas")
+  exp <- c(Inf, -Inf)
+  got <- read.sas(fl, convert = TRUE)[c(10, 14), 1]
+  expect_equal(exp, got)
+
+  got <- read.sas(fl, convert = TRUE)[c(10, 14), 2]
+  expect_equal(exp, got)
+
+  got <- read.sas(fl)
+  expect_true(all(is.na(got)))
+
+})

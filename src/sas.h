@@ -536,5 +536,22 @@ bool any_keepr(Rcpp::IntegerVector rvec, uint64_t idx) {
   return std::find(rvec.begin(), rvec.end(), idx) != rvec.end();
 }
 
+inline double check_na(double value, bool convert, bool debug) {
+  uint64_t bits;
+  std::memcpy(&bits, &value, sizeof(bits));
+
+  if (debug) Rcpp::Rcout << bits << std::endl;
+
+  if (convert) {
+    // https://documentation.sas.com/doc/en/imlug/15.2/imlug_r_sect019.htm
+    if (bits == 0xfffff50000000000) {
+      return R_PosInf; // .I
+    } else if (bits == 0xfffff10000000000) {
+      return R_NegInf; // .M
+    }
+  }
+
+  return NA_REAL; // leave unchanged
+}
 
 #endif
