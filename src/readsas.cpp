@@ -1693,8 +1693,8 @@ Rcpp::List readsas(const char * filePath,
 
               Rcpp::Rcout << "SH_OFF: " << potabs[sc].SH_OFF
                           << "; SH_LEN: " << potabs[sc].SH_LEN
-                          << "; COMPR.: " << potabs[sc].COMPRESSION
-                          << "; SH_TYPE: " << potabs[sc].SH_TYPE
+                          << "; COMPR.: " << (int32_t)potabs[sc].COMPRESSION
+                          << "; SH_TYPE: " << (int32_t)potabs[sc].SH_TYPE
                           << std::endl;
 
             }

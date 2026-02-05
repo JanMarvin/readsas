@@ -93,7 +93,7 @@ read.sas <- function(file, debug = FALSE, convert_dates = TRUE, recode = TRUE,
   }
 
 
-  encoding <- attr(data, "encoding") <- attr(data, "encoding")
+  encoding <- attr(data, "encoding")
 
   ## shorten attributes and reassign
   labels  <- attr(data, "labels")  <- attr(data, "labels")[cvec]

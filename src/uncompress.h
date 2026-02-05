@@ -11,276 +11,168 @@
 #include "sas.h"
 #include "uncompress.h"
 
-std::string SASYZCRL(uint64_t rowlen, uint64_t reslen, std::string rowstr,
-                     bool debug)
-{
+std::string SASYZCRL(uint64_t rowlen, uint64_t reslen, const std::string& rowstr, bool debug) {
+    std::string res;
+    res.reserve(reslen);
 
-  // Minimal change for VLA: Use new[] for dynamic allocation
-  size_t rowstr_size = rowstr.size();
-  char* row = new char[rowstr_size];
-  memcpy(row, rowstr.data(), rowstr_size); // Copy data to the allocated memory
+    const uint8_t* row = reinterpret_cast<const uint8_t*>(rowstr.data());
+    uint32_t rowoff = 0;
 
+    while (rowoff < rowlen) {
+        uint8_t control = row[rowoff];
+        uint8_t cbyte = control & 0xF0;
+        uint8_t ebyte = control & 0x0F;
 
-  std::string res = "";
-  uint32_t rowoff = 0;
+        rowoff++;
 
-  while (rowoff < rowlen) {
-
-    // unsure
-    int32_t cbyte = row[rowoff] & 0xF0;
-    int32_t ebyte = row[rowoff] & 0x0F;
-
-    int32_t len = 0;
-
-    switch (cbyte) {
-
-    case 0:
-    case 16:
-    case 32:
-    case 48:
-    {
-      if (rowoff != rowlen - 1) {
-
-      len = (row[rowoff + 1] & 0xFF) + 64 + row[rowoff] * 256;
-
-      res +=  rowstr.substr(rowoff+2, len);
-
-      rowoff += len + 1;
+        switch (cbyte) {
+            case 0x00: case 0x10: case 0x20: case 0x30: { // Large Literal Copy
+                if (rowoff < rowlen) {
+                    int32_t len = (row[rowoff] & 0xFF) + 64 + (control << 8);
+                    rowoff++;
+                    if (rowoff + len <= rowlen) {
+                        res.append(rowstr, rowoff, len);
+                        rowoff += len;
+                    }
+                }
+                break;
+            }
+            case 0x40: { // RLE: Repeat row[rowoff+1]
+                if (rowoff < rowlen) {
+                    int32_t count = (ebyte << 8) + (row[rowoff] & 0xFF) + 18;
+                    rowoff++;
+                    if (rowoff < rowlen) {
+                        res.append(count, (char)row[rowoff]);
+                        rowoff++;
+                    }
+                }
+                break;
+            }
+            case 0x60: { // Repeat Space (0x20)
+                int32_t count = (ebyte << 8) + (row[rowoff] & 0xFF) + 17;
+                res.append(count, ' ');
+                rowoff++;
+                break;
+            }
+            case 0x70: { // Repeat Zero (0x00)
+                int32_t count = (ebyte << 8) + (row[rowoff] & 0xFF) + 17;
+                res.append(count, '\0');
+                rowoff++;
+                break;
+            }
+            case 0x80: case 0x90: case 0xA0: case 0xB0: { // Small Literal Copy
+                int32_t len = (control - 0x7F);
+                if (rowoff + len <= rowlen) {
+                    res.append(rowstr, rowoff, len);
+                    rowoff += len;
+                }
+                break;
+            }
+            case 0xC0: { // Short RLE
+                int32_t count = ebyte + 3;
+                if (rowoff < rowlen) {
+                    res.append(count, (char)row[rowoff]);
+                    rowoff++;
+                }
+                break;
+            }
+            case 0xD0: { // Short Repeat '@' (0x40)
+                res.append(ebyte + 2, '@');
+                break;
+            }
+            case 0xE0: { // Short Repeat Space (0x20)
+                res.append(ebyte + 2, ' ');
+                break;
+            }
+            case 0xF0: { // Short Repeat Zero (0x00)
+                res.append(ebyte + 2, '\0');
+                break;
+            }
+            default:
+                break;
+        }
     }
 
-      break;
-    }
+    if (res.size() != reslen)
+        Rcpp::warning("SASYZCRL: string size %zu != %zu\n", res.size(), reslen);
 
-    case 64:
-    {
-      int32_t copyCounter = ebyte * 16 + (row[rowoff + 1] & 0xFF);
-
-      for (auto i = 0; i < copyCounter + 18; ++i) {
-        res += row[rowoff + 2];
-      }
-
-      rowoff += 2;
-
-      break;
-    }
-
-    case 96:
-    {
-      uint8_t val = 32;
-
-      for (auto i = 0; i < ebyte * 256 + (row[rowoff + 1] & 0xFF) + 17; ++i) {
-        res += val;
-      }
-
-      ++rowoff;
-
-      break;
-    }
-
-    case 112:
-    {
-      uint8_t val = 0;
-
-      for (auto i = 0; i < ebyte * 256 + (row[rowoff + 1] & 0xFF) + 17; ++i) {
-        res += val;
-      }
-
-      ++rowoff;
-
-      break;
-    }
-
-    case 128:
-    case 144:
-    case 160:
-    case 176:
-    {
-      int32_t p0 = ((ebyte + 1) + (cbyte - 128));
-      int32_t p1 = (rowlen - (rowoff + 1));
-      len = std::min(p0 , p1);
-
-      res += rowstr.substr(rowoff+1, len);
-      rowoff += len;
-
-      break;
-    }
-
-    case 192:
-    {
-      for (auto i = 0; i < ebyte + 3; ++i) {
-      res += row[rowoff + 1];
-    }
-      ++rowoff;
-
-      break;
-    }
-
-    case 208:
-    {
-      uint8_t val = 64;
-      for (auto i = 0; i < ebyte + 2; ++i) {
-        res += val;
-      }
-
-      break;
-    }
-
-    case 224:
-    {
-      uint8_t val = 32;
-      for (auto i = 0; i < ebyte + 2; ++i) {
-        res += val;
-      }
-
-      break;
-    }
-
-    case 240:
-    {
-      uint8_t val = 0;
-      for (auto i = 0; i < ebyte + 2; ++i) {
-        res += val;
-      }
-
-      break;
-    }
-
-    default:
-    {
-      Rcpp::warning("SASYZCRL: Error control byte: %d", cbyte);
-      break; // Exit loop on error
-    }
-    }
-    ++rowoff;
-
-  }
-
-  // comp_deleted throws warning
-  if (res.size() != reslen)
-    Rcpp::warning("SASYZCRL: string size %zu != %zu\n",
-                  res.size(), reslen);
-
-  // Clean up allocated memory
-  delete[] row;
-
-  return res;
+    return res;
 }
 
-std::string SASYZCR2(uint64_t rowlen, uint64_t reslen, const std::string rowstr,
-                     bool debug) {
+std::string SASYZCR2(uint64_t rowlen, uint64_t reslen, const std::string& rowstr, bool debug) {
+    std::string res;
+    res.reserve(reslen);
 
-  if (debug)
-    Rcpp::Rcout << "row ----------------------------- " << std::endl;
+    const uint8_t* row = reinterpret_cast<const uint8_t*>(rowstr.data());
+    uint32_t rowoff = 0;
+    uint32_t cbit = 0, cmsk = 0;
 
-  // Minimal change for VLA: Use new[] for dynamic allocation
-  size_t rowstr_size = rowstr.size();
-  char* row = new char[rowstr_size];
-  memcpy(row, rowstr.data(), rowstr_size); // Copy data to the allocated memory
+    while (rowoff < rowlen && res.size() < reslen) {
+        cmsk >>= 1;
+        if (cmsk == 0) {
+            if (rowoff + 1 >= rowlen) break;
+            cbit = (row[rowoff] << 8) | row[rowoff + 1];
+            rowoff += 2;
+            cmsk = 0x8000;
+        }
 
+        if ((cbit & cmsk) == 0) {
+            if (rowoff < rowlen) {
+                res += (char)row[rowoff++];
+            }
+            continue;
+        }
 
-  std::string res = "";
-  uint32_t rowoff = 0;
-  int32_t resoff = 0, ofs = 0, cbit = 0, cmsk = 0;
+        if (rowoff >= rowlen) break;
+        uint8_t ctrl = row[rowoff++];
+        uint8_t cmd = (ctrl >> 4) & 0x0F;
+        uint8_t len_nibble = ctrl & 0x0F;
 
-  while (rowoff < rowlen) {
+        switch (cmd) {
+            case 0: { // Short RLE
+                uint16_t count = len_nibble + 3;
+                if (rowoff < rowlen) {
+                    res.append(count, (char)row[rowoff++]);
+                }
+                break;
+            }
+            case 1: { // Long RLE
+                if (rowoff < rowlen) {
+                    uint16_t count = (row[rowoff++] & 0xff) + (len_nibble << 8) + 19;
+                    if (rowoff < rowlen) {
+                        res.append(count, (char)row[rowoff++]);
+                    }
+                }
+                break;
+            }
+            case 2: { // Long LZ77
+                if (rowoff + 1 < rowlen) {
+                    uint32_t ofs = len_nibble + 3 + (row[rowoff++] << 4);
+                    uint16_t count = row[rowoff++] + 16;
 
-    cmsk >>= 1;
-    if (cmsk == 0) {
-      cbit = (((row[rowoff]) & 0xff) << 8) | (row[rowoff + 1] & 0xff);
-      rowoff += 2;
-      cmsk = 0x8000;
+                    uint32_t pos = res.size() - ofs;
+                    for (uint16_t i = 0; i < count; ++i) res += res[pos + i];
+                }
+                break;
+            }
+            default: { // Short LZ77 (cmd >= 3)
+                if (rowoff < rowlen) {
+                    uint32_t ofs = len_nibble + 3 + (row[rowoff++] << 4);
+                    uint16_t count = cmd;
+
+                    uint32_t pos = res.size() - ofs;
+                    for (uint16_t i = 0; i < count; ++i) res += res[pos + i];
+                }
+                break;
+            }
+        }
     }
 
-    // copy char if control bit is zero
-    if ((cbit & cmsk) == 0) {
-      res += row[rowoff++];
-      ++resoff;
-
-      continue;
+    if (res.size() != reslen) {
+        Rcpp::warning("SASYZCR2 mismatch: %zu != %zu", res.size(), reslen);
     }
 
-    int32_t cmd = (row[rowoff] >> 4) & 0x0F;
-    int32_t len = row[rowoff++] & 0x0F;
-
-    switch (cmd)
-    {
-    case 0: // short RLE
-    {
-      len += 3;
-      for (int32_t i = 0; i < len; ++i) {
-        res += row[rowoff];
-      }
-      ++rowoff;
-      resoff += len;
-
-      // if (debug)
-      // Rcpp::Rcout << "d1 " << std::endl;
-
-      break;
-    }
-
-    case 1: // long RLE
-    {
-      len += ((row[rowoff++] & 0xff) << 4) + 19;
-      for (int32_t i = 0; i < len; ++i) {
-        res += row[rowoff];
-      }
-      ++rowoff;
-      resoff += len;
-
-      // if (debug)
-      // Rcpp::Rcout << "d2 " << std::endl;
-
-      break;
-    }
-
-    case 2: // long
-    {
-      ofs = len + 3;
-      ofs += ((row[rowoff++] & 0xff) << 4);
-      len = (row[rowoff++] & 0xff) + 16;
-
-      auto pos = resoff - ofs;
-      if (pos< 0)
-        pos = std::abs(pos);
-
-      // if (debug)
-      // Rcpp::Rcout << "d3 " << resoff << " " << ofs << " " << pos << std::endl;
-
-      res += res.substr(pos, len);
-      resoff += len;
-
-      break;
-    }
-
-    default: // short
-    {
-      ofs = len + 3;
-      ofs += ((row[rowoff++] & 0xff) << 4);
-
-      auto pos = resoff - ofs;
-      if (pos< 0)
-        pos = std::abs(pos);
-
-      // if (debug)
-      // Rcpp::Rcout << "d4 " << resoff << " " << ofs << " " << pos << std::endl;
-
-      res += res.substr(pos, cmd);
-      resoff += cmd;
-
-      break;
-    }
-    }
-  }
-
-  if (res.size() != reslen)
-    Rcpp::warning("SASYZCR2: string size %zu != %zu\n", // Use %zu for size_t
-                  res.size(), reslen);
-
-  // Clean up allocated memory
-  delete[] row;
-
-  return res;
+    return res;
 }
 
 #endif
