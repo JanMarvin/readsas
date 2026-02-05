@@ -608,6 +608,14 @@ Rcpp::List readsas(const char * filePath,
           if ((pg == 0) && (sc != 3))
             page0not = (PAGE_TYPE == 0) &&  (potabs[sc].SH_LEN == rowlength);
 
+          // there can be uncompressed rows in the data
+          if (potabs[sc].COMPRESSION == 0 && potabs[sc].SH_TYPE == 1 && potabs[sc].SH_LEN == rowlength && compr > 0) {
+            std::string ustr(rowlength, '\0');
+            sas.read(&ustr[0], rowlength);
+            writestr(ustr, ustr.size(), out);
+            continue;
+          }
+
           int64_t sas_offset = alignval;
           if (! ((potabs[sc].COMPRESSION == 4) |
               (PAGE_TYPE == -28672) | page0not ) ) {
@@ -1693,8 +1701,8 @@ Rcpp::List readsas(const char * filePath,
 
               Rcpp::Rcout << "SH_OFF: " << potabs[sc].SH_OFF
                           << "; SH_LEN: " << potabs[sc].SH_LEN
-                          << "; COMPR.: " << potabs[sc].COMPRESSION
-                          << "; SH_TYPE: " << potabs[sc].SH_TYPE
+                          << "; COMPR.: " << (int32_t)potabs[sc].COMPRESSION
+                          << "; SH_TYPE: " << (int32_t)potabs[sc].SH_TYPE
                           << std::endl;
 
             }

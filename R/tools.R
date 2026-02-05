@@ -15,5 +15,5 @@ get.filepath <- function(path = "") {
     return("File does not exist.")
   }
 
-  return(filepath)
+  filepath
 }
