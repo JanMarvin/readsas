@@ -235,7 +235,7 @@ read.sas <- function(file, debug = FALSE, convert_dates = TRUE, recode = TRUE,
     attr(data, "cvec") <- attr(data, "rvec") <- NULL
   }
 
-  return(data)
+  data
 }
 
 #' helper function to convert SAS date numeric to date
