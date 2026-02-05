@@ -148,3 +148,29 @@ test_that("missing values", {
   expect_true(all(is.na(got)))
 
 })
+
+test_that("compression works", {
+  # char
+  fl <- system.file("extdata", "compression_char.sas7bdat", package = "readsas")
+  got <- read.sas(fl)
+
+  expect_equal(attr(got, "compression"), "SASYZCRL")
+  expect_true(all(got$rle_spaces == "Text                                                   End"))
+  expect_true(all(got$rle_zeros == "1234567890"))
+  expect_true(all(got$rle_chars == "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBCCCCCCCCCCC"))
+
+  # binary
+  fl <- system.file("extdata", "compression_short.sas7bdat", package = "readsas")
+  got <- read.sas(fl)
+
+  expect_equal(attr(got, "compression"), "SASYZCR2")
+  expect_true(all(got$short_rle == "ZZZZZZZZZZ"))
+  expect_true(all(got$short_lz77 == "1234567812345678"))
+
+  fl <- system.file("extdata", "compression_test.sas7bdat", package = "readsas")
+  got <- read.sas(fl)
+
+  expect_equal(attr(got, "compression"), "SASYZCR2")
+  expect_true(all(got$long_rle == "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"))
+  expect_true(all(got$long_lz77 == "ABCDE12345FGHIJ67890KLMNO12345PQRST67890UVWXY12345ABCDE12345FGHIJ67890KLMNO12345PQRST67890UVWXY12345ABCDE12345FGHIJ67890KLMNO12345PQRST67890UVWXY12345"))
+})

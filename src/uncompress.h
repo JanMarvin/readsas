@@ -111,14 +111,16 @@ std::string SASYZCR2(uint64_t rowlen, uint64_t reslen, const std::string& rowstr
         cmsk >>= 1;
         if (cmsk == 0) {
             if (rowoff + 1 >= rowlen) break;
-            cbit = (row[rowoff] << 8) | row[rowoff + 1];
+            // Read 16-bit control mask
+            cbit = (static_cast<uint16_t>(row[rowoff]) << 8) | row[rowoff + 1];
             rowoff += 2;
             cmsk = 0x8000;
         }
 
+        // Control bit 0: Raw Literal Byte
         if ((cbit & cmsk) == 0) {
             if (rowoff < rowlen) {
-                res += (char)row[rowoff++];
+                res += static_cast<char>(row[rowoff++]);
             }
             continue;
         }
@@ -132,36 +134,48 @@ std::string SASYZCR2(uint64_t rowlen, uint64_t reslen, const std::string& rowstr
             case 0: { // Short RLE
                 uint16_t count = len_nibble + 3;
                 if (rowoff < rowlen) {
-                    res.append(count, (char)row[rowoff++]);
+                    char b = static_cast<char>(row[rowoff++]);
+                    uint32_t can_add = std::min<uint32_t>(count, reslen - res.size());
+                    res.append(can_add, b);
                 }
                 break;
             }
             case 1: { // Long RLE
                 if (rowoff < rowlen) {
-                    uint16_t count = (row[rowoff++] & 0xff) + (len_nibble << 8) + 19;
+                    uint16_t count = (static_cast<uint16_t>(row[rowoff++]) << 4) + len_nibble + 19;
                     if (rowoff < rowlen) {
-                        res.append(count, (char)row[rowoff++]);
+                        char b = static_cast<char>(row[rowoff++]);
+                        uint32_t can_add = std::min<uint32_t>(count, reslen - res.size());
+                        res.append(can_add, b);
                     }
                 }
                 break;
             }
-            case 2: { // Long LZ77
+            case 2: { // Long LZ77 (Pattern)
                 if (rowoff + 1 < rowlen) {
-                    uint32_t ofs = len_nibble + 3 + (row[rowoff++] << 4);
-                    uint16_t count = row[rowoff++] + 16;
+                    uint32_t ofs = len_nibble + 3 + (static_cast<uint32_t>(row[rowoff++]) << 4);
+                    uint16_t count = static_cast<uint16_t>(row[rowoff++]) + 16;
 
-                    uint32_t pos = res.size() - ofs;
-                    for (uint16_t i = 0; i < count; ++i) res += res[pos + i];
+                    if (ofs <= res.size()) {
+                        uint32_t pos = res.size() - ofs;
+                        uint32_t max_copy = std::min<uint32_t>(count, reslen - res.size());
+                        for (uint32_t i = 0; i < max_copy; ++i)
+                            res += res[pos + i];
+                    }
                 }
                 break;
             }
             default: { // Short LZ77 (cmd >= 3)
                 if (rowoff < rowlen) {
-                    uint32_t ofs = len_nibble + 3 + (row[rowoff++] << 4);
+                    uint32_t ofs = len_nibble + 3 + (static_cast<uint32_t>(row[rowoff++]) << 4);
                     uint16_t count = cmd;
 
-                    uint32_t pos = res.size() - ofs;
-                    for (uint16_t i = 0; i < count; ++i) res += res[pos + i];
+                    if (ofs <= res.size()) {
+                        uint32_t pos = res.size() - ofs;
+                        uint32_t max_copy = std::min<uint32_t>(count, reslen - res.size());
+                        for (uint32_t i = 0; i < max_copy; ++i)
+                            res += res[pos + i];
+                    }
                 }
                 break;
             }
@@ -170,6 +184,8 @@ std::string SASYZCR2(uint64_t rowlen, uint64_t reslen, const std::string& rowstr
 
     if (res.size() != reslen) {
         Rcpp::warning("SASYZCR2 mismatch: %zu != %zu", res.size(), reslen);
+        if (res.size() < reslen) res.append(reslen - res.size(), '\0');
+        else if (res.size() > reslen) res.resize(reslen);
     }
 
     return res;
