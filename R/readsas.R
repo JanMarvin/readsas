@@ -285,3 +285,15 @@ convert_to_datetime <- function(x) {
 convert_to_time <- function(x) {
   format(convert_to_datetime(x), format = "%H:%M:%S")
 }
+
+
+as_date <- function(x) {
+  as.vector(
+    julian(x, as.Date("1960-1-1", tz = "UTC"))
+  )
+}
+
+as_datetime <- function(x) {
+  # From SAS blog: Number of seconds between 01JAN1960 and 01JAN1970: 315619200
+  as.numeric(x) + 315619200
+}

@@ -14,6 +14,36 @@
 
 #include "swap_endian.h"
 
+// #define NA_DOUBLE 00 00 00 00 00 FE FF FF
+
+template <typename T>
+inline void writebin(T t, std::fstream& sas, bool swapit)
+{
+  if (swapit==1){
+    T t_s = swap_endian(t);
+    sas.write((char*)&t_s, sizeof(t_s));
+  } else {
+    sas.write((char*)&t, sizeof(t));
+  }
+}
+
+
+inline void write_case_i(uint32_t f1, uint32_t f2, bool ENDIANNES, bool bit32, bool swapit, std::fstream& sas) {
+
+  // with ENDIANNES == 0 aka big endian
+  // f2 is written first. So this requires an additional swap
+  if (ENDIANNES == 0) {
+    writebin(f2, sas, swapit);
+    if (bit32 == 0)
+      writebin(f1, sas, swapit);
+  } else if (ENDIANNES == 1) {
+    writebin(f1, sas, swapit);
+    if (bit32 == 0)
+      writebin(f2, sas, swapit);
+  }
+
+}
+
 inline void writestr(std::string val_s, int32_t len, std::fstream& sas)
 {
 
@@ -68,6 +98,7 @@ T readbin( T t , std::istream& sas, bool swapit)
     return(swap_endian(t));
 }
 
+inline
 double readbinlen(double d, std::istream& sas, bool swapit, int len)
 {
 
@@ -495,7 +526,7 @@ inline std::string SASEncoding(uint8_t encval) {
   return enc;
 }
 
-std::vector<int64_t> vec_order(const std::vector<int64_t> &v) {
+inline std::vector<int64_t> vec_order(const std::vector<int64_t> &v) {
   std::vector<int64_t> idx(v.size());
   iota(idx.begin(), idx.end(), 0);
   stable_sort(idx.begin(), idx.end(),
@@ -505,7 +536,7 @@ std::vector<int64_t> vec_order(const std::vector<int64_t> &v) {
 }
 
 // order only the valid options
-std::vector<int64_t> order_(std::vector<int64_t> v) {
+inline std::vector<int64_t> order_(std::vector<int64_t> v) {
   // if (std::count(v.begin(), v.end(), -1)) {
   //   std::vector<int64_t> idx(v.size());
   //   iota(idx.begin(), idx.end(), -1);
@@ -532,7 +563,7 @@ std::vector<int64_t> order_(std::vector<int64_t> v) {
   // }
 }
 
-bool any_keepr(Rcpp::IntegerVector rvec, uint64_t idx) {
+inline bool any_keepr(Rcpp::IntegerVector rvec, uint64_t idx) {
   return std::find(rvec.begin(), rvec.end(), idx) != rvec.end();
 }
 
