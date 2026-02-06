@@ -18,7 +18,7 @@ test_that("parso external tests", {
 
   for (fl in parso_files) {
 
-    message(fl)
+    # message(fl)
     sas7bdat <- sprintf("https://github.com/epam/parso/raw/master/src/test/resources/sas7bdat/%s.sas7bdat", fl)
     csv      <- sprintf("https://github.com/epam/parso/raw/master/src/test/resources/csv/%s.csv", fl)
     # # testing with local parso
@@ -77,7 +77,7 @@ test_that("parso external char tests", {
 
   for (fl in parso_files) {
 
-    message(fl)
+    # message(fl)
     sas7bdat <- sprintf("https://github.com/epam/parso/raw/master/src/test/resources/sas7bdat/%s.sas7bdat", fl)
     csv      <- sprintf("https://github.com/epam/parso/raw/master/src/test/resources/csv/%s.csv", fl)
 
@@ -108,7 +108,7 @@ test_that("test external sas7bdat", {
 
   for (fl in sas7bdat_files) {
 
-    message(fl)
+    # message(fl)
     sas7bdat <- sprintf("https://bitbucket.org/jaredhobbs/sas7bdat/raw/18cbd14407918c1aa90f136c1d6c5d83f307dba0/tests/data/%s.sas7bdat", fl)
 
     exp <- "SAS FILE"

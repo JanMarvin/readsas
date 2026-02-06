@@ -610,8 +610,12 @@ Rcpp::List readsas(const char * filePath,
 
           // there can be uncompressed rows in the data
           if (potabs[sc].COMPRESSION == 0 && potabs[sc].SH_TYPE == 1 && potabs[sc].SH_LEN == rowlength && compr > 0) {
+
+            if (debug)
+              Rcout << "-------- case 0 "<< sas.tellg()  << std::endl;
+
             std::string ustr(rowlength, '\0');
-            sas.read(&ustr[0], rowlength);
+            ustr = readstring(ustr, sas);
             writestr(ustr, ustr.size(), out);
             continue;
           }
