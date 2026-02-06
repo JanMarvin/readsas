@@ -1262,8 +1262,8 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
 
       if (debug)
         Rprintf("SIG %lld; FIRST %lld; F_POS %hd; LAST %lld; L_POS %d\n",
-                scv[i].SIG, scv[i].FIRST, scv[i].F_POS,
-                scv[i].LAST, scv[i].L_POS);
+                (long long)scv[i].SIG, (long long)scv[i].FIRST, scv[i].F_POS,
+                (long long)scv[i].LAST, scv[i].L_POS);
 
     }
 
@@ -1303,7 +1303,7 @@ void writesas(const char * filePath, Rcpp::DataFrame dat, uint8_t compress,
     }
     if (debug)
       Rprintf("colnum %lld; uunk64 %lld\n",
-              colnum, uunk64);
+              (long long)colnum, (long long)uunk64);
 
     post_shlen = sas.tellg();
     potabs[shc].SH_LEN = post_shlen - pre_shlen;
